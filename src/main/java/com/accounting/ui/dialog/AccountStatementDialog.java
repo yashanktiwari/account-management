@@ -56,21 +56,6 @@ public class AccountStatementDialog {
 
         VBox root = new VBox(0);
 
-        // Header
-        Label header = new Label("ACCOUNT STATEMENT");
-        header.getStyleClass().add("section-header-red");
-        header.setMaxWidth(Double.MAX_VALUE);
-        header.setAlignment(Pos.CENTER);
-
-        Button closeBtn = new Button("X");
-        closeBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 4;");
-        closeBtn.setOnAction(e -> stage.close());
-
-        HBox headerBar = new HBox(header, closeBtn);
-        HBox.setHgrow(header, Priority.ALWAYS);
-        headerBar.setAlignment(Pos.CENTER);
-        headerBar.setStyle("-fx-background-color: #dc2626;");
-
         // Filter bar
         HBox filterBar = new HBox(12);
         filterBar.setPadding(new Insets(12));
@@ -157,7 +142,7 @@ public class AccountStatementDialog {
         VBox footer = new VBox(summaryRow, closingRow);
         footer.getStyleClass().add("footer-bar");
 
-        root.getChildren().addAll(headerBar, filterBar, table, footer);
+        root.getChildren().addAll(filterBar, table, footer);
 
         Scene scene = new Scene(root, 1050, 650);
         scene.getStylesheets().add(

@@ -16,6 +16,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -23,6 +24,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 
+import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -48,6 +50,8 @@ public class MainApp extends Application {
     private ObservableList<DashboardDAO.OutstandingCustomer> outstandingList = FXCollections.observableArrayList();
     private TableView<Payment> recentPaymentsTable;
     private ObservableList<Payment> recentPaymentsList = FXCollections.observableArrayList();
+    private StackPane contentHost;
+    private ScrollPane dashboardScroll;
 
     public static Stage getPrimaryStage() {
         return primaryStage;
@@ -121,10 +125,11 @@ public class MainApp extends Application {
         root.setLeft(sidebar);
 
         // ── Center: Dashboard ──
-        ScrollPane dashboardScroll = new ScrollPane(buildDashboard());
+        dashboardScroll = new ScrollPane(buildDashboard());
         dashboardScroll.setFitToWidth(true);
         dashboardScroll.setStyle("-fx-background-color: #f8fafc;");
-        root.setCenter(dashboardScroll);
+        contentHost = new StackPane(dashboardScroll);
+        root.setCenter(contentHost);
 
         Scene scene = new Scene(root, 1200, 700);
         scene.getStylesheets().addAll(
@@ -157,28 +162,52 @@ public class MainApp extends Application {
         Label navTitle = new Label("Navigation");
         navTitle.setStyle("-fx-font-size: 12px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 8 0 4 8;");
 
-        Button dashBtn = sidebarButton("Dashboard", () -> refreshDashboard());
+        Button dashBtn = sidebarButton("Dashboard", this::showDashboard);
         dashBtn.getStyleClass().add("sidebar-btn-active");
 
         Label mastersTitle = new Label("Masters");
         mastersTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
 
-        Button customerBtn = sidebarButton("Customers", () -> new AccountEntryDialog("CUSTOMER").show(primaryStage));
-        Button supplierBtn = sidebarButton("Suppliers", () -> new AccountEntryDialog("SUPPLIER").show(primaryStage));
-        Button vehicleBtn = sidebarButton("Vehicles", () -> new VehicleMasterDialog().show(primaryStage));
+        Button customerBtn = sidebarButton("Customers", () -> {
+            AccountEntryDialog dialog = new AccountEntryDialog("CUSTOMER");
+            showEmbeddedDialog(dialog, () -> dialog.show(primaryStage));
+        });
+        Button supplierBtn = sidebarButton("Suppliers", () -> {
+            AccountEntryDialog dialog = new AccountEntryDialog("SUPPLIER");
+            showEmbeddedDialog(dialog, () -> dialog.show(primaryStage));
+        });
+        Button vehicleBtn = sidebarButton("Vehicles", () -> {
+            VehicleMasterDialog dialog = new VehicleMasterDialog();
+            showEmbeddedDialog(dialog, () -> dialog.show(primaryStage));
+        });
 
         Label billingTitle = new Label("Billing");
         billingTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
 
-        Button invoiceBtn = sidebarButton("Invoice Register", () -> new InvoiceRegisterDialog().show(primaryStage));
-        Button paymentEntryBtn = sidebarButton("Payment Entry", () -> new PaymentEntryDialog(this::refreshDashboard).show(primaryStage));
-        Button paymentRegBtn = sidebarButton("Payment Register", () -> new PaymentRegisterDialog().show(primaryStage));
+        Button invoiceBtn = sidebarButton("Invoice Register", () -> {
+            InvoiceRegisterDialog dialog = new InvoiceRegisterDialog();
+            showEmbeddedDialog(dialog, () -> dialog.show(primaryStage));
+        });
+        Button paymentEntryBtn = sidebarButton("Payment Entry", () -> {
+            PaymentEntryDialog dialog = new PaymentEntryDialog(this::refreshDashboard);
+            showEmbeddedDialog(dialog, () -> dialog.show(primaryStage));
+        });
+        Button paymentRegBtn = sidebarButton("Payment Register", () -> {
+            PaymentRegisterDialog dialog = new PaymentRegisterDialog();
+            showEmbeddedDialog(dialog, () -> dialog.show(primaryStage));
+        });
 
         Label reportsTitle = new Label("Reports");
         reportsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
 
-        Button outstandingBtn = sidebarButton("Outstanding", () -> new OutstandingRegisterDialog().show(primaryStage));
-        Button statementBtn = sidebarButton("Account Statement", () -> new AccountStatementDialog().show(primaryStage));
+        Button outstandingBtn = sidebarButton("Outstanding", () -> {
+            OutstandingRegisterDialog dialog = new OutstandingRegisterDialog();
+            showEmbeddedDialog(dialog, () -> dialog.show(primaryStage));
+        });
+        Button statementBtn = sidebarButton("Account Statement", () -> {
+            AccountStatementDialog dialog = new AccountStatementDialog();
+            showEmbeddedDialog(dialog, () -> dialog.show(primaryStage));
+        });
 
         Label settingsTitle = new Label("Settings");
         settingsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
@@ -204,6 +233,29 @@ public class MainApp extends Application {
         btn.getStyleClass().add("sidebar-btn");
         btn.setOnAction(e -> action.run());
         return btn;
+    }
+
+    private void showDashboard() {
+        contentHost.getChildren().setAll(dashboardScroll);
+        refreshDashboard();
+    }
+
+    private void showEmbeddedDialog(Object dialogInstance, Runnable showAction) {
+        showAction.run();
+        try {
+            Field stageField = dialogInstance.getClass().getDeclaredField("stage");
+            stageField.setAccessible(true);
+            Stage dialogStage = (Stage) stageField.get(dialogInstance);
+            if (dialogStage == null || dialogStage.getScene() == null) {
+                return;
+            }
+            Parent dialogRoot = dialogStage.getScene().getRoot();
+            dialogStage.hide();
+            dialogStage.close();
+            contentHost.getChildren().setAll(dialogRoot);
+        } catch (Exception ex) {
+            log.error("Failed to embed dialog content in main view", ex);
+        }
     }
 
     private VBox buildDashboard() {
@@ -280,15 +332,30 @@ public class MainApp extends Application {
 
     private HBox buildQuickActions() {
         Button addPaymentBtn = quickActionBtn("Add Payment", "#16a34a",
-                () -> new PaymentEntryDialog(this::refreshDashboard).show(primaryStage));
+                () -> {
+                    PaymentEntryDialog dialog = new PaymentEntryDialog(this::refreshDashboard);
+                    showEmbeddedDialog(dialog, () -> dialog.show(primaryStage));
+                });
         Button addCustomerBtn = quickActionBtn("Add Customer", "#2563eb",
-                () -> new AccountEntryDialog("CUSTOMER").show(primaryStage));
+                () -> {
+                    AccountEntryDialog dialog = new AccountEntryDialog("CUSTOMER");
+                    showEmbeddedDialog(dialog, () -> dialog.show(primaryStage));
+                });
         Button invoiceBtn = quickActionBtn("Invoice Register", "#7c3aed",
-                () -> new InvoiceRegisterDialog().show(primaryStage));
+                () -> {
+                    InvoiceRegisterDialog dialog = new InvoiceRegisterDialog();
+                    showEmbeddedDialog(dialog, () -> dialog.show(primaryStage));
+                });
         Button outstandingBtn = quickActionBtn("Outstanding", "#ea580c",
-                () -> new OutstandingRegisterDialog().show(primaryStage));
+                () -> {
+                    OutstandingRegisterDialog dialog = new OutstandingRegisterDialog();
+                    showEmbeddedDialog(dialog, () -> dialog.show(primaryStage));
+                });
         Button statementBtn = quickActionBtn("Statement", "#0891b2",
-                () -> new AccountStatementDialog().show(primaryStage));
+                () -> {
+                    AccountStatementDialog dialog = new AccountStatementDialog();
+                    showEmbeddedDialog(dialog, () -> dialog.show(primaryStage));
+                });
 
         Button refreshBtn = quickActionBtn("Refresh", "#475569", this::refreshDashboard);
 

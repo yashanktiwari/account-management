@@ -55,21 +55,6 @@ public class InvoiceRegisterDialog {
 
         VBox root = new VBox(0);
 
-        // Header
-        Label header = new Label("INVOICE REGISTER");
-        header.getStyleClass().add("section-header-red");
-        header.setMaxWidth(Double.MAX_VALUE);
-        header.setAlignment(Pos.CENTER);
-
-        Button closeBtn = new Button("X");
-        closeBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 4;");
-        closeBtn.setOnAction(e -> stage.close());
-
-        HBox headerBar = new HBox(header, closeBtn);
-        HBox.setHgrow(header, Priority.ALWAYS);
-        headerBar.setAlignment(Pos.CENTER);
-        headerBar.setStyle("-fx-background-color: #dc2626;");
-
         // Filter bar
         GridPane filters = new GridPane();
         filters.setHgap(10);
@@ -150,7 +135,7 @@ public class InvoiceRegisterDialog {
         footer.setPadding(new Insets(8, 16, 8, 16));
         footer.getStyleClass().add("footer-bar");
 
-        root.getChildren().addAll(headerBar, filters, table, footer);
+        root.getChildren().addAll(filters, table, footer);
 
         Scene scene = new Scene(root, 1050, 600);
         scene.getStylesheets().add(

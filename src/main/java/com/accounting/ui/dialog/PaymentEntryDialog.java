@@ -65,21 +65,6 @@ public class PaymentEntryDialog {
 
         VBox root = new VBox(0);
 
-        // Header
-        Label header = new Label("PAYMENT / RECEIPT ENTRY");
-        header.getStyleClass().add("section-header");
-        header.setMaxWidth(Double.MAX_VALUE);
-        header.setAlignment(Pos.CENTER);
-
-        Button closeBtn = new Button("X");
-        closeBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 4;");
-        closeBtn.setOnAction(e -> stage.close());
-
-        HBox headerBar = new HBox(header, closeBtn);
-        HBox.setHgrow(header, Priority.ALWAYS);
-        headerBar.setAlignment(Pos.CENTER);
-        headerBar.setStyle("-fx-background-color: #16a34a;");
-
         // Form
         GridPane form = new GridPane();
         form.setHgap(12);
@@ -184,7 +169,7 @@ public class PaymentEntryDialog {
         tableSection.setPadding(new Insets(0, 16, 16, 16));
         VBox.setVgrow(tableSection, Priority.ALWAYS);
 
-        root.getChildren().addAll(headerBar, form, actionBar, new Separator(), tableSection);
+        root.getChildren().addAll(form, actionBar, new Separator(), tableSection);
 
         Scene scene = new Scene(root, 700, 650);
         scene.getStylesheets().add(
@@ -243,6 +228,13 @@ public class PaymentEntryDialog {
 
     private void savePayment() {
         if (selectedAccount == null) {
+            selectedAccount = resolveAccountByName(accountNameField.getText());
+            if (selectedAccount != null) {
+                loadInvoicesForAccount(selectedAccount.getId());
+            }
+        }
+
+        if (selectedAccount == null) {
             AlertUtil.showWarning("Validation", "Please select a valid account name.");
             return;
         }
@@ -299,6 +291,16 @@ public class PaymentEntryDialog {
                 }
             });
         });
+    }
+
+    private Account resolveAccountByName(String typedName) {
+        if (typedName == null || typedName.isBlank()) return null;
+        String name = typedName.trim();
+        List<Account> accounts = accountDAO.getAllAccounts();
+        return accounts.stream()
+                .filter(a -> a.getAccountName() != null && a.getAccountName().equalsIgnoreCase(name))
+                .findFirst()
+                .orElse(null);
     }
 
     private void clearForm() {

@@ -54,21 +54,6 @@ public class OutstandingRegisterDialog {
 
         VBox root = new VBox(0);
 
-        // Header
-        Label header = new Label("ACCOUNT BALANCE REGISTER");
-        header.getStyleClass().add("section-header-red");
-        header.setMaxWidth(Double.MAX_VALUE);
-        header.setAlignment(Pos.CENTER);
-
-        Button closeBtn = new Button("X");
-        closeBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 4;");
-        closeBtn.setOnAction(e -> stage.close());
-
-        HBox headerBar = new HBox(header, closeBtn);
-        HBox.setHgrow(header, Priority.ALWAYS);
-        headerBar.setAlignment(Pos.CENTER);
-        headerBar.setStyle("-fx-background-color: #dc2626;");
-
         // Filters
         GridPane filters = new GridPane();
         filters.setHgap(10);
@@ -145,7 +130,7 @@ public class OutstandingRegisterDialog {
         footer.setPadding(new Insets(8, 16, 8, 16));
         footer.getStyleClass().add("footer-bar");
 
-        root.getChildren().addAll(headerBar, filters, treeTable, footer);
+        root.getChildren().addAll(filters, treeTable, footer);
 
         Scene scene = new Scene(root, 1000, 650);
         scene.getStylesheets().add(

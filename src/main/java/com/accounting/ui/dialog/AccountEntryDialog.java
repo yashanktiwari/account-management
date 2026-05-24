@@ -72,36 +72,13 @@ public class AccountEntryDialog {
         VBox root = new VBox();
         root.setSpacing(0);
 
-        // Header
-        Label header = new Label(isCustomer() ? "CUSTOMER ENTRY" : "SUPPLIER ENTRY");
-        header.getStyleClass().add(isCustomer() ? "section-header" : "section-header-red");
-        header.setMaxWidth(Double.MAX_VALUE);
-        header.setAlignment(Pos.CENTER);
-
-        Button closeBtn = new Button("X");
-        closeBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 4;");
-        closeBtn.setOnAction(e -> stage.close());
-
-        HBox headerBar = new HBox(header, closeBtn);
-        HBox.setHgrow(header, Priority.ALWAYS);
-        headerBar.setAlignment(Pos.CENTER);
-        headerBar.setStyle("-fx-background-color: " + (isCustomer() ? "#16a34a" : "#dc2626") + ";");
-
-        // Tab pane
-        TabPane tabPane = new TabPane();
-        tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
-
-        Tab ledgerTab = new Tab("Account/Ledger Details", buildLedgerDetailsPane());
-        Tab otherTab = new Tab("Account's Other Details", buildOtherDetailsPane());
-        Tab familyTab = new Tab("Account's Family Details", buildFamilyDetailsPane());
-
-        tabPane.getTabs().addAll(ledgerTab, otherTab, familyTab);
+        Node content = buildLedgerDetailsPane();
 
         // Footer buttons
         HBox footer = buildFooter();
 
-        root.getChildren().addAll(headerBar, tabPane, footer);
-        VBox.setVgrow(tabPane, Priority.ALWAYS);
+        root.getChildren().addAll(content, footer);
+        VBox.setVgrow(content, Priority.ALWAYS);
 
         Scene scene = new Scene(root, 780, 600);
         scene.getStylesheets().add(

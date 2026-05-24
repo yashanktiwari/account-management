@@ -47,21 +47,6 @@ public class VehicleMasterDialog {
 
         VBox root = new VBox(0);
 
-        // Header
-        Label header = new Label("VEHICLE MASTER");
-        header.getStyleClass().add("section-header-blue");
-        header.setMaxWidth(Double.MAX_VALUE);
-        header.setAlignment(Pos.CENTER);
-
-        Button closeBtn = new Button("X");
-        closeBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 4;");
-        closeBtn.setOnAction(e -> stage.close());
-
-        HBox headerBar = new HBox(header, closeBtn);
-        HBox.setHgrow(header, Priority.ALWAYS);
-        headerBar.setAlignment(Pos.CENTER);
-        headerBar.setStyle("-fx-background-color: #1e3a5f;");
-
         // Form
         GridPane form = new GridPane();
         form.setHgap(12);
@@ -145,7 +130,7 @@ public class VehicleMasterDialog {
 
         VBox.setVgrow(table, Priority.ALWAYS);
 
-        root.getChildren().addAll(headerBar, form, actionBar, searchBar, table);
+        root.getChildren().addAll(form, actionBar, searchBar, table);
 
         Scene scene = new Scene(root, 450, 600);
         scene.getStylesheets().add(
