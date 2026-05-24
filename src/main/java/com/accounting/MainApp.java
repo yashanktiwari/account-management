@@ -16,6 +16,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -52,6 +53,14 @@ public class MainApp extends Application {
     private StackPane contentHost;
     private ScrollPane dashboardScroll;
     private final List<Button> sidebarNavButtons = new ArrayList<>();
+    private Button dashBtn;
+    private Button customerBtn;
+    private Button supplierBtn;
+    private Button vehicleBtn;
+    private Button invoiceBtn;
+    private Button paymentsBtn;
+    private Button outstandingBtn;
+    private Button statementBtn;
 
     public static Stage getPrimaryStage() {
         return primaryStage;
@@ -100,26 +109,6 @@ public class MainApp extends Application {
     private void buildMainUI(Stage stage) {
         BorderPane root = new BorderPane();
 
-        // ── Menu Bar ──
-        MenuBar menuBar = buildMenuBar();
-
-        // ── Company Header ──
-        String companyName = AppConfig.getCompanyName();
-        String financialYear = AppConfig.getFinancialYear();
-
-        Label companyLabel = new Label(companyName);
-        companyLabel.getStyleClass().add("company-name");
-
-        Label fyLabel = new Label(financialYear.isBlank() ? "" : "(" + financialYear + ")");
-        fyLabel.getStyleClass().add("financial-year");
-
-        HBox companyHeader = new HBox(12, companyLabel, fyLabel);
-        companyHeader.setAlignment(Pos.CENTER_RIGHT);
-        companyHeader.getStyleClass().add("company-header");
-
-        VBox topSection = new VBox(menuBar, companyHeader);
-        root.setTop(topSection);
-
         // ── Sidebar Navigation ──
         VBox sidebar = buildSidebar();
         root.setLeft(sidebar);
@@ -162,47 +151,26 @@ public class MainApp extends Application {
         Label navTitle = new Label("Navigation");
         navTitle.setStyle("-fx-font-size: 12px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 8 0 4 8;");
 
-        Button dashBtn = sidebarButton("Dashboard", this::showDashboard);
+        dashBtn = sidebarButton("Dashboard", this::showDashboard);
 
         Label mastersTitle = new Label("Masters");
         mastersTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
 
-        Button customerBtn = sidebarButton("Customers", () -> {
-            AccountMasterListView view = new AccountMasterListView("CUSTOMER");
-            showContent(view.createContent());
-        });
-        Button supplierBtn = sidebarButton("Suppliers", () -> {
-            AccountMasterListView view = new AccountMasterListView("SUPPLIER");
-            showContent(view.createContent());
-        });
-        Button vehicleBtn = sidebarButton("Vehicles", () -> {
-            VehicleMasterListView view = new VehicleMasterListView();
-            showContent(view.createContent());
-        });
+        customerBtn = sidebarButton("Customers", this::showCustomers);
+        supplierBtn = sidebarButton("Suppliers", this::showSuppliers);
+        vehicleBtn = sidebarButton("Vehicles", this::showVehicles);
 
         Label billingTitle = new Label("Billing");
         billingTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
 
-        Button invoiceBtn = sidebarButton("Invoice Register", () -> {
-            InvoiceRegisterDialog dialog = new InvoiceRegisterDialog();
-            showContent(dialog.createContent());
-        });
-        Button paymentsBtn = sidebarButton("Payments", () -> {
-            PaymentListView view = new PaymentListView();
-            showContent(view.createContent());
-        });
+        invoiceBtn = sidebarButton("Invoice Register", this::showInvoices);
+        paymentsBtn = sidebarButton("Payments", this::showPayments);
 
         Label reportsTitle = new Label("Reports");
         reportsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
 
-        Button outstandingBtn = sidebarButton("Outstanding", () -> {
-            OutstandingRegisterDialog dialog = new OutstandingRegisterDialog();
-            showContent(dialog.createContent());
-        });
-        Button statementBtn = sidebarButton("Account Statement", () -> {
-            AccountStatementDialog dialog = new AccountStatementDialog();
-            showContent(dialog.createContent());
-        });
+        outstandingBtn = sidebarButton("Outstanding", this::showOutstanding);
+        statementBtn = sidebarButton("Account Statement", this::showStatement);
 
         Label settingsTitle = new Label("Settings");
         settingsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
@@ -250,12 +218,40 @@ public class MainApp extends Application {
         refreshDashboard();
     }
 
-    private void showContent(javafx.scene.Parent content) {
+    private void showContent(Parent content) {
         ScrollPane wrapper = new ScrollPane(content);
         wrapper.setFitToWidth(true);
         wrapper.setFitToHeight(true);
         wrapper.setStyle("-fx-background-color: #f8fafc;");
         contentHost.getChildren().setAll(wrapper);
+    }
+
+    private void showCustomers() {
+        showContent(new AccountMasterListView("CUSTOMER").createContent());
+    }
+
+    private void showSuppliers() {
+        showContent(new AccountMasterListView("SUPPLIER").createContent());
+    }
+
+    private void showVehicles() {
+        showContent(new VehicleMasterListView().createContent());
+    }
+
+    private void showInvoices() {
+        showContent(new InvoiceRegisterDialog().createContent());
+    }
+
+    private void showPayments() {
+        showContent(new PaymentListView().createContent());
+    }
+
+    private void showOutstanding() {
+        showContent(new OutstandingRegisterDialog().createContent());
+    }
+
+    private void showStatement() {
+        showContent(new AccountStatementDialog().createContent());
     }
 
     private VBox buildDashboard() {
@@ -332,35 +328,50 @@ public class MainApp extends Application {
 
     private HBox buildQuickActions() {
         Button addPaymentBtn = quickActionBtn("Add Payment", "#16a34a",
-            () -> new PaymentEntryDialog(this::refreshDashboard).show(primaryStage));
+                () -> {
+                    setActiveSidebarButton(paymentsBtn);
+                    new PaymentEntryDialog(this::refreshDashboard).show(primaryStage);
+                });
         Button paymentsBtn = quickActionBtn("Payments", "#0f766e",
-            () -> {
-                PaymentListView view = new PaymentListView();
-                showContent(view.createContent());
-            });
+                () -> {
+                    setActiveSidebarButton(this.paymentsBtn);
+                    showPayments();
+                });
         Button addCustomerBtn = quickActionBtn("Add Customer", "#2563eb",
-            () -> new AccountEntryDialog("CUSTOMER").show(primaryStage));
+                () -> {
+                    setActiveSidebarButton(customerBtn);
+                    new AccountEntryDialog("CUSTOMER").show(primaryStage);
+                });
         Button addSupplierBtn = quickActionBtn("Add Supplier", "#dc2626",
-            () -> new AccountEntryDialog("SUPPLIER").show(primaryStage));
+                () -> {
+                    setActiveSidebarButton(supplierBtn);
+                    new AccountEntryDialog("SUPPLIER").show(primaryStage);
+                });
         Button addVehicleBtn = quickActionBtn("Add Vehicle", "#1e3a5f",
-            () -> new VehicleMasterDialog().show(primaryStage));
+                () -> {
+                    setActiveSidebarButton(vehicleBtn);
+                    new VehicleMasterDialog().show(primaryStage);
+                });
         Button invoiceBtn = quickActionBtn("Invoice Register", "#7c3aed",
                 () -> {
-                    InvoiceRegisterDialog dialog = new InvoiceRegisterDialog();
-                    showContent(dialog.createContent());
+                    setActiveSidebarButton(this.invoiceBtn);
+                    showInvoices();
                 });
         Button outstandingBtn = quickActionBtn("Outstanding", "#ea580c",
                 () -> {
-                    OutstandingRegisterDialog dialog = new OutstandingRegisterDialog();
-                    showContent(dialog.createContent());
+                    setActiveSidebarButton(this.outstandingBtn);
+                    showOutstanding();
                 });
         Button statementBtn = quickActionBtn("Statement", "#0891b2",
                 () -> {
-                    AccountStatementDialog dialog = new AccountStatementDialog();
-                    showContent(dialog.createContent());
+                    setActiveSidebarButton(this.statementBtn);
+                    showStatement();
                 });
 
-        Button refreshBtn = quickActionBtn("Refresh", "#475569", this::refreshDashboard);
+        Button refreshBtn = quickActionBtn("Refresh", "#475569", () -> {
+            setActiveSidebarButton(dashBtn);
+            showDashboard();
+        });
 
         HBox actions = new HBox(10, addPaymentBtn, paymentsBtn, addCustomerBtn, addSupplierBtn, addVehicleBtn,
             invoiceBtn, outstandingBtn, statementBtn, refreshBtn);
@@ -500,64 +511,6 @@ public class MainApp extends Application {
         if (amount >= 100_000) return String.format("%.2f L", amount / 100_000);
         if (amount >= 1_000) return String.format("%.1f K", amount / 1_000);
         return String.format("%.0f", amount);
-    }
-
-    private MenuBar buildMenuBar() {
-        MenuBar menuBar = new MenuBar();
-        menuBar.getStyleClass().add("menu-bar");
-
-        // ── Masters Menu ──
-        Menu mastersMenu = new Menu("Masters");
-
-        MenuItem customerItem = new MenuItem("Customer Entry");
-        customerItem.setOnAction(e -> new AccountEntryDialog("CUSTOMER").show(primaryStage));
-
-        MenuItem supplierItem = new MenuItem("Supplier Entry");
-        supplierItem.setOnAction(e -> new AccountEntryDialog("SUPPLIER").show(primaryStage));
-
-        MenuItem vehicleItem = new MenuItem("Vehicle Master");
-        vehicleItem.setOnAction(e -> new VehicleMasterDialog().show(primaryStage));
-
-        mastersMenu.getItems().addAll(customerItem, supplierItem, new SeparatorMenuItem(), vehicleItem);
-
-        // ── Billing Menu ──
-        Menu billingMenu = new Menu("Billing");
-
-        MenuItem invoiceRegItem = new MenuItem("Invoice Register");
-        invoiceRegItem.setOnAction(e -> new InvoiceRegisterDialog().show(primaryStage));
-
-        MenuItem paymentsItem = new MenuItem("Payments");
-        paymentsItem.setOnAction(e -> {
-            PaymentListView view = new PaymentListView();
-            showContent(view.createContent());
-        });
-
-        billingMenu.getItems().addAll(invoiceRegItem, new SeparatorMenuItem(), paymentsItem);
-
-        // ── Reports Menu ──
-        Menu reportsMenu = new Menu("Reports");
-
-        MenuItem outstandingItem = new MenuItem("Outstanding Register");
-        outstandingItem.setOnAction(e -> new OutstandingRegisterDialog().show(primaryStage));
-
-        MenuItem statementItem = new MenuItem("Account Statement");
-        statementItem.setOnAction(e -> new AccountStatementDialog().show(primaryStage));
-
-        reportsMenu.getItems().addAll(outstandingItem, statementItem);
-
-        // ── Settings Menu ──
-        Menu settingsMenu = new Menu("Settings");
-
-        MenuItem dbSetupItem = new MenuItem("Database Setup");
-        dbSetupItem.setOnAction(e -> DatabaseSetupDialog.show(primaryStage, () -> {}));
-
-        MenuItem companyItem = new MenuItem("Company Settings");
-        companyItem.setOnAction(e -> showCompanySettings());
-
-        settingsMenu.getItems().addAll(dbSetupItem, companyItem);
-
-        menuBar.getMenus().addAll(mastersMenu, billingMenu, reportsMenu, settingsMenu);
-        return menuBar;
     }
 
     private void showCompanySettings() {
