@@ -65,7 +65,7 @@ public class AccountEntryDialog {
 
     public void show(Window owner) {
         stage = new Stage();
-        stage.setTitle(isCustomer() ? "Customer" : "Suppliers");
+        stage.setTitle(isCustomer() ? "Customer" : "Supplier");
         stage.initModality(Modality.NONE);
         if (owner != null) stage.initOwner(owner);
 
@@ -73,7 +73,7 @@ public class AccountEntryDialog {
         root.setSpacing(0);
 
         // Header
-        Label header = new Label(isCustomer() ? "CUSTOMER ENTRY" : "SUPPLIERS ENTRY");
+        Label header = new Label(isCustomer() ? "CUSTOMER ENTRY" : "SUPPLIER ENTRY");
         header.getStyleClass().add(isCustomer() ? "section-header" : "section-header-red");
         header.setMaxWidth(Double.MAX_VALUE);
         header.setAlignment(Pos.CENTER);
@@ -133,9 +133,9 @@ public class AccountEntryDialog {
 
         // Use A/c As & A/c Type
         acAsCombo = new ComboBox<>(FXCollections.observableArrayList(
-                "Customer", "Suppliers", "Bank", "Cash", "General"
+                "Customer", "Supplier", "Bank", "Cash", "General"
         ));
-        acAsCombo.setValue(isCustomer() ? "Customer" : "Suppliers");
+        acAsCombo.setValue(isCustomer() ? "Customer" : "Supplier");
         acAsCombo.setPrefWidth(160);
 
         acTypeField = new TextField(isCustomer() ? "SUNDRY DEBTORS" : "SUNDRY CREDITORS");
@@ -322,7 +322,7 @@ public class AccountEntryDialog {
         grid.add(label("Opening Balance"), 0, row);
         HBox balBox = new HBox(5, openingBalanceField, balanceTypeCombo);
         grid.add(balBox, 1, row);
-        grid.add(label("Nature of Pymnt"), 2, row);
+        grid.add(label("Nature of Payment"), 2, row);
         grid.add(natureOfPaymentCombo, 3, row);
 
         // Load root areas
@@ -539,7 +539,7 @@ public class AccountEntryDialog {
     private void clearForm() {
         currentAccount = null;
         nameField.clear();
-        acAsCombo.setValue(isCustomer() ? "Customer" : "Suppliers");
+        acAsCombo.setValue(isCustomer() ? "Customer" : "Supplier");
         acTypeField.setText(isCustomer() ? "SUNDRY DEBTORS" : "SUNDRY CREDITORS");
         mailingNameField.clear();
         addressField.clear();

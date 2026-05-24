@@ -334,6 +334,43 @@ public class ExportUtil {
         }
     }
 
+    // ── Payment Register Excel ──
+    public static void exportPaymentsToExcel(List<Payment> data, String filePath) throws Exception {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Payment Register");
+
+        Row header = sheet.createRow(0);
+        String[] columns = {
+                "Date", "Voucher Type", "Voucher No", "Account Name",
+                "Amount", "Against Invoice", "Remarks"
+        };
+
+        CellStyle headerStyle = createHeaderStyle(workbook);
+        for (int i = 0; i < columns.length; i++) {
+            Cell cell = header.createCell(i);
+            cell.setCellValue(columns[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        int rowNum = 1;
+        for (Payment p : data) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(p.getPaymentDate() != null ? p.getPaymentDate().format(DATE_FMT) : "");
+            row.createCell(1).setCellValue(safe(p.getVoucherType()));
+            row.createCell(2).setCellValue(safe(p.getVoucherNo()));
+            row.createCell(3).setCellValue(safe(p.getAccountName()));
+            row.createCell(4).setCellValue(p.getAmount());
+            row.createCell(5).setCellValue(safe(p.getAgainstInvoiceNo()));
+            row.createCell(6).setCellValue(safe(p.getRemarks()));
+        }
+
+        for (int i = 0; i < columns.length; i++) sheet.autoSizeColumn(i);
+
+        try (FileOutputStream fos = new FileOutputStream(filePath)) {
+            workbook.write(fos);
+        }
+    }
+
     private static CellStyle createHeaderStyle(Workbook workbook) {
         CellStyle style = workbook.createCellStyle();
         org.apache.poi.ss.usermodel.Font font = workbook.createFont();

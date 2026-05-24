@@ -245,3 +245,35 @@
     -fx-font-size: 13px;
     -fx-text-fill: #64748b;
 }
+
+/* ── Sidebar ── */
+
+.sidebar {
+    -fx-background-color: #1e293b;
+    -fx-padding: 8;
+}
+
+.sidebar-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #cbd5e1;
+    -fx-font-size: 13px;
+    -fx-padding: 8 12 8 12;
+    -fx-background-radius: 6;
+    -fx-alignment: CENTER-LEFT;
+    -fx-cursor: hand;
+}
+
+.sidebar-btn:hover {
+    -fx-background-color: #334155;
+    -fx-text-fill: white;
+}
+
+.sidebar-btn-active {
+    -fx-background-color: #2563eb;
+    -fx-text-fill: white;
+}
+
+.sidebar-btn-active:hover {
+    -fx-background-color: #1d4ed8;
+    -fx-text-fill: white;
+}
