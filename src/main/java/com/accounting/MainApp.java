@@ -187,13 +187,9 @@ public class MainApp extends Application {
             InvoiceRegisterDialog dialog = new InvoiceRegisterDialog();
             showContent(dialog.createContent());
         });
-        Button paymentEntryBtn = sidebarButton("Payment Entry", () -> {
-            PaymentEntryDialog dialog = new PaymentEntryDialog(this::refreshDashboard);
-            showContent(dialog.createContent());
-        });
-        Button paymentRegBtn = sidebarButton("Payment Register", () -> {
-            PaymentRegisterDialog dialog = new PaymentRegisterDialog();
-            showContent(dialog.createContent());
+        Button paymentsBtn = sidebarButton("Payments", () -> {
+            PaymentListView view = new PaymentListView();
+            showContent(view.createContent());
         });
 
         Label reportsTitle = new Label("Reports");
@@ -217,7 +213,7 @@ public class MainApp extends Application {
         sidebar.getChildren().addAll(
                 navTitle, dashBtn,
                 mastersTitle, customerBtn, supplierBtn, vehicleBtn,
-                billingTitle, invoiceBtn, paymentEntryBtn, paymentRegBtn,
+            billingTitle, invoiceBtn, paymentsBtn,
                 reportsTitle, outstandingBtn, statementBtn,
                 settingsTitle, dbBtn, companyBtn
         );
@@ -337,6 +333,11 @@ public class MainApp extends Application {
     private HBox buildQuickActions() {
         Button addPaymentBtn = quickActionBtn("Add Payment", "#16a34a",
             () -> new PaymentEntryDialog(this::refreshDashboard).show(primaryStage));
+        Button paymentsBtn = quickActionBtn("Payments", "#0f766e",
+            () -> {
+                PaymentListView view = new PaymentListView();
+                showContent(view.createContent());
+            });
         Button addCustomerBtn = quickActionBtn("Add Customer", "#2563eb",
             () -> new AccountEntryDialog("CUSTOMER").show(primaryStage));
         Button addSupplierBtn = quickActionBtn("Add Supplier", "#dc2626",
@@ -361,7 +362,7 @@ public class MainApp extends Application {
 
         Button refreshBtn = quickActionBtn("Refresh", "#475569", this::refreshDashboard);
 
-        HBox actions = new HBox(10, addPaymentBtn, addCustomerBtn, addSupplierBtn, addVehicleBtn,
+        HBox actions = new HBox(10, addPaymentBtn, paymentsBtn, addCustomerBtn, addSupplierBtn, addVehicleBtn,
             invoiceBtn, outstandingBtn, statementBtn, refreshBtn);
         actions.setAlignment(Pos.CENTER_LEFT);
         return actions;
@@ -525,13 +526,13 @@ public class MainApp extends Application {
         MenuItem invoiceRegItem = new MenuItem("Invoice Register");
         invoiceRegItem.setOnAction(e -> new InvoiceRegisterDialog().show(primaryStage));
 
-        MenuItem paymentEntryItem = new MenuItem("Payment Entry");
-        paymentEntryItem.setOnAction(e -> new PaymentEntryDialog(this::refreshDashboard).show(primaryStage));
+        MenuItem paymentsItem = new MenuItem("Payments");
+        paymentsItem.setOnAction(e -> {
+            PaymentListView view = new PaymentListView();
+            showContent(view.createContent());
+        });
 
-        MenuItem paymentRegItem = new MenuItem("Payment Register");
-        paymentRegItem.setOnAction(e -> new PaymentRegisterDialog().show(primaryStage));
-
-        billingMenu.getItems().addAll(invoiceRegItem, new SeparatorMenuItem(), paymentEntryItem, paymentRegItem);
+        billingMenu.getItems().addAll(invoiceRegItem, new SeparatorMenuItem(), paymentsItem);
 
         // ── Reports Menu ──
         Menu reportsMenu = new Menu("Reports");
