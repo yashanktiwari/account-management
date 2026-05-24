@@ -65,10 +65,17 @@ public class AccountEntryDialog {
     }
 
     public void show(Window owner) {
+        show(owner, null);
+    }
+
+    public void show(Window owner, Runnable onClose) {
         stage = new Stage();
         stage.setTitle(isCustomer() ? "Customer" : "Supplier");
         stage.initModality(Modality.NONE);
         if (owner != null) stage.initOwner(owner);
+        if (onClose != null) {
+            stage.setOnHidden(e -> onClose.run());
+        }
 
         Scene scene = new Scene(createContent(), 780, 600);
         scene.getStylesheets().add(

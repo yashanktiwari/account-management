@@ -41,10 +41,17 @@ public class VehicleMasterDialog {
     private Stage stage;
 
     public void show(Window owner) {
+        show(owner, null);
+    }
+
+    public void show(Window owner, Runnable onClose) {
         stage = new Stage();
         stage.setTitle("Vehicle Master");
         stage.initModality(Modality.NONE);
         if (owner != null) stage.initOwner(owner);
+        if (onClose != null) {
+            stage.setOnHidden(e -> onClose.run());
+        }
 
         Scene scene = new Scene(createContent(), 450, 600);
         scene.getStylesheets().add(

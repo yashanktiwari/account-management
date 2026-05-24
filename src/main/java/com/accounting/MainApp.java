@@ -168,16 +168,16 @@ public class MainApp extends Application {
         mastersTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
 
         Button customerBtn = sidebarButton("Customers", () -> {
-            AccountEntryDialog dialog = new AccountEntryDialog("CUSTOMER");
-            showContent(dialog.createContent());
+            AccountMasterListView view = new AccountMasterListView("CUSTOMER");
+            showContent(view.createContent());
         });
         Button supplierBtn = sidebarButton("Suppliers", () -> {
-            AccountEntryDialog dialog = new AccountEntryDialog("SUPPLIER");
-            showContent(dialog.createContent());
+            AccountMasterListView view = new AccountMasterListView("SUPPLIER");
+            showContent(view.createContent());
         });
         Button vehicleBtn = sidebarButton("Vehicles", () -> {
-            VehicleMasterDialog dialog = new VehicleMasterDialog();
-            showContent(dialog.createContent());
+            VehicleMasterListView view = new VehicleMasterListView();
+            showContent(view.createContent());
         });
 
         Label billingTitle = new Label("Billing");
@@ -336,15 +336,13 @@ public class MainApp extends Application {
 
     private HBox buildQuickActions() {
         Button addPaymentBtn = quickActionBtn("Add Payment", "#16a34a",
-                () -> {
-                    PaymentEntryDialog dialog = new PaymentEntryDialog(this::refreshDashboard);
-                    showContent(dialog.createContent());
-                });
+            () -> new PaymentEntryDialog(this::refreshDashboard).show(primaryStage));
         Button addCustomerBtn = quickActionBtn("Add Customer", "#2563eb",
-                () -> {
-                    AccountEntryDialog dialog = new AccountEntryDialog("CUSTOMER");
-                    showContent(dialog.createContent());
-                });
+            () -> new AccountEntryDialog("CUSTOMER").show(primaryStage));
+        Button addSupplierBtn = quickActionBtn("Add Supplier", "#dc2626",
+            () -> new AccountEntryDialog("SUPPLIER").show(primaryStage));
+        Button addVehicleBtn = quickActionBtn("Add Vehicle", "#1e3a5f",
+            () -> new VehicleMasterDialog().show(primaryStage));
         Button invoiceBtn = quickActionBtn("Invoice Register", "#7c3aed",
                 () -> {
                     InvoiceRegisterDialog dialog = new InvoiceRegisterDialog();
@@ -363,7 +361,8 @@ public class MainApp extends Application {
 
         Button refreshBtn = quickActionBtn("Refresh", "#475569", this::refreshDashboard);
 
-        HBox actions = new HBox(10, addPaymentBtn, addCustomerBtn, invoiceBtn, outstandingBtn, statementBtn, refreshBtn);
+        HBox actions = new HBox(10, addPaymentBtn, addCustomerBtn, addSupplierBtn, addVehicleBtn,
+            invoiceBtn, outstandingBtn, statementBtn, refreshBtn);
         actions.setAlignment(Pos.CENTER_LEFT);
         return actions;
     }
