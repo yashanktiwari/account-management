@@ -1,0 +1,247 @@
+.root {
+
+    -fx-font-family: "Segoe UI";
+
+    -fx-accent: #2563eb;
+    -fx-focus-color: #2563eb;
+    -fx-faint-focus-color: rgba(37,99,235,0.2);
+
+    -fx-control-inner-background: white;
+    -fx-text-inner-color: #333333;
+
+    -fx-highlight-fill: #2563eb;
+    -fx-highlight-text-fill: white;
+
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.button,
+.combo-box,
+.date-picker,
+.menu-item,
+.hyperlink,
+.check-box,
+.radio-button {
+    -fx-cursor: hand;
+}
+
+.button {
+    -fx-background-radius: 6;
+}
+
+.button:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 6, 0, 0, 2);
+}
+
+.primary-button {
+    -fx-background-color: #2563eb;
+    -fx-text-fill: white;
+    -fx-background-radius: 6;
+}
+
+.primary-button:hover {
+    -fx-background-color: #1d4ed8;
+}
+
+.primary-button:pressed {
+    -fx-background-color: #1e40af;
+}
+
+.secondary-button {
+    -fx-background-color: #f3f4f6;
+}
+
+.danger-button {
+    -fx-background-color: #ef4444;
+    -fx-text-fill: white;
+    -fx-background-radius: 6;
+}
+
+.danger-button:hover {
+    -fx-background-color: #dc2626;
+}
+
+.success-button {
+    -fx-background-color: #16a34a;
+    -fx-text-fill: white;
+    -fx-background-radius: 6;
+}
+
+.success-button:hover {
+    -fx-background-color: #15803d;
+}
+
+.text-field,
+.text-area,
+.combo-box,
+.date-picker {
+    -fx-border-color: #d1d5db;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-background-color: white;
+    -fx-background-insets: 0;
+}
+
+.text-field,
+.combo-box,
+.date-picker {
+    -fx-pref-height: 32;
+}
+
+.combo-box,
+.text-area,
+.date-picker {
+    -fx-background-radius: 6;
+}
+
+.text-field {
+    -fx-background-radius: 6, 6, 6;
+}
+
+.text-field:focused,
+.text-area:focused,
+.combo-box:focused,
+.date-picker:focused {
+    -fx-border-color: #2563eb;
+    -fx-background-insets: 0;
+}
+
+.date-picker {
+    -fx-background-color: white;
+    -fx-border-color: #d1d5db;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-background-insets: 0;
+}
+
+.date-picker > .text-field {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.date-picker > .arrow-button {
+    -fx-background-color: transparent;
+}
+
+/* ── Form section headers ── */
+
+.section-header {
+    -fx-background-color: #16a34a;
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 4;
+}
+
+.section-header-red {
+    -fx-background-color: #dc2626;
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 4;
+}
+
+.section-header-blue {
+    -fx-background-color: #1e3a5f;
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 4;
+}
+
+/* ── Form labels ── */
+
+.form-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+/* ── Table styling ── */
+
+.table-view {
+    -fx-border-color: #d1d5db;
+    -fx-border-radius: 4;
+}
+
+.table-view .column-header {
+    -fx-background-color: #f3f4f6;
+    -fx-border-color: #e5e7eb;
+    -fx-font-weight: bold;
+}
+
+.table-view .table-row-cell:odd {
+    -fx-background-color: #f9fafb;
+}
+
+.table-view .table-row-cell:selected {
+    -fx-background-color: #dbeafe;
+    -fx-text-fill: #1e3a8a;
+}
+
+/* ── Footer bar ── */
+
+.footer-bar {
+    -fx-background-color: #f3f4f6;
+    -fx-border-color: #e5e7eb transparent transparent transparent;
+    -fx-padding: 8 16 8 16;
+}
+
+/* ── Tab pane styling ── */
+
+.tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: #f3f4f6;
+    -fx-background-radius: 4 4 0 0;
+    -fx-padding: 6 16 6 16;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color: white;
+    -fx-border-color: #d1d5db #d1d5db white #d1d5db;
+}
+
+/* ── Menu bar ── */
+
+.menu-bar {
+    -fx-background-color: #1e3a5f;
+    -fx-padding: 2 0 2 0;
+}
+
+.menu-bar .menu {
+    -fx-padding: 4 12 4 12;
+}
+
+.menu-bar .menu .label {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.menu-bar .menu:hover {
+    -fx-background-color: #2563eb;
+}
+
+.menu-bar .menu:showing {
+    -fx-background-color: #2563eb;
+}
+
+/* ── Company header ── */
+
+.company-header {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: transparent transparent #e2e8f0 transparent;
+    -fx-padding: 8 16 8 16;
+}
+
+.company-name {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e3a5f;
+}
+
+.financial-year {
+    -fx-font-size: 13px;
+    -fx-text-fill: #64748b;
+}
