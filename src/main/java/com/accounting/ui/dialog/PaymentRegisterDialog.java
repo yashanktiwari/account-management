@@ -11,6 +11,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -48,6 +49,16 @@ public class PaymentRegisterDialog {
         stage.initModality(Modality.NONE);
         if (owner != null) stage.initOwner(owner);
 
+        Scene scene = new Scene(createContent(), 900, 600);
+        scene.getStylesheets().add(
+                Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
+        );
+        stage.setScene(scene);
+        stage.setMaximized(true);
+        stage.show();
+    }
+
+    public Parent createContent() {
         VBox root = new VBox(0);
 
         // Filters
@@ -102,15 +113,8 @@ public class PaymentRegisterDialog {
 
         root.getChildren().addAll(filterBar, table, footer);
 
-        Scene scene = new Scene(root, 900, 600);
-        scene.getStylesheets().add(
-                Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
-        );
-        stage.setScene(scene);
-        stage.setMaximized(true);
-        stage.show();
-
         searchPayments();
+        return root;
     }
 
     private void searchPayments() {

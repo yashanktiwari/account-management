@@ -12,6 +12,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -54,6 +55,16 @@ public class AccountStatementDialog {
         stage.initModality(Modality.NONE);
         if (owner != null) stage.initOwner(owner);
 
+        Scene scene = new Scene(createContent(), 1050, 650);
+        scene.getStylesheets().add(
+                Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
+        );
+        stage.setScene(scene);
+        stage.setMaximized(true);
+        stage.show();
+    }
+
+    public Parent createContent() {
         VBox root = new VBox(0);
 
         // Filter bar
@@ -144,13 +155,7 @@ public class AccountStatementDialog {
 
         root.getChildren().addAll(filterBar, table, footer);
 
-        Scene scene = new Scene(root, 1050, 650);
-        scene.getStylesheets().add(
-                Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
-        );
-        stage.setScene(scene);
-        stage.setMaximized(true);
-        stage.show();
+        return root;
     }
 
     @SuppressWarnings("unchecked")

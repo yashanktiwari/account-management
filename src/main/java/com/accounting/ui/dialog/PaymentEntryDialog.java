@@ -14,6 +14,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -63,6 +64,15 @@ public class PaymentEntryDialog {
         stage.initModality(Modality.NONE);
         if (owner != null) stage.initOwner(owner);
 
+        Scene scene = new Scene(createContent(), 700, 650);
+        scene.getStylesheets().add(
+                Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
+        );
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    public Parent createContent() {
         VBox root = new VBox(0);
 
         // Form
@@ -171,15 +181,9 @@ public class PaymentEntryDialog {
 
         root.getChildren().addAll(form, actionBar, new Separator(), tableSection);
 
-        Scene scene = new Scene(root, 700, 650);
-        scene.getStylesheets().add(
-                Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
-        );
-        stage.setScene(scene);
-        stage.show();
-
         setupAutoComplete();
         loadRecentPayments();
+        return root;
     }
 
     private void setupAutoComplete() {

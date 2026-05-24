@@ -11,6 +11,7 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -69,6 +70,15 @@ public class AccountEntryDialog {
         stage.initModality(Modality.NONE);
         if (owner != null) stage.initOwner(owner);
 
+        Scene scene = new Scene(createContent(), 780, 600);
+        scene.getStylesheets().add(
+                Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
+        );
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    public Parent createContent() {
         VBox root = new VBox();
         root.setSpacing(0);
 
@@ -80,12 +90,7 @@ public class AccountEntryDialog {
         root.getChildren().addAll(content, footer);
         VBox.setVgrow(content, Priority.ALWAYS);
 
-        Scene scene = new Scene(root, 780, 600);
-        scene.getStylesheets().add(
-                Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
-        );
-        stage.setScene(scene);
-        stage.show();
+        return root;
     }
 
     private boolean isCustomer() {

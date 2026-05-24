@@ -11,6 +11,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -45,6 +46,15 @@ public class VehicleMasterDialog {
         stage.initModality(Modality.NONE);
         if (owner != null) stage.initOwner(owner);
 
+        Scene scene = new Scene(createContent(), 450, 600);
+        scene.getStylesheets().add(
+                Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
+        );
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    public Parent createContent() {
         VBox root = new VBox(0);
 
         // Form
@@ -132,14 +142,8 @@ public class VehicleMasterDialog {
 
         root.getChildren().addAll(form, actionBar, searchBar, table);
 
-        Scene scene = new Scene(root, 450, 600);
-        scene.getStylesheets().add(
-                Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
-        );
-        stage.setScene(scene);
-        stage.show();
-
         loadAllVehicles();
+        return root;
     }
 
     private void loadAllVehicles() {

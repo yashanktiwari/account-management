@@ -12,6 +12,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -52,6 +53,16 @@ public class OutstandingRegisterDialog {
         stage.initModality(Modality.NONE);
         if (owner != null) stage.initOwner(owner);
 
+        Scene scene = new Scene(createContent(), 1000, 650);
+        scene.getStylesheets().add(
+                Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
+        );
+        stage.setScene(scene);
+        stage.setMaximized(true);
+        stage.show();
+    }
+
+    public Parent createContent() {
         VBox root = new VBox(0);
 
         // Filters
@@ -132,19 +143,13 @@ public class OutstandingRegisterDialog {
 
         root.getChildren().addAll(filters, treeTable, footer);
 
-        Scene scene = new Scene(root, 1000, 650);
-        scene.getStylesheets().add(
-                Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
-        );
-        stage.setScene(scene);
-        stage.setMaximized(true);
-        stage.show();
-
         // Load root areas
         AppExecutor.submit(() -> {
             List<String> areas = dao.getAllRootAreas();
             Platform.runLater(() -> rootCityCombo.setItems(FXCollections.observableArrayList(areas)));
         });
+
+        return root;
     }
 
     @SuppressWarnings("unchecked")
