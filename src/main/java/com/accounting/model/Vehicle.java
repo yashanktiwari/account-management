@@ -1,11 +1,15 @@
 package com.accounting.model;
 
+import java.time.LocalDateTime;
+
 public class Vehicle {
 
     private int id;
     private String vehicleNo;
     private String vehicleModel;
     private String accountName;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public Vehicle() {}
 
@@ -26,6 +30,12 @@ public class Vehicle {
 
     public String getAccountName() { return accountName; }
     public void setAccountName(String accountName) { this.accountName = accountName; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
     @Override
     public String toString() {

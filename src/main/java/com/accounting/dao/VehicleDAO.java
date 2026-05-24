@@ -108,6 +108,8 @@ public class VehicleDAO {
         v.setVehicleNo(rs.getString("vehicle_no"));
         v.setVehicleModel(rs.getString("vehicle_model"));
         v.setAccountName(rs.getString("account_name"));
+        v.setCreatedAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null);
+        v.setUpdatedAt(rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null);
         return v;
     }
 }

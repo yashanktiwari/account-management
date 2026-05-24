@@ -54,24 +54,39 @@ public class AccountMasterListView {
         actions.setAlignment(Pos.CENTER_LEFT);
 
         table = new TableView<>();
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
+        table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
 
-        TableColumn<Account, String> nameCol = new TableColumn<>("Name");
-        nameCol.setCellValueFactory(new PropertyValueFactory<>("accountName"));
+        table.getColumns().add(col("ID", "id", 70));
+        table.getColumns().add(col("Account Name", "accountName", 220));
+        table.getColumns().add(col("Account Type", "accountType", 120));
+        table.getColumns().add(col("A/c As", "acAs", 100));
+        table.getColumns().add(col("A/c Type", "acType", 180));
+        table.getColumns().add(col("Mailing Name", "mailingName", 180));
+        table.getColumns().add(col("Address", "address", 260));
+        table.getColumns().add(col("State", "stateName", 120));
+        table.getColumns().add(col("State Code", "stateCode", 90));
+        table.getColumns().add(col("City", "cityName", 120));
+        table.getColumns().add(col("Fax", "fax", 110));
+        table.getColumns().add(col("Pin Code", "pinCode", 100));
+        table.getColumns().add(col("Email", "email", 200));
+        table.getColumns().add(col("Mobile", "mobile", 130));
+        table.getColumns().add(col("Root Area", "rootAreaName", 140));
+        table.getColumns().add(col("GSTIN", "gstin", 150));
+        table.getColumns().add(col("CST No", "cstNo", 130));
+        table.getColumns().add(col("TAN No", "tanNo", 130));
+        table.getColumns().add(col("PAN No", "panNo", 130));
+        table.getColumns().add(col("TDS %", "tdsPercent", 90));
+        table.getColumns().add(col("TDS Applicable", "tdsApplicable", 120));
+        table.getColumns().add(col("Aadhar No", "aadharNo", 150));
+        table.getColumns().add(col("Drugs Lic No", "drugsLicNo", 150));
+        table.getColumns().add(col("Credit Period", "creditPeriod", 110));
+        table.getColumns().add(col("Credit Limit", "creditAmtLimit", 120));
+        table.getColumns().add(col("Opening Balance", "openingBalance", 130));
+        table.getColumns().add(col("Balance Type", "balanceType", 110));
+        table.getColumns().add(col("Nature of Payment", "natureOfPayment", 140));
+        table.getColumns().add(col("Created At", "createdAt", 170));
+        table.getColumns().add(col("Updated At", "updatedAt", 170));
 
-        TableColumn<Account, String> mobileCol = new TableColumn<>("Mobile");
-        mobileCol.setCellValueFactory(new PropertyValueFactory<>("mobile"));
-
-        TableColumn<Account, String> cityCol = new TableColumn<>("City");
-        cityCol.setCellValueFactory(new PropertyValueFactory<>("cityName"));
-
-        TableColumn<Account, String> areaCol = new TableColumn<>("Area");
-        areaCol.setCellValueFactory(new PropertyValueFactory<>("rootAreaName"));
-
-        TableColumn<Account, String> balanceTypeCol = new TableColumn<>("Bal Type");
-        balanceTypeCol.setCellValueFactory(new PropertyValueFactory<>("balanceType"));
-
-        table.getColumns().addAll(nameCol, mobileCol, cityCol, areaCol, balanceTypeCol);
         table.setItems(rows);
 
         VBox.setVgrow(table, Priority.ALWAYS);
@@ -86,5 +101,12 @@ public class AccountMasterListView {
             List<Account> data = dao.getAll(accountType);
             Platform.runLater(() -> rows.setAll(data));
         });
+    }
+
+    private TableColumn<Account, Object> col(String title, String property, double width) {
+        TableColumn<Account, Object> column = new TableColumn<>(title);
+        column.setCellValueFactory(new PropertyValueFactory<>(property));
+        column.setPrefWidth(width);
+        return column;
     }
 }

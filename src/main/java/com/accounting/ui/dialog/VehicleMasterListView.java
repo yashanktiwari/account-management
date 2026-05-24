@@ -48,18 +48,15 @@ public class VehicleMasterListView {
         actions.setAlignment(Pos.CENTER_LEFT);
 
         table = new TableView<>();
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
+        table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
 
-        TableColumn<Vehicle, String> noCol = new TableColumn<>("Vehicle No");
-        noCol.setCellValueFactory(new PropertyValueFactory<>("vehicleNo"));
+        table.getColumns().add(col("ID", "id", 80));
+        table.getColumns().add(col("Vehicle No", "vehicleNo", 150));
+        table.getColumns().add(col("Vehicle Model", "vehicleModel", 180));
+        table.getColumns().add(col("Account Name", "accountName", 220));
+        table.getColumns().add(col("Created At", "createdAt", 180));
+        table.getColumns().add(col("Updated At", "updatedAt", 180));
 
-        TableColumn<Vehicle, String> modelCol = new TableColumn<>("Model");
-        modelCol.setCellValueFactory(new PropertyValueFactory<>("vehicleModel"));
-
-        TableColumn<Vehicle, String> accountCol = new TableColumn<>("Account Name");
-        accountCol.setCellValueFactory(new PropertyValueFactory<>("accountName"));
-
-        table.getColumns().addAll(noCol, modelCol, accountCol);
         table.setItems(rows);
 
         VBox.setVgrow(table, Priority.ALWAYS);
@@ -74,5 +71,12 @@ public class VehicleMasterListView {
             List<Vehicle> data = dao.getAll();
             Platform.runLater(() -> rows.setAll(data));
         });
+    }
+
+    private TableColumn<Vehicle, Object> col(String title, String property, double width) {
+        TableColumn<Vehicle, Object> column = new TableColumn<>(title);
+        column.setCellValueFactory(new PropertyValueFactory<>(property));
+        column.setPrefWidth(width);
+        return column;
     }
 }
