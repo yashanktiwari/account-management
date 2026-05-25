@@ -54,13 +54,12 @@ public class MainApp extends Application {
     private ScrollPane dashboardScroll;
     private final List<Button> sidebarNavButtons = new ArrayList<>();
     private Button dashBtn;
-    private Button customerBtn;
-    private Button supplierBtn;
+    private Button partyBtn;
     private Button vehicleBtn;
-    private Button invoiceBtn;
-    private Button paymentsBtn;
-    private Button outstandingBtn;
-    private Button statementBtn;
+    private Button purchaseInvoiceBtn;
+    private Button saleInvoiceBtn;
+    private Button purchaseReceiptBtn;
+    private Button saleReceiptBtn;
 
     public static Stage getPrimaryStage() {
         return primaryStage;
@@ -156,21 +155,20 @@ public class MainApp extends Application {
         Label mastersTitle = new Label("Masters");
         mastersTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
 
-        customerBtn = sidebarButton("Customers", this::showCustomers);
-        supplierBtn = sidebarButton("Suppliers", this::showSuppliers);
+        partyBtn = sidebarButton("Parties", this::showParties);
         vehicleBtn = sidebarButton("Vehicles", this::showVehicles);
 
-        Label billingTitle = new Label("Billing");
-        billingTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
+        Label invoicesTitle = new Label("Invoices");
+        invoicesTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
 
-        invoiceBtn = sidebarButton("Invoice Register", this::showInvoices);
-        paymentsBtn = sidebarButton("Payments", this::showPayments);
+        purchaseInvoiceBtn = sidebarButton("Purchase Invoice", this::showPurchaseInvoice);
+        saleInvoiceBtn = sidebarButton("Sale Invoice", this::showSaleInvoice);
 
-        Label reportsTitle = new Label("Reports");
-        reportsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
+        Label receiptsTitle = new Label("Receipts");
+        receiptsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
 
-        outstandingBtn = sidebarButton("Outstanding", this::showOutstanding);
-        statementBtn = sidebarButton("Account Statement", this::showStatement);
+        purchaseReceiptBtn = sidebarButton("Purchase Receipt", this::showPurchaseReceipt);
+        saleReceiptBtn = sidebarButton("Sale Receipt", this::showSaleReceipt);
 
         Label settingsTitle = new Label("Settings");
         settingsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
@@ -180,9 +178,9 @@ public class MainApp extends Application {
 
         sidebar.getChildren().addAll(
                 navTitle, dashBtn,
-                mastersTitle, customerBtn, supplierBtn, vehicleBtn,
-            billingTitle, invoiceBtn, paymentsBtn,
-                reportsTitle, outstandingBtn, statementBtn,
+                mastersTitle, partyBtn, vehicleBtn,
+                invoicesTitle, purchaseInvoiceBtn, saleInvoiceBtn,
+                receiptsTitle, purchaseReceiptBtn, saleReceiptBtn,
                 settingsTitle, dbBtn, companyBtn
         );
 
@@ -226,32 +224,28 @@ public class MainApp extends Application {
         contentHost.getChildren().setAll(wrapper);
     }
 
-    private void showCustomers() {
-        showContent(new AccountMasterListView("CUSTOMER").createContent());
-    }
-
-    private void showSuppliers() {
-        showContent(new AccountMasterListView("SUPPLIER").createContent());
+    private void showParties() {
+        new PartyMasterDialog().show(primaryStage, this::refreshDashboard);
     }
 
     private void showVehicles() {
-        showContent(new VehicleMasterListView().createContent());
+        new VehicleMasterDialog().show(primaryStage, this::refreshDashboard);
     }
 
-    private void showInvoices() {
-        showContent(new InvoiceRegisterDialog().createContent());
+    private void showPurchaseInvoice() {
+        new PurchaseInvoiceDialog().show(primaryStage, this::refreshDashboard);
     }
 
-    private void showPayments() {
-        showContent(new PaymentListView().createContent());
+    private void showSaleInvoice() {
+        new SaleInvoiceDialog().show(primaryStage, this::refreshDashboard);
     }
 
-    private void showOutstanding() {
-        showContent(new OutstandingRegisterDialog().createContent());
+    private void showPurchaseReceipt() {
+        new PurchaseReceiptDialog().show(primaryStage, this::refreshDashboard);
     }
 
-    private void showStatement() {
-        showContent(new AccountStatementDialog().createContent());
+    private void showSaleReceipt() {
+        new SaleReceiptDialog().show(primaryStage, this::refreshDashboard);
     }
 
     private VBox buildDashboard() {
@@ -327,45 +321,35 @@ public class MainApp extends Application {
     }
 
     private HBox buildQuickActions() {
-        Button addPaymentBtn = quickActionBtn("Add Payment", "#16a34a",
+        Button purchaseInvBtn = quickActionBtn("Purchase Invoice", "#16a34a",
                 () -> {
-                    setActiveSidebarButton(paymentsBtn);
-                    new PaymentEntryDialog(this::refreshDashboard).show(primaryStage);
+                    setActiveSidebarButton(purchaseInvoiceBtn);
+                    showPurchaseInvoice();
                 });
-        Button paymentsBtn = quickActionBtn("Payments", "#0f766e",
+        Button saleInvBtn = quickActionBtn("Sale Invoice", "#2563eb",
                 () -> {
-                    setActiveSidebarButton(this.paymentsBtn);
-                    showPayments();
+                    setActiveSidebarButton(saleInvoiceBtn);
+                    showSaleInvoice();
                 });
-        Button addCustomerBtn = quickActionBtn("Add Customer", "#2563eb",
+        Button purchaseRecBtn = quickActionBtn("Purchase Receipt", "#dc2626",
                 () -> {
-                    setActiveSidebarButton(customerBtn);
-                    new AccountEntryDialog("CUSTOMER").show(primaryStage);
+                    setActiveSidebarButton(purchaseReceiptBtn);
+                    showPurchaseReceipt();
                 });
-        Button addSupplierBtn = quickActionBtn("Add Supplier", "#dc2626",
+        Button saleRecBtn = quickActionBtn("Sale Receipt", "#0891b2",
                 () -> {
-                    setActiveSidebarButton(supplierBtn);
-                    new AccountEntryDialog("SUPPLIER").show(primaryStage);
+                    setActiveSidebarButton(saleReceiptBtn);
+                    showSaleReceipt();
                 });
         Button addVehicleBtn = quickActionBtn("Add Vehicle", "#1e3a5f",
                 () -> {
                     setActiveSidebarButton(vehicleBtn);
-                    new VehicleMasterDialog().show(primaryStage);
+                    showVehicles();
                 });
-        Button invoiceBtn = quickActionBtn("Invoice Register", "#7c3aed",
+        Button partyBtn = quickActionBtn("Manage Parties", "#7c3aed",
                 () -> {
-                    setActiveSidebarButton(this.invoiceBtn);
-                    showInvoices();
-                });
-        Button outstandingBtn = quickActionBtn("Outstanding", "#ea580c",
-                () -> {
-                    setActiveSidebarButton(this.outstandingBtn);
-                    showOutstanding();
-                });
-        Button statementBtn = quickActionBtn("Statement", "#0891b2",
-                () -> {
-                    setActiveSidebarButton(this.statementBtn);
-                    showStatement();
+                    setActiveSidebarButton(this.partyBtn);
+                    showParties();
                 });
 
         Button refreshBtn = quickActionBtn("Refresh", "#475569", () -> {
@@ -373,8 +357,8 @@ public class MainApp extends Application {
             showDashboard();
         });
 
-        HBox actions = new HBox(10, addPaymentBtn, paymentsBtn, addCustomerBtn, addSupplierBtn, addVehicleBtn,
-            invoiceBtn, outstandingBtn, statementBtn, refreshBtn);
+        HBox actions = new HBox(10, purchaseInvBtn, saleInvBtn, purchaseRecBtn, saleRecBtn, addVehicleBtn,
+            partyBtn, refreshBtn);
         actions.setAlignment(Pos.CENTER_LEFT);
         return actions;
     }

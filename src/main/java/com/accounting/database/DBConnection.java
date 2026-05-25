@@ -106,35 +106,27 @@ public class DBConnection {
              Statement stmt = conn.createStatement()) {
 
             stmt.executeUpdate("""
-                CREATE TABLE IF NOT EXISTS accounts (
+                CREATE TABLE IF NOT EXISTS parties (
                     id INT AUTO_INCREMENT PRIMARY KEY,
-                    account_name VARCHAR(255) NOT NULL,
-                    account_type ENUM('CUSTOMER','SUPPLIER') NOT NULL,
-                    ac_as VARCHAR(50),
-                    ac_type VARCHAR(100),
+                    name VARCHAR(255) NOT NULL,
+                    type ENUM('CUSTOMER','SUPPLIER') NOT NULL,
                     mailing_name VARCHAR(255),
                     address TEXT,
-                    state_name VARCHAR(100),
-                    state_code VARCHAR(10),
-                    city_name VARCHAR(100),
-                    fax VARCHAR(50),
-                    pin_code VARCHAR(10),
-                    email VARCHAR(255),
+                    city VARCHAR(100),
+                    state VARCHAR(100),
+                    pincode VARCHAR(10),
                     mobile VARCHAR(20),
-                    root_area_name VARCHAR(255),
+                    email VARCHAR(255),
+                    pan VARCHAR(20),
                     gstin VARCHAR(20),
-                    cst_no VARCHAR(50),
-                    tan_no VARCHAR(50),
-                    pan_no VARCHAR(20),
-                    tds_percent DECIMAL(5,2) DEFAULT 0,
-                    tds_applicable ENUM('YES','NO') DEFAULT 'NO',
-                    aadhar_no VARCHAR(20),
-                    drugs_lic_no VARCHAR(50),
-                    credit_period INT DEFAULT 0,
-                    credit_amt_limit DECIMAL(15,2) DEFAULT 0,
-                    opening_balance DECIMAL(15,2) DEFAULT 0,
-                    balance_type ENUM('Debit','Credit') DEFAULT 'Debit',
+                    credit_limit VARCHAR(50),
+                    opening_balance VARCHAR(50),
+                    balance_type ENUM('DEBIT','CREDIT'),
                     nature_of_payment VARCHAR(100),
+                    bank_name VARCHAR(100),
+                    bank_account VARCHAR(50),
+                    ifsc_code VARCHAR(20),
+                    remarks TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
                 )
@@ -152,45 +144,113 @@ public class DBConnection {
             """);
 
             stmt.executeUpdate("""
-                CREATE TABLE IF NOT EXISTS invoices (
+                CREATE TABLE IF NOT EXISTS purchase_invoices (
                     id INT AUTO_INCREMENT PRIMARY KEY,
+                    invoice_no VARCHAR(50) NOT NULL UNIQUE,
                     invoice_date DATE NOT NULL,
-                    invoice_no VARCHAR(50) NOT NULL,
-                    account_id INT,
-                    account_name VARCHAR(255),
-                    total_qty DECIMAL(15,3) DEFAULT 0,
-                    total_amt DECIMAL(15,2) DEFAULT 0,
-                    total_tax DECIMAL(15,2) DEFAULT 0,
-                    grand_total DECIMAL(15,2) DEFAULT 0,
-                    trans_type ENUM('SALE','PURCHASE') NOT NULL,
-                    tax_type VARCHAR(20),
-                    cash_credit ENUM('CASH','CREDIT') DEFAULT 'CREDIT',
+                    party_id INT NOT NULL,
+                    party_name VARCHAR(255),
                     voucher_type VARCHAR(50),
-                    vehicle_no VARCHAR(20),
+                    gst VARCHAR(10),
+                    taxable_amount DECIMAL(15,2) DEFAULT 0,
+                    sgst_amount DECIMAL(15,2) DEFAULT 0,
+                    cgst_amount DECIMAL(15,2) DEFAULT 0,
+                    igst_amount DECIMAL(15,2) DEFAULT 0,
+                    total_gst DECIMAL(15,2) DEFAULT 0,
+                    net_amount DECIMAL(15,2) DEFAULT 0,
                     remarks TEXT,
+                    bank_name VARCHAR(100),
+                    bank_account VARCHAR(50),
+                    ifsc_code VARCHAR(20),
+                    status VARCHAR(20) DEFAULT 'DRAFT',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE SET NULL
+                    FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE
                 )
             """);
 
             stmt.executeUpdate("""
-                CREATE TABLE IF NOT EXISTS payments (
+                CREATE TABLE IF NOT EXISTS sale_invoices (
                     id INT AUTO_INCREMENT PRIMARY KEY,
-                    payment_date DATE NOT NULL,
-                    voucher_no VARCHAR(50),
-                    voucher_type ENUM('RECEIPT','PAYMENT') NOT NULL,
-                    account_id INT,
-                    account_name VARCHAR(255),
-                    particulars VARCHAR(255),
-                    amount DECIMAL(15,2) DEFAULT 0,
-                    against_invoice_id INT,
-                    against_invoice_no VARCHAR(50),
+                    invoice_no VARCHAR(50) NOT NULL UNIQUE,
+                    invoice_date DATE NOT NULL,
+                    delivery_date DATE,
+                    party_id INT NOT NULL,
+                    party_name VARCHAR(255),
+                    voucher_type VARCHAR(50),
+                    gst VARCHAR(10),
+                    taxable_amount DECIMAL(15,2) DEFAULT 0,
+                    sgst_amount DECIMAL(15,2) DEFAULT 0,
+                    cgst_amount DECIMAL(15,2) DEFAULT 0,
+                    igst_amount DECIMAL(15,2) DEFAULT 0,
+                    total_gst DECIMAL(15,2) DEFAULT 0,
+                    net_amount DECIMAL(15,2) DEFAULT 0,
                     remarks TEXT,
+                    rcvr_name VARCHAR(255),
+                    rcvr_address TEXT,
+                    rcvr_contact_no VARCHAR(20),
+                    rcvr_gstin VARCHAR(20),
+                    status VARCHAR(20) DEFAULT 'DRAFT',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE SET NULL,
-                    FOREIGN KEY (against_invoice_id) REFERENCES invoices(id) ON DELETE SET NULL
+                    FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE
+                )
+            """);
+
+            stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS invoice_line_items (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    invoice_id INT NOT NULL,
+                    lr_no VARCHAR(50),
+                    container_no VARCHAR(50),
+                    vehicle_no VARCHAR(20),
+                    from_location VARCHAR(100),
+                    to_location VARCHAR(100),
+                    type VARCHAR(50),
+                    basic_freight DECIMAL(15,2) DEFAULT 0,
+                    detention_charge DECIMAL(15,2) DEFAULT 0,
+                    total DECIMAL(15,2) DEFAULT 0,
+                    FOREIGN KEY (invoice_id) REFERENCES purchase_invoices(id) ON DELETE CASCADE
+                )
+            """);
+
+            stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS purchase_receipts (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    receipt_no VARCHAR(50) NOT NULL UNIQUE,
+                    receipt_date DATE NOT NULL,
+                    party_id INT NOT NULL,
+                    party_name VARCHAR(255),
+                    amount DECIMAL(15,2) DEFAULT 0,
+                    payment_mode VARCHAR(50),
+                    cheque_no VARCHAR(50),
+                    cheque_date DATE,
+                    bank_name VARCHAR(100),
+                    remarks TEXT,
+                    status VARCHAR(20) DEFAULT 'DRAFT',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE
+                )
+            """);
+
+            stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS sale_receipts (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    receipt_no VARCHAR(50) NOT NULL UNIQUE,
+                    receipt_date DATE NOT NULL,
+                    party_id INT NOT NULL,
+                    party_name VARCHAR(255),
+                    amount DECIMAL(15,2) DEFAULT 0,
+                    payment_mode VARCHAR(50),
+                    cheque_no VARCHAR(50),
+                    cheque_date DATE,
+                    bank_name VARCHAR(100),
+                    remarks TEXT,
+                    status VARCHAR(20) DEFAULT 'DRAFT',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE
                 )
             """);
 

@@ -381,6 +381,209 @@ public class ExportUtil {
         return style;
     }
 
+    // ── Purchase Invoice PDF ──
+    public static void exportPurchaseInvoiceToPdf(PurchaseInvoice invoice, String filePath) throws Exception {
+        Document doc = new Document(PageSize.A4);
+        PdfWriter.getInstance(doc, new FileOutputStream(filePath));
+        doc.open();
+
+        // Header with logo and company details
+        addInvoiceHeader(doc, "PURCHASE INVOICE");
+
+        // Invoice details
+        PdfPTable detailsTable = new PdfPTable(4);
+        detailsTable.setWidthPercentage(100);
+        detailsTable.setSpacingBefore(10);
+
+        addCell(detailsTable, "Invoice No:", invoice.getInvoiceNo(), true);
+        addCell(detailsTable, "Invoice Date:", invoice.getInvoiceDate().format(DATE_FMT), false);
+        addCell(detailsTable, "Supplier:", invoice.getPartyName(), true);
+        addCell(detailsTable, "Voucher Type:", invoice.getVoucherType(), false);
+
+        doc.add(detailsTable);
+
+        // Line items table
+        PdfPTable lineItemsTable = new PdfPTable(8);
+        lineItemsTable.setWidthPercentage(100);
+        lineItemsTable.setSpacingBefore(10);
+
+        String[] headers = {"S.No", "LR No", "Container No", "Vehicle No", "From", "To", "Basic Freight", "Detention"};
+        for (String header : headers) {
+            PdfPCell cell = new PdfPCell(new Phrase(header, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
+            cell.setBackgroundColor(new com.lowagie.text.BaseColor(200, 200, 200));
+            lineItemsTable.addCell(cell);
+        }
+
+        int sno = 1;
+        for (InvoiceLineItem item : invoice.getLineItems()) {
+            lineItemsTable.addCell(String.valueOf(sno++));
+            lineItemsTable.addCell(safe(item.getLrNo()));
+            lineItemsTable.addCell(safe(item.getContainerNo()));
+            lineItemsTable.addCell(safe(item.getVehicleNo()));
+            lineItemsTable.addCell(safe(item.getFrom()));
+            lineItemsTable.addCell(safe(item.getTo()));
+            lineItemsTable.addCell(String.format("%.2f", item.getBasicFreight()));
+            lineItemsTable.addCell(String.format("%.2f", item.getDetentionCharge()));
+        }
+
+        doc.add(lineItemsTable);
+
+        // Totals
+        PdfPTable totalsTable = new PdfPTable(2);
+        totalsTable.setWidthPercentage(50);
+        totalsTable.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        totalsTable.setSpacingBefore(10);
+
+        addTotalRow(totalsTable, "Taxable Amount:", String.format("%.2f", invoice.getTaxableAmount()));
+        addTotalRow(totalsTable, "GST (" + invoice.getGst() + "):", String.format("%.2f", invoice.getTotalGst()));
+        addTotalRow(totalsTable, "Net Amount:", String.format("%.2f", invoice.getNetAmount()));
+
+        doc.add(totalsTable);
+
+        // Footer
+        addInvoiceFooter(doc);
+
+        doc.close();
+    }
+
+    // ── Sale Invoice PDF ──
+    public static void exportSaleInvoiceToPdf(SaleInvoice invoice, String filePath) throws Exception {
+        Document doc = new Document(PageSize.A4);
+        PdfWriter.getInstance(doc, new FileOutputStream(filePath));
+        doc.open();
+
+        // Header with logo and company details
+        addInvoiceHeader(doc, "SALE INVOICE");
+
+        // Invoice details
+        PdfPTable detailsTable = new PdfPTable(4);
+        detailsTable.setWidthPercentage(100);
+        detailsTable.setSpacingBefore(10);
+
+        addCell(detailsTable, "Invoice No:", invoice.getInvoiceNo(), true);
+        addCell(detailsTable, "Invoice Date:", invoice.getInvoiceDate().format(DATE_FMT), false);
+        addCell(detailsTable, "Customer:", invoice.getPartyName(), true);
+        addCell(detailsTable, "Delivery Date:", invoice.getDeliveryDate().format(DATE_FMT), false);
+
+        doc.add(detailsTable);
+
+        // Receiver details
+        PdfPTable receiverTable = new PdfPTable(2);
+        receiverTable.setWidthPercentage(100);
+        receiverTable.setSpacingBefore(10);
+
+        addCell(receiverTable, "Receiver Name:", invoice.getRcvrName(), true);
+        addCell(receiverTable, "Contact No:", invoice.getRcvrContactNo(), false);
+        addCell(receiverTable, "Address:", invoice.getRcvrAddress(), true);
+        addCell(receiverTable, "GSTIN:", invoice.getRcvrGstin(), false);
+
+        doc.add(receiverTable);
+
+        // Line items table
+        PdfPTable lineItemsTable = new PdfPTable(8);
+        lineItemsTable.setWidthPercentage(100);
+        lineItemsTable.setSpacingBefore(10);
+
+        String[] headers = {"S.No", "LR No", "Container No", "Vehicle No", "From", "To", "Basic Freight", "Detention"};
+        for (String header : headers) {
+            PdfPCell cell = new PdfPCell(new Phrase(header, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
+            cell.setBackgroundColor(new com.lowagie.text.BaseColor(200, 200, 200));
+            lineItemsTable.addCell(cell);
+        }
+
+        int sno = 1;
+        for (InvoiceLineItem item : invoice.getLineItems()) {
+            lineItemsTable.addCell(String.valueOf(sno++));
+            lineItemsTable.addCell(safe(item.getLrNo()));
+            lineItemsTable.addCell(safe(item.getContainerNo()));
+            lineItemsTable.addCell(safe(item.getVehicleNo()));
+            lineItemsTable.addCell(safe(item.getFrom()));
+            lineItemsTable.addCell(safe(item.getTo()));
+            lineItemsTable.addCell(String.format("%.2f", item.getBasicFreight()));
+            lineItemsTable.addCell(String.format("%.2f", item.getDetentionCharge()));
+        }
+
+        doc.add(lineItemsTable);
+
+        // Totals
+        PdfPTable totalsTable = new PdfPTable(2);
+        totalsTable.setWidthPercentage(50);
+        totalsTable.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        totalsTable.setSpacingBefore(10);
+
+        addTotalRow(totalsTable, "Taxable Amount:", String.format("%.2f", invoice.getTaxableAmount()));
+        addTotalRow(totalsTable, "GST (" + invoice.getGst() + "):", String.format("%.2f", invoice.getTotalGst()));
+        addTotalRow(totalsTable, "Net Amount:", String.format("%.2f", invoice.getNetAmount()));
+
+        doc.add(totalsTable);
+
+        // Footer
+        addInvoiceFooter(doc);
+
+        doc.close();
+    }
+
+    private static void addInvoiceHeader(Document doc, String title) throws Exception {
+        // Company name and details
+        Paragraph companyName = new Paragraph("SIHAG ENTERPRISE", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16));
+        companyName.setAlignment(Element.ALIGN_CENTER);
+        doc.add(companyName);
+
+        Paragraph companyDetails = new Paragraph("PAN: DYHPD9230H | GSTIN: 24DYHPD9230H1ZJ", 
+                FontFactory.getFont(FontFactory.HELVETICA, 10));
+        companyDetails.setAlignment(Element.ALIGN_CENTER);
+        doc.add(companyDetails);
+
+        Paragraph invoiceTitle = new Paragraph(title, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14));
+        invoiceTitle.setAlignment(Element.ALIGN_CENTER);
+        invoiceTitle.setSpacingBefore(10);
+        doc.add(invoiceTitle);
+
+        Paragraph spacer = new Paragraph(" ");
+        doc.add(spacer);
+    }
+
+    private static void addInvoiceFooter(Document doc) throws Exception {
+        doc.add(new Paragraph(" "));
+        Paragraph footer = new Paragraph(
+                "Shop No: 03, Commercial Zone, Survey No.33/1, Plot No-1, Nr. Shahid Manshi Circle\n" +
+                "Mundra Port Main Road, Nana Kapaya, Mundra-Kutch (Gujarat) 370 421\n" +
+                "Email: sihag.enterprise23@gmail.com | Ph: 9033 777 516 | 94260 36076",
+                FontFactory.getFont(FontFactory.HELVETICA, 9)
+        );
+        footer.setAlignment(Element.ALIGN_CENTER);
+        doc.add(footer);
+
+        Paragraph terms = new Paragraph("\nTerms and Conditions:\n" +
+                "1. Subject to Mundra jurisdiction\n" +
+                "2. In case of any correction in the bill, the same may be information with in 07 days of submission\n" +
+                "3. Credit Limit 07-10 Days after Billing Date",
+                FontFactory.getFont(FontFactory.HELVETICA, 8)
+        );
+        doc.add(terms);
+    }
+
+    private static void addCell(PdfPTable table, String label, String value, boolean bold) {
+        PdfPCell labelCell = new PdfPCell(new Phrase(label, 
+                FontFactory.getFont(bold ? FontFactory.HELVETICA_BOLD : FontFactory.HELVETICA, 10)));
+        labelCell.setBorder(PdfPCell.NO_BORDER);
+        table.addCell(labelCell);
+
+        PdfPCell valueCell = new PdfPCell(new Phrase(safe(value), FontFactory.getFont(FontFactory.HELVETICA, 10)));
+        valueCell.setBorder(PdfPCell.NO_BORDER);
+        table.addCell(valueCell);
+    }
+
+    private static void addTotalRow(PdfPTable table, String label, String value) {
+        PdfPCell labelCell = new PdfPCell(new Phrase(label, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11)));
+        labelCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        table.addCell(labelCell);
+
+        PdfPCell valueCell = new PdfPCell(new Phrase(value, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11)));
+        valueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        table.addCell(valueCell);
+    }
+
     private static String safe(String value) {
         return value == null ? "" : value;
     }
