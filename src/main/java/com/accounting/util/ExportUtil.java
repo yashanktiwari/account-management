@@ -410,7 +410,7 @@ public class ExportUtil {
         String[] headers = {"S.No", "LR No", "Container No", "Vehicle No", "From", "To", "Basic Freight", "Detention"};
         for (String header : headers) {
             PdfPCell cell = new PdfPCell(new Phrase(header, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
-            cell.setBackgroundColor(new com.lowagie.text.BaseColor(200, 200, 200));
+            cell.setBackgroundColor(new java.awt.Color(200, 200, 200));
             lineItemsTable.addCell(cell);
         }
 
@@ -487,7 +487,7 @@ public class ExportUtil {
         String[] headers = {"S.No", "LR No", "Container No", "Vehicle No", "From", "To", "Basic Freight", "Detention"};
         for (String header : headers) {
             PdfPCell cell = new PdfPCell(new Phrase(header, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
-            cell.setBackgroundColor(new com.lowagie.text.BaseColor(200, 200, 200));
+            cell.setBackgroundColor(new java.awt.Color(200, 200, 200));
             lineItemsTable.addCell(cell);
         }
 
