@@ -132,6 +132,18 @@ public class DBConnection {
                 )
             """);
 
+            // Migrate parties table — add new columns if they don't exist yet
+            for (String alter : new String[]{
+                    "ALTER TABLE parties ADD COLUMN IF NOT EXISTS owner_name VARCHAR(255)",
+                    "ALTER TABLE parties ADD COLUMN IF NOT EXISTS cst_no VARCHAR(30)",
+                    "ALTER TABLE parties ADD COLUMN IF NOT EXISTS tan_no VARCHAR(30)",
+                    "ALTER TABLE parties ADD COLUMN IF NOT EXISTS tds VARCHAR(20)",
+                    "ALTER TABLE parties ADD COLUMN IF NOT EXISTS aadhar_no VARCHAR(20)",
+                    "ALTER TABLE parties ADD COLUMN IF NOT EXISTS routes TEXT"
+            }) {
+                try { stmt.executeUpdate(alter); } catch (Exception ignored) {}
+            }
+
             stmt.executeUpdate("""
                 CREATE TABLE IF NOT EXISTS vehicles (
                     id INT AUTO_INCREMENT PRIMARY KEY,

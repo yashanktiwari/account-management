@@ -18,13 +18,14 @@ public class PartyDAO {
         String sql = """
                 INSERT INTO parties (name, type, mailing_name, address, city, state, pincode, mobile, email,
                 pan, gstin, credit_limit, opening_balance, balance_type, nature_of_payment, bank_name,
-                bank_account, ifsc_code, remarks, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                bank_account, ifsc_code, remarks, owner_name, cst_no, tan_no, tds, aadhar_no, routes,
+                created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, party.getName());
-            pstmt.setString(2, party.getType());
+            pstmt.setString(2, party.getType() != null ? party.getType() : "CUSTOMER");
             pstmt.setString(3, party.getMailingName());
             pstmt.setString(4, party.getAddress());
             pstmt.setString(5, party.getCity());
@@ -42,6 +43,12 @@ public class PartyDAO {
             pstmt.setString(17, party.getBankAccount());
             pstmt.setString(18, party.getIfscCode());
             pstmt.setString(19, party.getRemarks());
+            pstmt.setString(20, party.getOwnerName());
+            pstmt.setString(21, party.getCstNo());
+            pstmt.setString(22, party.getTanNo());
+            pstmt.setString(23, party.getTds());
+            pstmt.setString(24, party.getAadharNo());
+            pstmt.setString(25, party.getRoutes());
 
             pstmt.executeUpdate();
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
@@ -55,13 +62,14 @@ public class PartyDAO {
         String sql = """
                 UPDATE parties SET name=?, type=?, mailing_name=?, address=?, city=?, state=?, pincode=?,
                 mobile=?, email=?, pan=?, gstin=?, credit_limit=?, opening_balance=?, balance_type=?,
-                nature_of_payment=?, bank_name=?, bank_account=?, ifsc_code=?, remarks=?, updated_at=NOW()
+                nature_of_payment=?, bank_name=?, bank_account=?, ifsc_code=?, remarks=?,
+                owner_name=?, cst_no=?, tan_no=?, tds=?, aadhar_no=?, routes=?, updated_at=NOW()
                 WHERE id=?
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, party.getName());
-            pstmt.setString(2, party.getType());
+            pstmt.setString(2, party.getType() != null ? party.getType() : "CUSTOMER");
             pstmt.setString(3, party.getMailingName());
             pstmt.setString(4, party.getAddress());
             pstmt.setString(5, party.getCity());
@@ -79,7 +87,13 @@ public class PartyDAO {
             pstmt.setString(17, party.getBankAccount());
             pstmt.setString(18, party.getIfscCode());
             pstmt.setString(19, party.getRemarks());
-            pstmt.setInt(20, party.getId());
+            pstmt.setString(20, party.getOwnerName());
+            pstmt.setString(21, party.getCstNo());
+            pstmt.setString(22, party.getTanNo());
+            pstmt.setString(23, party.getTds());
+            pstmt.setString(24, party.getAadharNo());
+            pstmt.setString(25, party.getRoutes());
+            pstmt.setInt(26, party.getId());
 
             pstmt.executeUpdate();
             log.info("Party updated: {}", party.getName());
@@ -185,6 +199,12 @@ public class PartyDAO {
                     IFNULL(bank_account, ''),
                     IFNULL(ifsc_code, ''),
                     IFNULL(remarks, ''),
+                    IFNULL(owner_name, ''),
+                    IFNULL(cst_no, ''),
+                    IFNULL(tan_no, ''),
+                    IFNULL(tds, ''),
+                    IFNULL(aadhar_no, ''),
+                    IFNULL(routes, ''),
                     IFNULL(CAST(created_at AS CHAR), ''),
                     IFNULL(CAST(updated_at AS CHAR), '')
                 ) LIKE ?
@@ -199,6 +219,11 @@ public class PartyDAO {
             }
         }
         return parties;
+    }
+
+    /** Safely read a column that may not exist in older DB schemas */
+    private String safeGet(ResultSet rs, String col) {
+        try { return rs.getString(col); } catch (SQLException e) { return null; }
     }
 
     private Party mapParty(ResultSet rs) throws SQLException {
@@ -223,6 +248,12 @@ public class PartyDAO {
         p.setBankAccount(rs.getString("bank_account"));
         p.setIfscCode(rs.getString("ifsc_code"));
         p.setRemarks(rs.getString("remarks"));
+        p.setOwnerName(safeGet(rs, "owner_name"));
+        p.setCstNo(safeGet(rs, "cst_no"));
+        p.setTanNo(safeGet(rs, "tan_no"));
+        p.setTds(safeGet(rs, "tds"));
+        p.setAadharNo(safeGet(rs, "aadhar_no"));
+        p.setRoutes(safeGet(rs, "routes"));
         p.setCreatedAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null);
         p.setUpdatedAt(rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null);
         return p;

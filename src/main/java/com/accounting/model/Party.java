@@ -5,9 +5,9 @@ import java.time.LocalDateTime;
 public class Party {
 
     private int id;
-    private String name;
-    private String type; // CUSTOMER or SUPPLIER
-    private String mailingName;
+    private String name;         // company name
+    private String type;         // kept for DAO backward compat
+    private String mailingName;  // kept for DAO backward compat
     private String address;
     private String city;
     private String state;
@@ -18,12 +18,19 @@ public class Party {
     private String gstin;
     private String creditLimit;
     private String openingBalance;
-    private String balanceType; // DEBIT or CREDIT
+    private String balanceType;
     private String natureOfPayment;
     private String bankName;
     private String bankAccount;
     private String ifscCode;
     private String remarks;
+    // New fields
+    private String ownerName;
+    private String cstNo;
+    private String tanNo;
+    private String tds;
+    private String aadharNo;
+    private String routes;  // pipe-separated list of route values
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -33,6 +40,10 @@ public class Party {
         this.name = name;
         this.type = type;
     }
+
+    /** Alias: company name is stored in the 'name' field */
+    public String getCompanyName() { return name; }
+    public void setCompanyName(String companyName) { this.name = companyName; }
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
@@ -93,6 +104,24 @@ public class Party {
 
     public String getRemarks() { return remarks; }
     public void setRemarks(String remarks) { this.remarks = remarks; }
+
+    public String getOwnerName() { return ownerName; }
+    public void setOwnerName(String ownerName) { this.ownerName = ownerName; }
+
+    public String getCstNo() { return cstNo; }
+    public void setCstNo(String cstNo) { this.cstNo = cstNo; }
+
+    public String getTanNo() { return tanNo; }
+    public void setTanNo(String tanNo) { this.tanNo = tanNo; }
+
+    public String getTds() { return tds; }
+    public void setTds(String tds) { this.tds = tds; }
+
+    public String getAadharNo() { return aadharNo; }
+    public void setAadharNo(String aadharNo) { this.aadharNo = aadharNo; }
+
+    public String getRoutes() { return routes; }
+    public void setRoutes(String routes) { this.routes = routes; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

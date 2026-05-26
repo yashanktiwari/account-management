@@ -1,20 +1,18 @@
-package com.accounting.ui.dialog;
+﻿package com.accounting.ui.dialog;
 
 import com.accounting.MainApp;
 import com.accounting.dao.PartyDAO;
 import com.accounting.model.Party;
+import com.accounting.util.AlertUtil;
 import com.accounting.util.AppExecutor;
+import com.accounting.util.NotificationUtil;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -39,8 +37,7 @@ public class PartyMasterListView {
         Button addBtn = new Button("Add New Party");
         addBtn.getStyleClass().add("primary-button");
         addBtn.setOnAction(e -> {
-            PartyMasterDialog dialog = new PartyMasterDialog();
-            dialog.show(MainApp.getPrimaryStage(), this::loadRows);
+            new PartyMasterDialog().show(MainApp.getPrimaryStage(), this::loadRows);
         });
 
         Button refreshBtn = new Button("Refresh");
@@ -61,17 +58,73 @@ public class PartyMasterListView {
         table = new TableView<>();
         table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
 
-        table.getColumns().add(col("ID", "id", 80));
-        table.getColumns().add(col("Name", "name", 220));
-        table.getColumns().add(col("Type", "type", 120));
-        table.getColumns().add(col("Mobile", "mobile", 140));
-        table.getColumns().add(col("Email", "email", 220));
-        table.getColumns().add(col("City", "city", 130));
-        table.getColumns().add(col("GSTIN", "gstin", 170));
-        table.getColumns().add(col("Created At", "createdAt", 180));
-        table.getColumns().add(col("Updated At", "updatedAt", 180));
+        table.getColumns().add(col("ID",           "id",          70));
+        table.getColumns().add(col("Company Name", "name",       200));
+        table.getColumns().add(col("Owner Name",   "ownerName",  160));
+        table.getColumns().add(col("Mobile",       "mobile",     130));
+        table.getColumns().add(col("Email",        "email",      200));
+        table.getColumns().add(col("Address",      "address",    220));
+        table.getColumns().add(col("State",        "state",      130));
+        table.getColumns().add(col("City",         "city",       120));
+        table.getColumns().add(col("Pin Code",     "pincode",     90));
+        table.getColumns().add(col("GST",          "gstin",      160));
+        table.getColumns().add(col("PAN Card",     "pan",        130));
+        table.getColumns().add(col("CST No.",      "cstNo",      110));
+        table.getColumns().add(col("TAN No.",      "tanNo",      110));
+        table.getColumns().add(col("TDS",          "tds",         80));
+        table.getColumns().add(col("Aadhar No.",   "aadharNo",   150));
+        table.getColumns().add(col("Routes",       "routes",     200));
+        table.getColumns().add(col("Created At",   "createdAt",  170));
+        table.getColumns().add(col("Updated At",   "updatedAt",  170));
 
         table.setItems(rows);
+
+        // ── Right-click context menu ──────────────────────────────────────────
+        ContextMenu ctxMenu = new ContextMenu();
+
+        MenuItem editItem = new MenuItem("Edit");
+        editItem.setOnAction(e -> {
+            Party selected = table.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                new PartyMasterDialog().show(MainApp.getPrimaryStage(), selected, this::loadRows);
+            }
+        });
+
+        MenuItem deleteItem = new MenuItem("Delete");
+        deleteItem.setOnAction(e -> {
+            Party selected = table.getSelectionModel().getSelectedItem();
+            if (selected == null) return;
+            boolean confirmed = AlertUtil.showConfirmation("Delete Party",
+                    "Delete '" + selected.getName() + "'? This cannot be undone.");
+            if (!confirmed) return;
+            AppExecutor.submit(() -> {
+                try {
+                    dao.delete(selected.getId());
+                    Platform.runLater(() -> {
+                        NotificationUtil.showSuccess("Deleted", "Party deleted.");
+                        rows.remove(selected);
+                    });
+                } catch (Exception ex) {
+                    Platform.runLater(() ->
+                            AlertUtil.showError("Error", "Failed to delete: " + ex.getMessage()));
+                }
+            });
+        });
+
+        ctxMenu.getItems().addAll(editItem, new SeparatorMenuItem(), deleteItem);
+
+        // Show menu only on rows that have data
+        table.setRowFactory(tv -> {
+            TableRow<Party> row = new TableRow<>();
+            row.setOnContextMenuRequested(e -> {
+                if (!row.isEmpty()) {
+                    table.getSelectionModel().select(row.getItem());
+                    ctxMenu.show(row, e.getScreenX(), e.getScreenY());
+                }
+                e.consume();
+            });
+            return row;
+        });
 
         VBox.setVgrow(table, Priority.ALWAYS);
         root.getChildren().addAll(heading, actions, table);
@@ -97,7 +150,6 @@ public class PartyMasterListView {
             loadRows();
             return;
         }
-
         AppExecutor.submit(() -> {
             try {
                 List<Party> data = dao.searchAllColumns(keyword.trim());
