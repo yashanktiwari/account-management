@@ -104,13 +104,13 @@ public class PartyMasterDialog {
         stage.initModality(Modality.NONE);
         stage.setResizable(true);
         stage.setMinWidth(880);
-        stage.setMinHeight(680);
+        stage.setMinHeight(740);
         if (owner != null) stage.initOwner(owner);
         if (onClose != null) {
             stage.setOnHidden(e -> onClose.run());
         }
 
-        Scene scene = new Scene(createContent(), 920, 700);
+        Scene scene = new Scene(createContent(), 920, 760);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );
@@ -278,15 +278,11 @@ public class PartyMasterDialog {
         saveBtn.setStyle("-fx-padding: 8 20; -fx-font-size: 12px; -fx-background-color: #16a34a; -fx-text-fill: white;");
         saveBtn.setOnAction(e -> saveParty());
 
-        Button deleteBtn = new Button("Delete");
-        deleteBtn.setStyle("-fx-padding: 8 20; -fx-font-size: 12px; -fx-background-color: #dc2626; -fx-text-fill: white;");
-        deleteBtn.setOnAction(e -> deleteParty());
-
         Button closeBtn = new Button("Close");
         closeBtn.setStyle("-fx-padding: 8 20; -fx-font-size: 12px;");
         closeBtn.setOnAction(e -> stage.close());
 
-        HBox box = new HBox(10, newBtn, saveBtn, deleteBtn, closeBtn);
+        HBox box = new HBox(10, newBtn, saveBtn, closeBtn);
         box.setAlignment(Pos.CENTER_RIGHT);
         box.setPadding(new Insets(12));
         box.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
@@ -395,27 +391,6 @@ public class PartyMasterDialog {
         });
     }
 
-    private void deleteParty() {
-        if (currentParty == null) {
-            AlertUtil.showWarning("Validation", "Select an existing party to delete.");
-            return;
-        }
-        if (AlertUtil.showConfirmation("Delete Party",
-                "Delete '" + currentParty.getName() + "'? This cannot be undone.")) {
-            AppExecutor.submit(() -> {
-                try {
-                    new PartyDAO().delete(currentParty.getId());
-                    Platform.runLater(() -> {
-                        NotificationUtil.showSuccess("Deleted", "Party deleted.");
-                        stage.close();
-                    });
-                } catch (Exception e) {
-                    log.error("Failed to delete party", e);
-                    Platform.runLater(() -> AlertUtil.showError("Error", "Failed to delete: " + e.getMessage()));
-                }
-            });
-        }
-    }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
