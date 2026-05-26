@@ -19,6 +19,10 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.slf4j.Logger;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class PartyMasterDialog {
@@ -29,9 +33,9 @@ public class PartyMasterDialog {
     private ComboBox<String> typeCombo;
     private TextField nameField;
     private TextField mailingNameField;
-    private TextField addressField;
-    private TextField cityField;
-    private TextField stateField;
+    private TextArea addressField;
+    private ComboBox<String> cityCombo;
+    private ComboBox<String> stateCombo;
     private TextField pincodeField;
     private TextField mobileField;
     private TextField emailField;
@@ -47,20 +51,54 @@ public class PartyMasterDialog {
     private TextField remarksField;
     private Runnable onClose;
 
+    private static final List<String> STATES = Arrays.asList(
+            "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa",
+            "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala",
+            "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland",
+            "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana",
+            "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+            "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu",
+            "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
+    );
+
+    private static final Map<String, List<String>> CITIES_BY_STATE = new HashMap<>();
+
+    static {
+        CITIES_BY_STATE.put("Andhra Pradesh", Arrays.asList("Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool"));
+        CITIES_BY_STATE.put("Assam", Arrays.asList("Guwahati", "Silchar", "Dibrugarh", "Jorhat", "Tezpur"));
+        CITIES_BY_STATE.put("Bihar", Arrays.asList("Patna", "Gaya", "Muzaffarpur", "Bhagalpur", "Darbhanga"));
+        CITIES_BY_STATE.put("Chhattisgarh", Arrays.asList("Raipur", "Bhilai", "Bilaspur", "Korba", "Durg"));
+        CITIES_BY_STATE.put("Delhi", Arrays.asList("New Delhi", "North Delhi", "South Delhi", "East Delhi", "West Delhi"));
+        CITIES_BY_STATE.put("Gujarat", Arrays.asList("Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar"));
+        CITIES_BY_STATE.put("Haryana", Arrays.asList("Gurugram", "Faridabad", "Panipat", "Ambala", "Hisar"));
+        CITIES_BY_STATE.put("Jharkhand", Arrays.asList("Ranchi", "Jamshedpur", "Dhanbad", "Bokaro", "Hazaribagh"));
+        CITIES_BY_STATE.put("Karnataka", Arrays.asList("Bengaluru", "Mysuru", "Hubballi", "Mangaluru", "Belagavi"));
+        CITIES_BY_STATE.put("Kerala", Arrays.asList("Kochi", "Thiruvananthapuram", "Kozhikode", "Thrissur", "Kollam"));
+        CITIES_BY_STATE.put("Madhya Pradesh", Arrays.asList("Indore", "Bhopal", "Jabalpur", "Gwalior", "Ujjain"));
+        CITIES_BY_STATE.put("Maharashtra", Arrays.asList("Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad"));
+        CITIES_BY_STATE.put("Odisha", Arrays.asList("Bhubaneswar", "Cuttack", "Rourkela", "Sambalpur", "Puri"));
+        CITIES_BY_STATE.put("Punjab", Arrays.asList("Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda"));
+        CITIES_BY_STATE.put("Rajasthan", Arrays.asList("Jaipur", "Jodhpur", "Kota", "Udaipur", "Ajmer"));
+        CITIES_BY_STATE.put("Tamil Nadu", Arrays.asList("Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem"));
+        CITIES_BY_STATE.put("Telangana", Arrays.asList("Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Khammam"));
+        CITIES_BY_STATE.put("Uttar Pradesh", Arrays.asList("Lucknow", "Kanpur", "Noida", "Varanasi", "Agra"));
+        CITIES_BY_STATE.put("West Bengal", Arrays.asList("Kolkata", "Howrah", "Durgapur", "Siliguri", "Asansol"));
+    }
+
     public void show(Window owner, Runnable onClose) {
         this.onClose = onClose;
         stage = new Stage();
         stage.setTitle("Party Master");
         stage.initModality(Modality.NONE);
         stage.setResizable(true);
-        stage.setMinWidth(980);
-        stage.setMinHeight(820);
+        stage.setMinWidth(900);
+        stage.setMinHeight(680);
         if (owner != null) stage.initOwner(owner);
         if (onClose != null) {
             stage.setOnHidden(e -> onClose.run());
         }
 
-        Scene scene = new Scene(createContent(), 1100, 860);
+        Scene scene = new Scene(createContent(), 940, 720);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );
@@ -109,17 +147,24 @@ public class PartyMasterDialog {
         grid.add(label("Email"), 0, 2);
         grid.add(emailField, 1, 2);
 
-        addressField = new TextField();
+        addressField = new TextArea();
+        addressField.setPrefRowCount(3);
+        addressField.setWrapText(true);
         grid.add(label("Address"), 2, 2);
         grid.add(addressField, 3, 2);
 
-        cityField = new TextField();
-        grid.add(label("City"), 0, 3);
-        grid.add(cityField, 1, 3);
+        stateCombo = new ComboBox<>(FXCollections.observableArrayList(STATES));
+        stateCombo.setPromptText("Select state");
+        stateCombo.setOnAction(e -> updateCitiesForState());
+        grid.add(label("State"), 0, 3);
+        grid.add(stateCombo, 1, 3);
 
-        stateField = new TextField();
-        grid.add(label("State"), 2, 3);
-        grid.add(stateField, 3, 3);
+        cityCombo = new ComboBox<>();
+        cityCombo.setPromptText("Select or type city");
+        cityCombo.setEditable(true);
+        cityCombo.setDisable(true);
+        grid.add(label("City"), 2, 3);
+        grid.add(cityCombo, 3, 3);
 
         pincodeField = new TextField();
         grid.add(label("Pincode"), 0, 4);
@@ -172,6 +217,25 @@ public class PartyMasterDialog {
         return section;
     }
 
+    private void updateCitiesForState() {
+        String selectedState = stateCombo.getValue();
+        cityCombo.getItems().clear();
+
+        if (selectedState == null || selectedState.isBlank()) {
+            cityCombo.setDisable(true);
+            cityCombo.getEditor().clear();
+            return;
+        }
+
+        cityCombo.setDisable(false);
+        List<String> cities = CITIES_BY_STATE.get(selectedState);
+        if (cities != null) {
+            cityCombo.getItems().addAll(cities);
+        }
+        cityCombo.getSelectionModel().clearSelection();
+        cityCombo.getEditor().clear();
+    }
+
     private HBox createButtonsBox() {
         Button newBtn = new Button("New");
         newBtn.setStyle("-fx-padding: 8 20 8 20; -fx-font-size: 12px; -fx-background-color: #2563eb; -fx-text-fill: white;");
@@ -204,8 +268,11 @@ public class PartyMasterDialog {
         mobileField.clear();
         emailField.clear();
         addressField.clear();
-        cityField.clear();
-        stateField.clear();
+        stateCombo.getSelectionModel().clearSelection();
+        cityCombo.getItems().clear();
+        cityCombo.getSelectionModel().clearSelection();
+        cityCombo.getEditor().clear();
+        cityCombo.setDisable(true);
         pincodeField.clear();
         panField.clear();
         gstinField.clear();
@@ -232,8 +299,10 @@ public class PartyMasterDialog {
         party.setMobile(mobileField.getText());
         party.setEmail(emailField.getText());
         party.setAddress(addressField.getText());
-        party.setCity(cityField.getText());
-        party.setState(stateField.getText());
+        String selectedCity = cityCombo.getValue();
+        String typedCity = cityCombo.getEditor().getText();
+        party.setCity((selectedCity != null && !selectedCity.isBlank()) ? selectedCity : typedCity);
+        party.setState(stateCombo.getValue());
         party.setPincode(pincodeField.getText());
         party.setPan(panField.getText());
         party.setGstin(gstinField.getText());
