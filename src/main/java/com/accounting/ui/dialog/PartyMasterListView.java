@@ -1,4 +1,4 @@
-﻿package com.accounting.ui.dialog;
+package com.accounting.ui.dialog;
 
 import com.accounting.MainApp;
 import com.accounting.dao.PartyDAO;
