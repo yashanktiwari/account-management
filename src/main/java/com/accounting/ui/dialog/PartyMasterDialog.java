@@ -52,6 +52,10 @@ public class PartyMasterDialog {
     private final ObservableList<String> routesList = FXCollections.observableArrayList();
     private TextField routeInputField;
 
+    private Button primaryActionBtn;
+    private Button secondaryActionBtn;
+    private Button closeBtn;
+
     private Runnable onClose;
 
     // ── State / City data ────────────────────────────────────────────────────
@@ -119,6 +123,9 @@ public class PartyMasterDialog {
 
         if (partyToEdit != null) {
             loadPartyIntoForm(partyToEdit);
+            refreshButtonsForEditMode();
+        } else {
+            refreshButtonsForAddMode();
         }
     }
 
@@ -270,19 +277,19 @@ public class PartyMasterDialog {
     }
 
     private HBox createButtonsBox() {
-        Button newBtn = new Button("New");
-        newBtn.setStyle("-fx-padding: 8 20; -fx-font-size: 12px; -fx-background-color: #2563eb; -fx-text-fill: white;");
-        newBtn.setOnAction(e -> clearForm());
+        secondaryActionBtn = new Button("New");
+        secondaryActionBtn.setStyle("-fx-padding: 8 20; -fx-font-size: 12px; -fx-background-color: #2563eb; -fx-text-fill: white;");
+        secondaryActionBtn.setOnAction(e -> clearForm());
 
-        Button saveBtn = new Button("Save");
-        saveBtn.setStyle("-fx-padding: 8 20; -fx-font-size: 12px; -fx-background-color: #16a34a; -fx-text-fill: white;");
-        saveBtn.setOnAction(e -> saveParty());
+        primaryActionBtn = new Button("Save");
+        primaryActionBtn.setStyle("-fx-padding: 8 20; -fx-font-size: 12px; -fx-background-color: #16a34a; -fx-text-fill: white;");
+        primaryActionBtn.setOnAction(e -> saveParty());
 
-        Button closeBtn = new Button("Close");
+        closeBtn = new Button("Close");
         closeBtn.setStyle("-fx-padding: 8 20; -fx-font-size: 12px;");
         closeBtn.setOnAction(e -> stage.close());
 
-        HBox box = new HBox(10, newBtn, saveBtn, closeBtn);
+        HBox box = new HBox(10, secondaryActionBtn, primaryActionBtn, closeBtn);
         box.setAlignment(Pos.CENTER_RIGHT);
         box.setPadding(new Insets(12));
         box.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
@@ -326,6 +333,7 @@ public class PartyMasterDialog {
 
     private void clearForm() {
         currentParty = null;
+        refreshButtonsForAddMode();
         companyNameField.clear();
         ownerNameField.clear();
         mobileField.clear();
@@ -348,27 +356,22 @@ public class PartyMasterDialog {
     }
 
     private void saveParty() {
-        if (companyNameField.getText().isBlank()) {
-            AlertUtil.showWarning("Validation", "Company Name is required.");
-            return;
-        }
-
         Party party = currentParty != null ? currentParty : new Party();
-        party.setName(companyNameField.getText().trim());
-        party.setOwnerName(ownerNameField.getText());
-        party.setMobile(mobileField.getText());
-        party.setEmail(emailField.getText());
-        party.setAddress(addressField.getText());
+        party.setName(nvl(companyNameField.getText()).trim());
+        party.setOwnerName(nvl(ownerNameField.getText()));
+        party.setMobile(nvl(mobileField.getText()));
+        party.setEmail(nvl(emailField.getText()));
+        party.setAddress(nvl(addressField.getText()));
         party.setState(stateCombo.getValue());
         String selCity = cityCombo.getValue();
-        party.setCity((selCity != null && !selCity.isBlank()) ? selCity : cityCombo.getEditor().getText());
-        party.setPincode(pinCodeField.getText());
-        party.setGstin(gstField.getText());
-        party.setPan(panField.getText());
-        party.setCstNo(cstNoField.getText());
-        party.setTanNo(tanNoField.getText());
-        party.setTds(tdsField.getText());
-        party.setAadharNo(aadharNoField.getText());
+        party.setCity((selCity != null && !selCity.isBlank()) ? selCity : nvl(cityCombo.getEditor().getText()));
+        party.setPincode(nvl(pinCodeField.getText()));
+        party.setGstin(nvl(gstField.getText()));
+        party.setPan(nvl(panField.getText()));
+        party.setCstNo(nvl(cstNoField.getText()));
+        party.setTanNo(nvl(tanNoField.getText()));
+        party.setTds(nvl(tdsField.getText()));
+        party.setAadharNo(nvl(aadharNoField.getText()));
         party.setRoutes(String.join("|", routesList));
 
         boolean isEdit = currentParty != null;
@@ -404,6 +407,27 @@ public class PartyMasterDialog {
         Label l = new Label(text);
         l.setStyle("-fx-font-size: 12px; -fx-text-fill: #475569;");
         return l;
+    }
+
+    private void refreshButtonsForAddMode() {
+        if (secondaryActionBtn != null) {
+            secondaryActionBtn.setText("New");
+            secondaryActionBtn.setVisible(true);
+            secondaryActionBtn.setManaged(true);
+        }
+        if (primaryActionBtn != null) {
+            primaryActionBtn.setText("Save");
+        }
+    }
+
+    private void refreshButtonsForEditMode() {
+        if (secondaryActionBtn != null) {
+            secondaryActionBtn.setVisible(false);
+            secondaryActionBtn.setManaged(false);
+        }
+        if (primaryActionBtn != null) {
+            primaryActionBtn.setText("Update");
+        }
     }
 
     private String nvl(String s) { return s != null ? s : ""; }

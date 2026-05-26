@@ -14,6 +14,34 @@ public class PartyDAO {
 
     private static final Logger log = get(PartyDAO.class);
 
+    private void ensurePartyColumns(Connection conn) throws SQLException {
+        DatabaseMetaData meta = conn.getMetaData();
+        List<String> existing = new ArrayList<>();
+        try (ResultSet rs = meta.getColumns(conn.getCatalog(), null, "parties", null)) {
+            while (rs.next()) {
+                existing.add(rs.getString("COLUMN_NAME").toLowerCase());
+            }
+        }
+
+        String[] requiredColumns = {
+                "owner_name VARCHAR(255)",
+                "cst_no VARCHAR(30)",
+                "tan_no VARCHAR(30)",
+                "tds VARCHAR(20)",
+                "aadhar_no VARCHAR(20)",
+                "routes TEXT"
+        };
+
+        try (Statement stmt = conn.createStatement()) {
+            for (String definition : requiredColumns) {
+                String columnName = definition.substring(0, definition.indexOf(' ')).toLowerCase();
+                if (!existing.contains(columnName)) {
+                    stmt.executeUpdate("ALTER TABLE parties ADD COLUMN " + definition);
+                }
+            }
+        }
+    }
+
     public void save(Party party) throws Exception {
         String sql = """
                 INSERT INTO parties (name, type, mailing_name, address, city, state, pincode, mobile, email,
@@ -24,6 +52,7 @@ public class PartyDAO {
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                    ensurePartyColumns(conn);
             pstmt.setString(1, party.getName());
             pstmt.setString(2, party.getType() != null ? party.getType() : "CUSTOMER");
             pstmt.setString(3, party.getMailingName());
@@ -68,6 +97,7 @@ public class PartyDAO {
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                    ensurePartyColumns(conn);
             pstmt.setString(1, party.getName());
             pstmt.setString(2, party.getType() != null ? party.getType() : "CUSTOMER");
             pstmt.setString(3, party.getMailingName());
@@ -213,6 +243,7 @@ public class PartyDAO {
         List<Party> parties = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            ensurePartyColumns(conn);
             pstmt.setString(1, "%" + keyword + "%");
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) parties.add(mapParty(rs));
