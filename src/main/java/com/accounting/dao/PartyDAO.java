@@ -160,6 +160,47 @@ public class PartyDAO {
         return parties;
     }
 
+    public List<Party> searchAllColumns(String keyword) throws Exception {
+        String sql = """
+                SELECT *
+                FROM parties
+                WHERE CONCAT_WS(' ',
+                    IFNULL(CAST(id AS CHAR), ''),
+                    IFNULL(name, ''),
+                    IFNULL(type, ''),
+                    IFNULL(mailing_name, ''),
+                    IFNULL(address, ''),
+                    IFNULL(city, ''),
+                    IFNULL(state, ''),
+                    IFNULL(pincode, ''),
+                    IFNULL(mobile, ''),
+                    IFNULL(email, ''),
+                    IFNULL(pan, ''),
+                    IFNULL(gstin, ''),
+                    IFNULL(credit_limit, ''),
+                    IFNULL(opening_balance, ''),
+                    IFNULL(balance_type, ''),
+                    IFNULL(nature_of_payment, ''),
+                    IFNULL(bank_name, ''),
+                    IFNULL(bank_account, ''),
+                    IFNULL(ifsc_code, ''),
+                    IFNULL(remarks, ''),
+                    IFNULL(CAST(created_at AS CHAR), ''),
+                    IFNULL(CAST(updated_at AS CHAR), '')
+                ) LIKE ?
+                ORDER BY name
+                """;
+        List<Party> parties = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, "%" + keyword + "%");
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) parties.add(mapParty(rs));
+            }
+        }
+        return parties;
+    }
+
     private Party mapParty(ResultSet rs) throws SQLException {
         Party p = new Party();
         p.setId(rs.getInt("id"));

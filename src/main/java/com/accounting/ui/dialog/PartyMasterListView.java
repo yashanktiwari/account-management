@@ -14,6 +14,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -26,6 +27,7 @@ public class PartyMasterListView {
     private final PartyDAO dao = new PartyDAO();
     private final ObservableList<Party> rows = FXCollections.observableArrayList();
     private TableView<Party> table;
+    private TextField searchField;
 
     public Parent createContent() {
         VBox root = new VBox(10);
@@ -44,8 +46,17 @@ public class PartyMasterListView {
         Button refreshBtn = new Button("Refresh");
         refreshBtn.setOnAction(e -> loadRows());
 
-        HBox actions = new HBox(10, addBtn, refreshBtn);
+        searchField = new TextField();
+        searchField.setPromptText("Search in all columns...");
+        searchField.setOnAction(e -> searchRows());
+
+        Button searchBtn = new Button("Search");
+        searchBtn.getStyleClass().add("primary-button");
+        searchBtn.setOnAction(e -> searchRows());
+
+        HBox actions = new HBox(10, addBtn, refreshBtn, new Label("Search:"), searchField, searchBtn);
         actions.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(searchField, Priority.ALWAYS);
 
         table = new TableView<>();
         table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
@@ -73,6 +84,23 @@ public class PartyMasterListView {
         AppExecutor.submit(() -> {
             try {
                 List<Party> data = dao.getAll();
+                Platform.runLater(() -> rows.setAll(data));
+            } catch (Exception ignored) {
+                Platform.runLater(rows::clear);
+            }
+        });
+    }
+
+    private void searchRows() {
+        String keyword = searchField.getText();
+        if (keyword == null || keyword.isBlank()) {
+            loadRows();
+            return;
+        }
+
+        AppExecutor.submit(() -> {
+            try {
+                List<Party> data = dao.searchAllColumns(keyword.trim());
                 Platform.runLater(() -> rows.setAll(data));
             } catch (Exception ignored) {
                 Platform.runLater(rows::clear);

@@ -8,20 +8,17 @@ import com.accounting.util.AppLogger;
 import com.accounting.util.NotificationUtil;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.slf4j.Logger;
 
-import java.util.List;
 import java.util.Objects;
 
 public class PartyMasterDialog {
@@ -29,8 +26,6 @@ public class PartyMasterDialog {
     private static final Logger log = AppLogger.get(PartyMasterDialog.class);
     private Stage stage;
     private Party currentParty;
-    private ObservableList<Party> partiesList = FXCollections.observableArrayList();
-    private TableView<Party> partiesTable;
     private ComboBox<String> typeCombo;
     private TextField nameField;
     private TextField mailingNameField;
@@ -57,12 +52,15 @@ public class PartyMasterDialog {
         stage = new Stage();
         stage.setTitle("Party Master");
         stage.initModality(Modality.NONE);
+        stage.setResizable(true);
+        stage.setMinWidth(980);
+        stage.setMinHeight(820);
         if (owner != null) stage.initOwner(owner);
         if (onClose != null) {
             stage.setOnHidden(e -> onClose.run());
         }
 
-        Scene scene = new Scene(createContent(), 1000, 700);
+        Scene scene = new Scene(createContent(), 1100, 860);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );
@@ -77,76 +75,11 @@ public class PartyMasterDialog {
         Label title = new Label("PARTY MASTER");
         title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
 
-        HBox searchBar = createSearchBar();
-        VBox tableSection = createTableSection();
         VBox formSection = createFormSection();
         HBox buttonsBox = createButtonsBox();
 
-        root.getChildren().addAll(title, searchBar, tableSection, formSection, buttonsBox);
-        VBox.setVgrow(tableSection, Priority.ALWAYS);
-
-        loadParties();
+        root.getChildren().addAll(title, formSection, buttonsBox);
         return root;
-    }
-
-    private HBox createSearchBar() {
-        typeCombo = new ComboBox<>(FXCollections.observableArrayList("ALL", "CUSTOMER", "SUPPLIER"));
-        typeCombo.setValue("ALL");
-        typeCombo.setPrefWidth(120);
-        typeCombo.setOnAction(e -> filterParties());
-
-        TextField searchField = new TextField();
-        searchField.setPromptText("Search by name, mobile, email...");
-        searchField.setOnKeyReleased(e -> filterParties());
-
-        HBox box = new HBox(10, new Label("Type:"), typeCombo, new Label("Search:"), searchField);
-        box.setAlignment(Pos.CENTER_LEFT);
-        box.setPadding(new Insets(12));
-        box.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
-        HBox.setHgrow(searchField, Priority.ALWAYS);
-        return box;
-    }
-
-    private VBox createTableSection() {
-        partiesTable = new TableView<>(partiesList);
-        partiesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
-
-        TableColumn<Party, String> nameCol = new TableColumn<>("Name");
-        nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
-        nameCol.setPrefWidth(150);
-
-        TableColumn<Party, String> typeCol = new TableColumn<>("Type");
-        typeCol.setCellValueFactory(new PropertyValueFactory<>("type"));
-        typeCol.setPrefWidth(100);
-
-        TableColumn<Party, String> mobileCol = new TableColumn<>("Mobile");
-        mobileCol.setCellValueFactory(new PropertyValueFactory<>("mobile"));
-        mobileCol.setPrefWidth(120);
-
-        TableColumn<Party, String> emailCol = new TableColumn<>("Email");
-        emailCol.setCellValueFactory(new PropertyValueFactory<>("email"));
-        emailCol.setPrefWidth(150);
-
-        TableColumn<Party, String> cityCol = new TableColumn<>("City");
-        cityCol.setCellValueFactory(new PropertyValueFactory<>("city"));
-        cityCol.setPrefWidth(100);
-
-        TableColumn<Party, String> gstinCol = new TableColumn<>("GSTIN");
-        gstinCol.setCellValueFactory(new PropertyValueFactory<>("gstin"));
-        gstinCol.setPrefWidth(120);
-
-        partiesTable.getColumns().addAll(nameCol, typeCol, mobileCol, emailCol, cityCol, gstinCol);
-        partiesTable.setOnMouseClicked(e -> {
-            if (partiesTable.getSelectionModel().getSelectedItem() != null) {
-                loadPartyDetails(partiesTable.getSelectionModel().getSelectedItem());
-            }
-        });
-
-        VBox section = new VBox(8, new Label("Parties List"), partiesTable);
-        section.setPadding(new Insets(12));
-        section.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
-        VBox.setVgrow(partiesTable, Priority.ALWAYS);
-        return section;
     }
 
     private VBox createFormSection() {
@@ -263,45 +196,6 @@ public class PartyMasterDialog {
         return box;
     }
 
-    private void loadParties() {
-        AppExecutor.submit(() -> {
-            try {
-                List<Party> parties = new PartyDAO().getAll();
-                Platform.runLater(() -> partiesList.setAll(parties));
-            } catch (Exception e) {
-                log.error("Failed to load parties", e);
-                Platform.runLater(() -> AlertUtil.showError("Error", "Failed to load parties"));
-            }
-        });
-    }
-
-    private void filterParties() {
-        // TODO: Implement filtering by type and search
-    }
-
-    private void loadPartyDetails(Party party) {
-        currentParty = party;
-        typeCombo.setValue(party.getType());
-        nameField.setText(party.getName());
-        mailingNameField.setText(party.getMailingName());
-        mobileField.setText(party.getMobile());
-        emailField.setText(party.getEmail());
-        addressField.setText(party.getAddress());
-        cityField.setText(party.getCity());
-        stateField.setText(party.getState());
-        pincodeField.setText(party.getPincode());
-        panField.setText(party.getPan());
-        gstinField.setText(party.getGstin());
-        creditLimitField.setText(party.getCreditLimit());
-        openingBalanceField.setText(party.getOpeningBalance());
-        balanceTypeCombo.setValue(party.getBalanceType());
-        natureOfPaymentField.setText(party.getNatureOfPayment());
-        bankNameField.setText(party.getBankName());
-        bankAccountField.setText(party.getBankAccount());
-        ifscCodeField.setText(party.getIfscCode());
-        remarksField.setText(party.getRemarks());
-    }
-
     private void clearForm() {
         currentParty = null;
         typeCombo.setValue("CUSTOMER");
@@ -362,7 +256,6 @@ public class PartyMasterDialog {
                 }
                 Platform.runLater(() -> {
                     NotificationUtil.showSuccess("Success", "Party saved successfully");
-                    loadParties();
                     clearForm();
                 });
             } catch (Exception e) {
@@ -374,7 +267,7 @@ public class PartyMasterDialog {
 
     private void deleteParty() {
         if (currentParty == null) {
-            AlertUtil.showWarning("Validation", "Please select a party to delete");
+            AlertUtil.showWarning("Validation", "Delete is available while editing an existing party");
             return;
         }
 
@@ -384,7 +277,6 @@ public class PartyMasterDialog {
                     new PartyDAO().delete(currentParty.getId());
                     Platform.runLater(() -> {
                         NotificationUtil.showSuccess("Success", "Party deleted successfully");
-                        loadParties();
                         clearForm();
                     });
                 } catch (Exception e) {
