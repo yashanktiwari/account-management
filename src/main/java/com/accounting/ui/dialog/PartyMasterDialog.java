@@ -126,36 +126,61 @@ public class PartyMasterDialog {
         grid.setVgap(12);
         grid.setPadding(new Insets(12));
 
+        ColumnConstraints labelCol1 = new ColumnConstraints();
+        labelCol1.setMinWidth(130);
+        labelCol1.setPrefWidth(140);
+
+        ColumnConstraints fieldCol1 = new ColumnConstraints();
+        fieldCol1.setHgrow(Priority.ALWAYS);
+        fieldCol1.setFillWidth(true);
+
+        ColumnConstraints labelCol2 = new ColumnConstraints();
+        labelCol2.setMinWidth(130);
+        labelCol2.setPrefWidth(140);
+
+        ColumnConstraints fieldCol2 = new ColumnConstraints();
+        fieldCol2.setHgrow(Priority.ALWAYS);
+        fieldCol2.setFillWidth(true);
+
+        grid.getColumnConstraints().addAll(labelCol1, fieldCol1, labelCol2, fieldCol2);
+
         typeCombo = new ComboBox<>(FXCollections.observableArrayList("CUSTOMER", "SUPPLIER"));
         typeCombo.setValue("CUSTOMER");
+        typeCombo.setMaxWidth(Double.MAX_VALUE);
         grid.add(label("Type"), 0, 0);
         grid.add(typeCombo, 1, 0);
 
         nameField = new TextField();
+        nameField.setMaxWidth(Double.MAX_VALUE);
         grid.add(label("Name"), 2, 0);
         grid.add(nameField, 3, 0);
 
         mailingNameField = new TextField();
+        mailingNameField.setMaxWidth(Double.MAX_VALUE);
         grid.add(label("Mailing Name"), 0, 1);
         grid.add(mailingNameField, 1, 1);
 
         mobileField = new TextField();
+        mobileField.setMaxWidth(Double.MAX_VALUE);
         grid.add(label("Mobile"), 2, 1);
         grid.add(mobileField, 3, 1);
 
         emailField = new TextField();
+        emailField.setMaxWidth(Double.MAX_VALUE);
         grid.add(label("Email"), 0, 2);
         grid.add(emailField, 1, 2);
 
         addressField = new TextArea();
         addressField.setPrefRowCount(3);
         addressField.setWrapText(true);
+        addressField.setMaxWidth(Double.MAX_VALUE);
         grid.add(label("Address"), 2, 2);
         grid.add(addressField, 3, 2);
 
         stateCombo = new ComboBox<>(FXCollections.observableArrayList(STATES));
         stateCombo.setPromptText("Select state");
         stateCombo.setOnAction(e -> updateCitiesForState());
+        stateCombo.setMaxWidth(Double.MAX_VALUE);
         grid.add(label("State"), 0, 3);
         grid.add(stateCombo, 1, 3);
 
@@ -163,53 +188,67 @@ public class PartyMasterDialog {
         cityCombo.setPromptText("Select or type city");
         cityCombo.setEditable(true);
         cityCombo.setDisable(true);
+        cityCombo.setMaxWidth(Double.MAX_VALUE);
         grid.add(label("City"), 2, 3);
         grid.add(cityCombo, 3, 3);
 
         pincodeField = new TextField();
+        pincodeField.setMaxWidth(Double.MAX_VALUE);
         grid.add(label("Pincode"), 0, 4);
         grid.add(pincodeField, 1, 4);
 
         panField = new TextField();
+        panField.setMaxWidth(Double.MAX_VALUE);
         grid.add(label("PAN"), 2, 4);
         grid.add(panField, 3, 4);
 
         gstinField = new TextField();
+        gstinField.setMaxWidth(Double.MAX_VALUE);
         grid.add(label("GSTIN"), 0, 5);
         grid.add(gstinField, 1, 5);
 
         creditLimitField = new TextField();
+        creditLimitField.setMaxWidth(Double.MAX_VALUE);
         grid.add(label("Credit Limit"), 2, 5);
         grid.add(creditLimitField, 3, 5);
 
         openingBalanceField = new TextField();
+        openingBalanceField.setMaxWidth(Double.MAX_VALUE);
         grid.add(label("Opening Balance"), 0, 6);
         grid.add(openingBalanceField, 1, 6);
 
         balanceTypeCombo = new ComboBox<>(FXCollections.observableArrayList("DEBIT", "CREDIT"));
         balanceTypeCombo.setValue("DEBIT");
+        balanceTypeCombo.setMaxWidth(Double.MAX_VALUE);
         grid.add(label("Balance Type"), 2, 6);
         grid.add(balanceTypeCombo, 3, 6);
 
         natureOfPaymentField = new TextField();
+        natureOfPaymentField.setMaxWidth(Double.MAX_VALUE);
         grid.add(label("Nature of Payment"), 0, 7);
         grid.add(natureOfPaymentField, 1, 7);
 
         bankNameField = new TextField();
+        bankNameField.setMaxWidth(Double.MAX_VALUE);
         grid.add(label("Bank Name"), 2, 7);
         grid.add(bankNameField, 3, 7);
 
         bankAccountField = new TextField();
+        bankAccountField.setMaxWidth(Double.MAX_VALUE);
         grid.add(label("Bank Account"), 0, 8);
         grid.add(bankAccountField, 1, 8);
 
         ifscCodeField = new TextField();
+        ifscCodeField.setMaxWidth(Double.MAX_VALUE);
         grid.add(label("IFSC Code"), 2, 8);
         grid.add(ifscCodeField, 3, 8);
 
         remarksField = new TextField();
+        remarksField.setMaxWidth(Double.MAX_VALUE);
         grid.add(label("Remarks"), 0, 9);
         grid.add(remarksField, 1, 9);
+
+        grid.setMaxWidth(Double.MAX_VALUE);
 
         VBox section = new VBox(8, new Label("Party Details"), grid);
         section.setPadding(new Insets(12));
