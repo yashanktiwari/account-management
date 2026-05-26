@@ -55,7 +55,6 @@ public class MainApp extends Application {
     private final List<Button> sidebarNavButtons = new ArrayList<>();
     private Button dashBtn;
     private Button partyBtn;
-    private Button vehicleBtn;
     private Button purchaseInvoiceBtn;
     private Button saleInvoiceBtn;
     private Button purchaseReceiptBtn;
@@ -156,7 +155,6 @@ public class MainApp extends Application {
         mastersTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
 
         partyBtn = sidebarButton("Parties", this::showParties);
-        vehicleBtn = sidebarButton("Vehicles", this::showVehicles);
 
         Label invoicesTitle = new Label("Invoices");
         invoicesTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
@@ -178,7 +176,7 @@ public class MainApp extends Application {
 
         sidebar.getChildren().addAll(
                 navTitle, dashBtn,
-                mastersTitle, partyBtn, vehicleBtn,
+            mastersTitle, partyBtn,
                 invoicesTitle, purchaseInvoiceBtn, saleInvoiceBtn,
                 receiptsTitle, purchaseReceiptBtn, saleReceiptBtn,
                 settingsTitle, dbBtn, companyBtn
@@ -225,11 +223,7 @@ public class MainApp extends Application {
     }
 
     private void showParties() {
-        new PartyMasterDialog().show(primaryStage, this::refreshDashboard);
-    }
-
-    private void showVehicles() {
-        new VehicleMasterDialog().show(primaryStage, this::refreshDashboard);
+        showContent(new PartyMasterListView().createContent());
     }
 
     private void showPurchaseInvoice() {
@@ -341,11 +335,6 @@ public class MainApp extends Application {
                     setActiveSidebarButton(saleReceiptBtn);
                     showSaleReceipt();
                 });
-        Button addVehicleBtn = quickActionBtn("Add Vehicle", "#1e3a5f",
-                () -> {
-                    setActiveSidebarButton(vehicleBtn);
-                    showVehicles();
-                });
         Button partyBtn = quickActionBtn("Manage Parties", "#7c3aed",
                 () -> {
                     setActiveSidebarButton(this.partyBtn);
@@ -357,7 +346,7 @@ public class MainApp extends Application {
             showDashboard();
         });
 
-        HBox actions = new HBox(10, purchaseInvBtn, saleInvBtn, purchaseRecBtn, saleRecBtn, addVehicleBtn,
+        HBox actions = new HBox(10, purchaseInvBtn, saleInvBtn, purchaseRecBtn, saleRecBtn,
             partyBtn, refreshBtn);
         actions.setAlignment(Pos.CENTER_LEFT);
         return actions;
