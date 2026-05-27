@@ -489,10 +489,20 @@ public class PurchaseInvoiceDialog {
         HBox.setHgrow(typeBox, Priority.ALWAYS);
 
         TextField freightField = new TextField();
+        freightField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
+                freightField.setText(oldVal);
+            }
+        });
         VBox freightBox = new VBox(4, new Label("Basic Freight"), freightField);
         HBox.setHgrow(freightBox, Priority.ALWAYS);
 
         TextField detentionField = new TextField();
+        detentionField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
+                detentionField.setText(oldVal);
+            }
+        });
         VBox detentionBox = new VBox(4, new Label("Detention Charge"), detentionField);
         HBox.setHgrow(detentionBox, Priority.ALWAYS);
 
