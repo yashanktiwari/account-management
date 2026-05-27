@@ -28,23 +28,30 @@ public class InvoicePDFGenerator {
 
             // Add header
             addHeader(document);
-            document.add(new Paragraph("\n"));
 
             // Add horizontal line after header
             LineSeparator headerLine = new LineSeparator(1, 100, new Color(0, 51, 102), Element.ALIGN_CENTER, -2);
             document.add(new Chunk(headerLine));
-            document.add(new Paragraph("\n"));
 
-            // Add invoice type title
+            // Add Original/Duplicate and Tax Invoice title
+            PdfPTable titleTable = new PdfPTable(1);
+            titleTable.setWidthPercentage(100);
+
+            Paragraph origDup = new Paragraph("Original / Duplicate", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10));
+            origDup.setAlignment(Element.ALIGN_CENTER);
+            PdfPCell origDupCell = new PdfPCell(origDup);
+            origDupCell.setBorder(Rectangle.NO_BORDER);
+            origDupCell.setPadding(2);
+            titleTable.addCell(origDupCell);
+
             Paragraph title = new Paragraph("Tax Invoice", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, Color.WHITE));
             title.setAlignment(Element.ALIGN_CENTER);
             PdfPCell titleCell = new PdfPCell(title);
             titleCell.setBackgroundColor(new Color(0, 51, 102));
             titleCell.setPadding(5);
             titleCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-            PdfPTable titleTable = new PdfPTable(1);
-            titleTable.setWidthPercentage(100);
             titleTable.addCell(titleCell);
+
             document.add(titleTable);
 
             // Add invoice details section
@@ -64,8 +71,8 @@ public class InvoicePDFGenerator {
             // Add terms and signature
             addTermsAndSignature(document);
 
-            // Add footer
-            document.add(new Paragraph("\n"));
+            // Add footer at the bottom
+            document.add(new Paragraph("\n\n\n\n\n")); // Add spacing to push footer to bottom
             addFooter(document);
 
             document.close();
@@ -84,23 +91,30 @@ public class InvoicePDFGenerator {
 
             // Add header
             addHeader(document);
-            document.add(new Paragraph("\n"));
 
             // Add horizontal line after header
             LineSeparator headerLine = new LineSeparator(1, 100, new Color(0, 51, 102), Element.ALIGN_CENTER, -2);
             document.add(new Chunk(headerLine));
-            document.add(new Paragraph("\n"));
 
-            // Add invoice type title
+            // Add Original/Duplicate and Tax Invoice title
+            PdfPTable titleTable = new PdfPTable(1);
+            titleTable.setWidthPercentage(100);
+
+            Paragraph origDup = new Paragraph("Original / Duplicate", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10));
+            origDup.setAlignment(Element.ALIGN_CENTER);
+            PdfPCell origDupCell = new PdfPCell(origDup);
+            origDupCell.setBorder(Rectangle.NO_BORDER);
+            origDupCell.setPadding(2);
+            titleTable.addCell(origDupCell);
+
             Paragraph title = new Paragraph("Tax Invoice", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, Color.WHITE));
             title.setAlignment(Element.ALIGN_CENTER);
             PdfPCell titleCell = new PdfPCell(title);
             titleCell.setBackgroundColor(new Color(0, 51, 102));
             titleCell.setPadding(5);
             titleCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-            PdfPTable titleTable = new PdfPTable(1);
-            titleTable.setWidthPercentage(100);
             titleTable.addCell(titleCell);
+
             document.add(titleTable);
 
             // Add invoice details section
@@ -120,8 +134,8 @@ public class InvoicePDFGenerator {
             // Add terms and signature
             addTermsAndSignature(document);
 
-            // Add footer
-            document.add(new Paragraph("\n"));
+            // Add footer at the bottom
+            document.add(new Paragraph("\n\n\n\n\n")); // Add spacing to push footer to bottom
             addFooter(document);
 
             document.close();
@@ -454,22 +468,21 @@ public class InvoicePDFGenerator {
         table.addCell(othersDetails);
 
         // GST Amount and Net Amount row
-        PdfPCell gstAmountLabel = createCell("GST Amount -", true);
-        gstAmountLabel.setColspan(1);
-        table.addCell(gstAmountLabel);
-        
-        PdfPCell gstAmountCell = createCell(String.format("%.2f", totalGst), true);
-        gstAmountCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        table.addCell(gstAmountCell);
-        
-        PdfPCell netAmountLabel = createCell("Net Amount -", true);
-        netAmountLabel.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        table.addCell(netAmountLabel);
-        
-        PdfPCell netAmountCell = createCell(String.format("%.2f", netAmount), true);
-        netAmountCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        table.addCell(netAmountCell);
+        PdfPTable gstNetTable = new PdfPTable(2);
+        gstNetTable.setWidthPercentage(100);
+        gstNetTable.setWidths(new float[]{1f, 1f});
+        gstNetTable.setSpacingBefore(5);
 
+        PdfPCell gstAmountLabel = createCell("GST Amount - " + String.format("%.2f", totalGst), true);
+        gstAmountLabel.setBorder(Rectangle.NO_BORDER);
+        gstNetTable.addCell(gstAmountLabel);
+
+        PdfPCell netAmountCell = createCell("Net Amount - " + String.format("%.2f", netAmount), true);
+        netAmountCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        netAmountCell.setBorder(Rectangle.NO_BORDER);
+        gstNetTable.addCell(netAmountCell);
+
+        document.add(gstNetTable);
         document.add(table);
 
         // Amount in words
