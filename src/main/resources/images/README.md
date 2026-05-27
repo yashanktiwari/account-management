@@ -6,22 +6,24 @@ This folder contains the header and footer images used in invoice PDF generation
 
 Place the following image files in this directory:
 
-1. **HEADER.PNG** (or HEADER.png)
+1. **HEADER** (with any extension: .png, .jpg, .jpeg)
    - This image will be displayed at the top of the invoice PDF
    - Should contain company logo, name, PAN, and GSTIN
    - Recommended dimensions: Width should match A4 paper width (approximately 595 pixels)
    - Maximum height: 100 pixels
+   - Example: HEADER.jpg, HEADER.png, HEADER.jpeg
 
-2. **FOOTER.PNG** (or FOOTER.png)
+2. **FOOTER** (with any extension: .png, .jpg, .jpeg)
    - This image will be displayed at the bottom of the invoice PDF
    - Should contain company address, email, and contact information
    - Recommended dimensions: Width should match A4 paper width (approximately 595 pixels)
    - Maximum height: 80 pixels
+   - Example: FOOTER.jpg, FOOTER.png, FOOTER.jpeg
 
 ## Image Format
 
-- Supported formats: PNG (recommended), JPG, JPEG
-- File names are case-insensitive (HEADER.PNG or HEADER.png both work)
+- Supported formats: PNG, JPG, JPEG
+- File extensions are case-insensitive (HEADER.jpg, HEADER.JPG, Header.jpg all work)
 
 ## Fallback Behavior
 

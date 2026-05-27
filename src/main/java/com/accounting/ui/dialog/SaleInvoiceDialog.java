@@ -12,6 +12,7 @@ import com.accounting.util.AppExecutor;
 import com.accounting.util.AppLogger;
 import com.accounting.util.NotificationUtil;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;

@@ -5,6 +5,7 @@ import com.accounting.model.PurchaseInvoice;
 import com.accounting.model.SaleInvoice;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.*;
+import com.lowagie.text.pdf.draw.LineSeparator;
 import org.slf4j.Logger;
 
 import java.awt.Color;
@@ -123,11 +124,8 @@ public class InvoicePDFGenerator {
 
     private static void addHeader(Document document) throws DocumentException {
         try {
-            // Try to load header image
-            File headerFile = new File(IMAGES_FOLDER + "/HEADER.PNG");
-            if (!headerFile.exists()) {
-                headerFile = new File(IMAGES_FOLDER + "/HEADER.png");
-            }
+            // Try to load header image (check multiple extensions)
+            File headerFile = findImageFile(IMAGES_FOLDER, "HEADER");
             
             if (headerFile.exists()) {
                 Image headerImage = Image.getInstance(headerFile.getAbsolutePath());
@@ -137,13 +135,25 @@ public class InvoicePDFGenerator {
                 document.add(headerImage);
             } else {
                 // Fallback to text-based header if image not found
-                log.warn("Header image not found at: {}. Using text-based header.", headerFile.getAbsolutePath());
+                log.warn("Header image not found. Using text-based header.");
                 addTextBasedHeader(document);
             }
         } catch (Exception e) {
             log.error("Failed to load header image, using text-based header", e);
             addTextBasedHeader(document);
         }
+    }
+
+    private static File findImageFile(String folder, String name) {
+        // Check for various image extensions
+        String[] extensions = {".png", ".PNG", ".jpg", ".JPG", ".jpeg", ".JPEG"};
+        for (String ext : extensions) {
+            File file = new File(folder + "/" + name + ext);
+            if (file.exists()) {
+                return file;
+            }
+        }
+        return new File(folder + "/" + name + ".png"); // Return default path even if doesn't exist
     }
 
     private static void addTextBasedHeader(Document document) throws DocumentException {
@@ -472,11 +482,8 @@ public class InvoicePDFGenerator {
 
     private static void addFooter(Document document) throws DocumentException {
         try {
-            // Try to load footer image
-            File footerFile = new File(IMAGES_FOLDER + "/FOOTER.PNG");
-            if (!footerFile.exists()) {
-                footerFile = new File(IMAGES_FOLDER + "/FOOTER.png");
-            }
+            // Try to load footer image (check multiple extensions)
+            File footerFile = findImageFile(IMAGES_FOLDER, "FOOTER");
             
             if (footerFile.exists()) {
                 Image footerImage = Image.getInstance(footerFile.getAbsolutePath());
@@ -486,7 +493,7 @@ public class InvoicePDFGenerator {
                 document.add(footerImage);
             } else {
                 // Fallback to text-based footer if image not found
-                log.warn("Footer image not found at: {}. Using text-based footer.", footerFile.getAbsolutePath());
+                log.warn("Footer image not found. Using text-based footer.");
                 addTextBasedFooter(document);
             }
         } catch (Exception e) {
