@@ -19,8 +19,9 @@ public class PurchaseInvoiceDAO {
         String sql = """
                 INSERT INTO purchase_invoices (invoice_no, invoice_date, party_id, party_name, voucher_type,
                 gst, taxable_amount, sgst_amount, cgst_amount, igst_amount, total_gst, net_amount, remarks,
-                bank_name, bank_account, ifsc_code, status, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                bank_name, bank_account, ifsc_code, credit_debit, account_name, paid_by, supplier_address,
+                supplier_contact_number, supplier_gst_no, status, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -40,7 +41,13 @@ public class PurchaseInvoiceDAO {
             pstmt.setString(14, invoice.getBankName());
             pstmt.setString(15, invoice.getBankAccount());
             pstmt.setString(16, invoice.getIfscCode());
-            pstmt.setString(17, invoice.getStatus());
+            pstmt.setString(17, invoice.getCreditDebit());
+            pstmt.setString(18, invoice.getAccountName());
+            pstmt.setString(19, invoice.getPaidBy());
+            pstmt.setString(20, invoice.getSupplierAddress());
+            pstmt.setString(21, invoice.getSupplierContactNumber());
+            pstmt.setString(22, invoice.getSupplierGstNo());
+            pstmt.setString(23, invoice.getStatus());
 
             pstmt.executeUpdate();
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
@@ -59,7 +66,8 @@ public class PurchaseInvoiceDAO {
                 UPDATE purchase_invoices SET invoice_no=?, invoice_date=?, party_id=?, party_name=?,
                 voucher_type=?, gst=?, taxable_amount=?, sgst_amount=?, cgst_amount=?, igst_amount=?,
                 total_gst=?, net_amount=?, remarks=?, bank_name=?, bank_account=?, ifsc_code=?,
-                status=?, updated_at=NOW() WHERE id=?
+                credit_debit=?, account_name=?, paid_by=?, supplier_address=?, supplier_contact_number=?,
+                supplier_gst_no=?, status=?, updated_at=NOW() WHERE id=?
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -79,8 +87,14 @@ public class PurchaseInvoiceDAO {
             pstmt.setString(14, invoice.getBankName());
             pstmt.setString(15, invoice.getBankAccount());
             pstmt.setString(16, invoice.getIfscCode());
-            pstmt.setString(17, invoice.getStatus());
-            pstmt.setInt(18, invoice.getId());
+            pstmt.setString(17, invoice.getCreditDebit());
+            pstmt.setString(18, invoice.getAccountName());
+            pstmt.setString(19, invoice.getPaidBy());
+            pstmt.setString(20, invoice.getSupplierAddress());
+            pstmt.setString(21, invoice.getSupplierContactNumber());
+            pstmt.setString(22, invoice.getSupplierGstNo());
+            pstmt.setString(23, invoice.getStatus());
+            pstmt.setInt(24, invoice.getId());
 
             pstmt.executeUpdate();
             deleteLineItems(invoice.getId());
@@ -239,6 +253,12 @@ public class PurchaseInvoiceDAO {
         inv.setBankName(rs.getString("bank_name"));
         inv.setBankAccount(rs.getString("bank_account"));
         inv.setIfscCode(rs.getString("ifsc_code"));
+        inv.setCreditDebit(rs.getString("credit_debit"));
+        inv.setAccountName(rs.getString("account_name"));
+        inv.setPaidBy(rs.getString("paid_by"));
+        inv.setSupplierAddress(rs.getString("supplier_address"));
+        inv.setSupplierContactNumber(rs.getString("supplier_contact_number"));
+        inv.setSupplierGstNo(rs.getString("supplier_gst_no"));
         inv.setStatus(rs.getString("status"));
         inv.setCreatedAt(rs.getDate("created_at").toLocalDate());
         inv.setUpdatedAt(rs.getDate("updated_at").toLocalDate());

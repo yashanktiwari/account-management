@@ -52,6 +52,15 @@ public class PurchaseInvoiceDialog {
     private TextField igstValueField;
     private Label taxableValueLabel;
     private Label gstValueLabel;
+    private ComboBox<String> creditDebitCombo;
+    private TextField accountNameField;
+    private ComboBox<String> paidByCombo;
+    private TextField bankNameField;
+    private TextField bankAccountField;
+    private TextField ifscCodeField;
+    private TextField supplierAddressField;
+    private TextField supplierContactNumberField;
+    private TextField supplierGstNoField;
     private Runnable onClose;
 
     public PurchaseInvoiceDialog() {
@@ -87,16 +96,25 @@ public class PurchaseInvoiceDialog {
         // Header section
         HBox headerBox = createHeaderSection();
 
-        // Party and invoice details
-        GridPane detailsGrid = createDetailsGrid();
+        // Invoice details section
+        GridPane invoiceDetailsGrid = createInvoiceDetailsGrid();
+
+        // GST checkboxes section
+        GridPane gstGrid = createGstGrid();
 
         // Line items table
         VBox lineItemsSection = createLineItemsSection();
 
+        // Payment details section
+        GridPane paymentGrid = createPaymentGrid();
+
+        // Supplier details section
+        GridPane supplierGrid = createSupplierGrid();
+
         // Footer with totals and buttons
         HBox footerBox = createFooterSection();
 
-        root.getChildren().addAll(headerBox, detailsGrid, lineItemsSection, footerBox);
+        root.getChildren().addAll(headerBox, invoiceDetailsGrid, gstGrid, lineItemsSection, paymentGrid, supplierGrid, footerBox);
         VBox.setVgrow(lineItemsSection, Priority.ALWAYS);
 
         // Load existing invoice data if editing
@@ -112,6 +130,25 @@ public class PurchaseInvoiceDialog {
             invoiceDatePicker.setValue(invoice.getInvoiceDate());
             voucherTypeCombo.setValue(invoice.getVoucherType());
             remarksField.setText(invoice.getRemarks());
+            
+            // Credit/Debit
+            creditDebitCombo.setValue(invoice.getCreditDebit() != null ? invoice.getCreditDebit() : "Debit");
+            
+            // Account Name
+            accountNameField.setText(invoice.getAccountName());
+            
+            // Paid by
+            paidByCombo.setValue(invoice.getPaidBy());
+            
+            // Bank details
+            bankNameField.setText(invoice.getBankName());
+            bankAccountField.setText(invoice.getBankAccount());
+            ifscCodeField.setText(invoice.getIfscCode());
+            
+            // Supplier details
+            supplierAddressField.setText(invoice.getSupplierAddress());
+            supplierContactNumberField.setText(invoice.getSupplierContactNumber());
+            supplierGstNoField.setText(invoice.getSupplierGstNo());
             
             // Set GST checkboxes based on values
             sgstCheckBox.setSelected(invoice.getSgstAmount() > 0);
@@ -144,7 +181,7 @@ public class PurchaseInvoiceDialog {
         return header;
     }
 
-    private GridPane createDetailsGrid() {
+    private GridPane createInvoiceDetailsGrid() {
         GridPane grid = new GridPane();
         grid.setHgap(16);
         grid.setVgap(12);
@@ -163,19 +200,41 @@ public class PurchaseInvoiceDialog {
         grid.add(label("Invoice Date"), 2, 0);
         grid.add(invoiceDatePicker, 3, 0);
 
-        // Party
-        partyCombo = new ComboBox<>();
-        partyCombo.setPrefWidth(250);
-        grid.add(label("Supplier"), 0, 1);
-        grid.add(partyCombo, 1, 1);
-
         // Voucher Type
         voucherTypeCombo = new ComboBox<>(FXCollections.observableArrayList(
                 "PURCHASE", "PURCHASE RETURN", "DEBIT NOTE"
         ));
         voucherTypeCombo.setValue("PURCHASE");
-        grid.add(label("Voucher Type"), 2, 1);
-        grid.add(voucherTypeCombo, 3, 1);
+        grid.add(label("Voucher Type"), 0, 1);
+        grid.add(voucherTypeCombo, 1, 1);
+
+        // Credit/Debit
+        creditDebitCombo = new ComboBox<>(FXCollections.observableArrayList("Credit", "Debit"));
+        creditDebitCombo.setValue("Debit");
+        grid.add(label("Credit/Debit"), 2, 1);
+        grid.add(creditDebitCombo, 3, 1);
+
+        // Account Name
+        accountNameField = new TextField();
+        grid.add(label("Account Name"), 0, 2);
+        grid.add(accountNameField, 1, 2);
+
+        // Party (Supplier)
+        partyCombo = new ComboBox<>();
+        partyCombo.setPrefWidth(250);
+        grid.add(label("Supplier"), 2, 2);
+        grid.add(partyCombo, 3, 2);
+
+        loadParties();
+        return grid;
+    }
+
+    private GridPane createGstGrid() {
+        GridPane grid = new GridPane();
+        grid.setHgap(16);
+        grid.setVgap(12);
+        grid.setPadding(new Insets(12));
+        grid.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
 
         // GST Checkboxes
         sgstCheckBox = new CheckBox("SGST");
@@ -187,8 +246,8 @@ public class PurchaseInvoiceDialog {
             updateTotal();
         });
         HBox sgstBox = new HBox(10, sgstCheckBox, sgstValueField);
-        grid.add(label("GST"), 0, 2);
-        grid.add(sgstBox, 1, 2);
+        grid.add(label("GST"), 0, 0);
+        grid.add(sgstBox, 1, 0);
 
         cgstCheckBox = new CheckBox("CGST");
         cgstValueField = new TextField("0");
@@ -199,8 +258,8 @@ public class PurchaseInvoiceDialog {
             updateTotal();
         });
         HBox cgstBox = new HBox(10, cgstCheckBox, cgstValueField);
-        grid.add(label(""), 2, 2);
-        grid.add(cgstBox, 3, 2);
+        grid.add(label(""), 2, 0);
+        grid.add(cgstBox, 3, 0);
 
         igstCheckBox = new CheckBox("IGST");
         igstValueField = new TextField("0");
@@ -211,15 +270,69 @@ public class PurchaseInvoiceDialog {
             updateTotal();
         });
         HBox igstBox = new HBox(10, igstCheckBox, igstValueField);
-        grid.add(label(""), 0, 3);
-        grid.add(igstBox, 1, 3);
+        grid.add(label(""), 0, 1);
+        grid.add(igstBox, 1, 1);
+
+        return grid;
+    }
+
+    private GridPane createPaymentGrid() {
+        GridPane grid = new GridPane();
+        grid.setHgap(16);
+        grid.setVgap(12);
+        grid.setPadding(new Insets(12));
+        grid.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
+
+        // Paid by
+        paidByCombo = new ComboBox<>(FXCollections.observableArrayList("Cash", "Bank Transfer", "UPI", "Cheque"));
+        grid.add(label("Paid by"), 0, 0);
+        grid.add(paidByCombo, 1, 0);
+
+        // Bank Name
+        bankNameField = new TextField();
+        grid.add(label("Bank Name"), 2, 0);
+        grid.add(bankNameField, 3, 0);
+
+        // Bank Account
+        bankAccountField = new TextField();
+        grid.add(label("Bank A/c"), 0, 1);
+        grid.add(bankAccountField, 1, 1);
+
+        // IFSC Code
+        ifscCodeField = new TextField();
+        grid.add(label("IFSC Code"), 2, 1);
+        grid.add(ifscCodeField, 3, 1);
 
         // Remarks
         remarksField = new TextField();
-        grid.add(label("Remarks"), 2, 3);
-        grid.add(remarksField, 3, 3);
+        grid.add(label("Remarks"), 0, 2);
+        grid.add(remarksField, 1, 2, 3, 1);
 
-        loadParties();
+        return grid;
+    }
+
+    private GridPane createSupplierGrid() {
+        GridPane grid = new GridPane();
+        grid.setHgap(16);
+        grid.setVgap(12);
+        grid.setPadding(new Insets(12));
+        grid.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
+
+        // Supplier Address
+        supplierAddressField = new TextField();
+        grid.add(label("Supplier Address"), 0, 0);
+        grid.add(supplierAddressField, 1, 0);
+
+        // Contact Number
+        supplierContactNumberField = new TextField();
+        grid.add(label("Contact Number"), 2, 0);
+        grid.add(supplierContactNumberField, 3, 0);
+
+        // GSTIN No.
+        supplierGstNoField = new TextField();
+        grid.add(label("GSTIN No."), 0, 1);
+        grid.add(supplierGstNoField, 1, 1);
+
         return grid;
     }
 
@@ -422,6 +535,17 @@ public class PurchaseInvoiceDialog {
         invoice.setRemarks(remarksField.getText());
         invoice.setLineItems(new java.util.ArrayList<>(lineItems));
         invoice.setStatus("SAVED");
+
+        // New fields
+        invoice.setCreditDebit(creditDebitCombo.getValue());
+        invoice.setAccountName(accountNameField.getText());
+        invoice.setPaidBy(paidByCombo.getValue());
+        invoice.setBankName(bankNameField.getText());
+        invoice.setBankAccount(bankAccountField.getText());
+        invoice.setIfscCode(ifscCodeField.getText());
+        invoice.setSupplierAddress(supplierAddressField.getText());
+        invoice.setSupplierContactNumber(supplierContactNumberField.getText());
+        invoice.setSupplierGstNo(supplierGstNoField.getText());
 
         double total = lineItems.stream().mapToDouble(InvoiceLineItem::getTotal).sum();
         invoice.setTaxableAmount(total);

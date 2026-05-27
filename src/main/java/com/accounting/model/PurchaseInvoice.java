@@ -23,6 +23,12 @@ public class PurchaseInvoice {
     private String bankName;
     private String bankAccount;
     private String ifscCode;
+    private String creditDebit;
+    private String accountName;
+    private String paidBy;
+    private String supplierAddress;
+    private String supplierContactNumber;
+    private String supplierGstNo;
     private String status; // DRAFT, SAVED, PRINTED
     private LocalDate createdAt;
     private LocalDate updatedAt;
@@ -80,6 +86,24 @@ public class PurchaseInvoice {
 
     public String getIfscCode() { return ifscCode; }
     public void setIfscCode(String ifscCode) { this.ifscCode = ifscCode; }
+
+    public String getCreditDebit() { return creditDebit; }
+    public void setCreditDebit(String creditDebit) { this.creditDebit = creditDebit; }
+
+    public String getAccountName() { return accountName; }
+    public void setAccountName(String accountName) { this.accountName = accountName; }
+
+    public String getPaidBy() { return paidBy; }
+    public void setPaidBy(String paidBy) { this.paidBy = paidBy; }
+
+    public String getSupplierAddress() { return supplierAddress; }
+    public void setSupplierAddress(String supplierAddress) { this.supplierAddress = supplierAddress; }
+
+    public String getSupplierContactNumber() { return supplierContactNumber; }
+    public void setSupplierContactNumber(String supplierContactNumber) { this.supplierContactNumber = supplierContactNumber; }
+
+    public String getSupplierGstNo() { return supplierGstNo; }
+    public void setSupplierGstNo(String supplierGstNo) { this.supplierGstNo = supplierGstNo; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
