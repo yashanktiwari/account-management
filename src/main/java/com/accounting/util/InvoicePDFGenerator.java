@@ -69,7 +69,7 @@ public class InvoicePDFGenerator {
             addTermsAndSignature(document);
 
             // Add footer at the bottom
-            document.add(new Paragraph("\n\n\n\n\n")); // Add spacing to push footer to bottom
+            document.add(new Paragraph("\n\n")); // Reduced spacing to fit on one page
             addFooter(document);
 
             document.close();
@@ -129,7 +129,7 @@ public class InvoicePDFGenerator {
             addTermsAndSignature(document);
 
             // Add footer at the bottom
-            document.add(new Paragraph("\n\n\n\n\n")); // Add spacing to push footer to bottom
+            document.add(new Paragraph("\n\n")); // Reduced spacing to fit on one page
             addFooter(document);
 
             document.close();
