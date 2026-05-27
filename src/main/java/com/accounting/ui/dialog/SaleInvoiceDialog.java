@@ -54,8 +54,6 @@ public class SaleInvoiceDialog {
     private TextField sgstValueField;
     private TextField cgstValueField;
     private TextField igstValueField;
-    private Label taxableValueLabel;
-    private Label gstValueLabel;
     private TextField remarksField;
     private TextField rcvrNameField;
     private TextField rcvrAddressField;
@@ -361,17 +359,6 @@ public class SaleInvoiceDialog {
         grid.add(label(""), 0, 1);
         grid.add(igstBox, 1, 1);
 
-        // Taxable value and GST value labels
-        taxableValueLabel = new Label("0.00");
-        taxableValueLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
-        grid.add(label("Taxable Value"), 2, 1);
-        grid.add(taxableValueLabel, 3, 1);
-
-        gstValueLabel = new Label("0.00");
-        gstValueLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
-        grid.add(label("GST Value"), 0, 2);
-        grid.add(gstValueLabel, 1, 2);
-
         return grid;
     }
 
@@ -545,26 +532,12 @@ public class SaleInvoiceDialog {
     }
 
     private HBox createFooterSection() {
-        Label taxableLbl = new Label("Taxable Value:");
-        taxableLbl.setStyle("-fx-font-size: 12px;");
-        taxableValueLabel = new Label("0.00");
-        taxableValueLabel.setStyle("-fx-font-size: 12px;");
-
-        Label gstLbl = new Label("GST:");
-        gstLbl.setStyle("-fx-font-size: 12px;");
-        gstValueLabel = new Label("0.00");
-        gstValueLabel.setStyle("-fx-font-size: 12px;");
-
-        Label netLbl = new Label("Net Amount:");
-        netLbl.setStyle("-fx-font-size: 13px; -fx-font-weight: bold;");
+        Label totalLbl = new Label("Total Amount:");
+        totalLbl.setStyle("-fx-font-size: 13px; -fx-font-weight: bold;");
         totalLabel = new Label("0.00");
         totalLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #dc2626;");
 
-        VBox taxableBox = new VBox(2, taxableLbl, taxableValueLabel);
-        VBox gstBox = new VBox(2, gstLbl, gstValueLabel);
-        VBox netBox = new VBox(2, netLbl, totalLabel);
-
-        HBox totalsBox = new HBox(20, taxableBox, gstBox, netBox);
+        HBox totalsBox = new HBox(12, totalLbl, totalLabel);
         totalsBox.setAlignment(Pos.CENTER_RIGHT);
         HBox.setHgrow(totalsBox, Priority.ALWAYS);
 
@@ -614,8 +587,6 @@ public class SaleInvoiceDialog {
         double totalGst = sgst + cgst + igst;
         double netAmount = taxable + totalGst;
 
-        taxableValueLabel.setText(String.format("%.2f", taxable));
-        gstValueLabel.setText(String.format("%.2f", totalGst));
         totalLabel.setText(String.format("%.2f", netAmount));
     }
 

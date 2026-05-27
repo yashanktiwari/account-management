@@ -56,8 +56,6 @@ public class PurchaseInvoiceDialog {
     private TextField sgstValueField;
     private TextField cgstValueField;
     private TextField igstValueField;
-    private Label taxableValueLabel;
-    private Label gstValueLabel;
     private ComboBox<String> creditDebitCombo;
     private TextField accountNameField;
     private TextField paidByField;
@@ -809,26 +807,12 @@ public class PurchaseInvoiceDialog {
     }
 
     private HBox createFooterSection() {
-        Label taxableLbl = new Label("Taxable Amount:");
-        taxableLbl.setStyle("-fx-font-size: 12px;");
-        taxableValueLabel = new Label("0.00");
-        taxableValueLabel.setStyle("-fx-font-size: 12px;");
-        
-        Label gstLbl = new Label("GST:");
-        gstLbl.setStyle("-fx-font-size: 12px;");
-        gstValueLabel = new Label("0.00");
-        gstValueLabel.setStyle("-fx-font-size: 12px;");
-        
-        Label netLbl = new Label("Net Amount:");
-        netLbl.setStyle("-fx-font-size: 13px; -fx-font-weight: bold;");
+        Label totalLbl = new Label("Total Amount:");
+        totalLbl.setStyle("-fx-font-size: 13px; -fx-font-weight: bold;");
         totalLabel = new Label("0.00");
         totalLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #dc2626;");
 
-        VBox taxableBox = new VBox(2, taxableLbl, taxableValueLabel);
-        VBox gstBox = new VBox(2, gstLbl, gstValueLabel);
-        VBox netBox = new VBox(2, netLbl, totalLabel);
-        
-        HBox totalsBox = new HBox(20, taxableBox, gstBox, netBox);
+        HBox totalsBox = new HBox(12, totalLbl, totalLabel);
         totalsBox.setAlignment(Pos.CENTER_RIGHT);
         HBox.setHgrow(totalsBox, Priority.ALWAYS);
 
@@ -887,9 +871,7 @@ public class PurchaseInvoiceDialog {
         double igst = igstCheckBox.isSelected() ? taxable * 0.18 : 0;
         double totalGst = sgst + cgst + igst;
         double netAmount = taxable + totalGst;
-        
-        taxableValueLabel.setText(String.format("%.2f", taxable));
-        gstValueLabel.setText(String.format("%.2f", totalGst));
+
         totalLabel.setText(String.format("%.2f", netAmount));
     }
 
