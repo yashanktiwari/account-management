@@ -58,7 +58,6 @@ public class SaleInvoiceDialog {
     private TextField cgstValueField;
     private TextField igstValueField;
     private TextField remarksField;
-    private TextField rcvrNameField;
     private TextField rcvrAddressField;
     private TextField rcvrContactField;
     private TextField rcvrGstinField;
@@ -195,7 +194,6 @@ public class SaleInvoiceDialog {
         ifscCodeField.setText(invoice.getIfscCode());
 
         // Receiver details
-        rcvrNameField.setText(invoice.getRcvrName());
         rcvrAddressField.setText(invoice.getRcvrAddress());
         rcvrContactField.setText(invoice.getRcvrContactNo());
         rcvrGstinField.setText(invoice.getRcvrGstin());
@@ -410,29 +408,23 @@ public class SaleInvoiceDialog {
         grid.setPadding(new Insets(12));
         grid.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
 
-        // Receiver Name
-        rcvrNameField = new TextField();
-        setupUppercaseListener(rcvrNameField);
-        grid.add(label("Receiver Name"), 0, 0);
-        grid.add(rcvrNameField, 1, 0, 3, 1);
-
         // Receiver Address
         rcvrAddressField = new TextField();
         setupUppercaseListener(rcvrAddressField);
-        grid.add(label("Receiver Address"), 0, 1);
-        grid.add(rcvrAddressField, 1, 1, 3, 1);
+        grid.add(label("Receiver Address"), 0, 0);
+        grid.add(rcvrAddressField, 1, 0, 3, 1);
 
         // Contact Number
         rcvrContactField = new TextField();
         setupUppercaseListener(rcvrContactField);
-        grid.add(label("Contact No"), 0, 2);
-        grid.add(rcvrContactField, 1, 2);
+        grid.add(label("Contact No"), 0, 1);
+        grid.add(rcvrContactField, 1, 1);
 
         // GSTIN No.
         rcvrGstinField = new TextField();
         setupUppercaseListener(rcvrGstinField);
-        grid.add(label("GSTIN"), 2, 2);
-        grid.add(rcvrGstinField, 3, 2);
+        grid.add(label("GSTIN"), 2, 1);
+        grid.add(rcvrGstinField, 3, 1);
 
         return grid;
     }
@@ -706,6 +698,7 @@ public class SaleInvoiceDialog {
                         for (Party p : customers) {
                             if (p.getId() == invoice.getPartyId()) {
                                 partyField.setText(p.getName());
+                                autofillFromParty(p);
                                 break;
                             }
                         }
@@ -717,6 +710,17 @@ public class SaleInvoiceDialog {
                 Platform.runLater(() -> AlertUtil.showError("Error", "Failed to load customers"));
             }
         });
+    }
+
+    // Helper method to trigger auto-fill from party selection
+    private void autofillFromParty(Party party) {
+        if (party != null) {
+            partyField.setText(party.getName());
+            rcvrAddressField.setText(party.getAddress());
+            rcvrContactField.setText(party.getMobile());
+            rcvrGstinField.setText(party.getGstin());
+            // Don't auto-fill paidBy, bank details - let user choose
+        }
     }
 
     private void setupCustomerAutocomplete() {
@@ -771,6 +775,7 @@ public class SaleInvoiceDialog {
             if (selected != null) {
                 partyField.setText(selected.getName());
                 customerPopup.hide();
+                autofillFromParty(selected);
             }
         });
 
@@ -791,6 +796,7 @@ public class SaleInvoiceDialog {
                         Party selected = customerListView.getSelectionModel().getSelectedItem();
                         if (selected != null) {
                             partyField.setText(selected.getName());
+                            autofillFromParty(selected);
                         }
                         customerPopup.hide();
                     }
@@ -804,6 +810,7 @@ public class SaleInvoiceDialog {
                     Party selected = customerListView.getSelectionModel().getSelectedItem();
                     if (selected != null) {
                         partyField.setText(selected.getName());
+                        autofillFromParty(selected);
                         partyField.requestFocus();
                     }
                     customerPopup.hide();
@@ -856,7 +863,6 @@ public class SaleInvoiceDialog {
         invoice.setPartyName(selectedParty.getName());
         invoice.setVoucherType(voucherTypeCombo.getValue());
         invoice.setRemarks(remarksField.getText());
-        invoice.setRcvrName(rcvrNameField.getText());
         invoice.setRcvrAddress(rcvrAddressField.getText());
         invoice.setRcvrContactNo(rcvrContactField.getText());
         invoice.setRcvrGstin(rcvrGstinField.getText());
