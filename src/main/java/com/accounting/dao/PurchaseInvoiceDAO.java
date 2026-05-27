@@ -135,7 +135,7 @@ public class PurchaseInvoiceDAO {
     }
 
     public List<PurchaseInvoice> getAll() throws Exception {
-        String sql = "SELECT * FROM purchase_invoices ORDER BY invoice_date DESC";
+        String sql = "SELECT * FROM purchase_invoices ORDER BY id DESC";
         List<PurchaseInvoice> invoices = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();

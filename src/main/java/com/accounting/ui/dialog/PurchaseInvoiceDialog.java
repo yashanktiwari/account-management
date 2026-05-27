@@ -167,11 +167,11 @@ public class PurchaseInvoiceDialog {
 
             // Set GST checkboxes based on values
             sgstCheckBox.setSelected(invoice.getSgstAmount() > 0);
-            sgstValueField.setText(String.valueOf((int) invoice.getSgstAmount()));
+            sgstValueField.setText(sgstCheckBox.isSelected() ? "9" : "0");
             cgstCheckBox.setSelected(invoice.getCgstAmount() > 0);
-            cgstValueField.setText(String.valueOf((int) invoice.getCgstAmount()));
+            cgstValueField.setText(cgstCheckBox.isSelected() ? "9" : "0");
             igstCheckBox.setSelected(invoice.getIgstAmount() > 0);
-            igstValueField.setText(String.valueOf((int) invoice.getIgstAmount()));
+            igstValueField.setText(igstCheckBox.isSelected() ? "18" : "0");
 
             // Load line items
             lineItems.setAll(invoice.getLineItems());
