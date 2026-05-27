@@ -96,26 +96,29 @@ public class PurchaseInvoiceDialog {
         // Header section
         HBox headerBox = createHeaderSection();
 
-        // Top row: Invoice details + Supplier details + GST
+        // Top row: Invoice details + GST
         HBox topRow = new HBox(12);
         GridPane invoiceDetailsGrid = createInvoiceDetailsGrid();
-        GridPane supplierGrid = createSupplierGrid();
         GridPane gstGrid = createGstGrid();
-        topRow.getChildren().addAll(invoiceDetailsGrid, supplierGrid, gstGrid);
+        topRow.getChildren().addAll(invoiceDetailsGrid, gstGrid);
         HBox.setHgrow(invoiceDetailsGrid, Priority.ALWAYS);
-        HBox.setHgrow(supplierGrid, Priority.ALWAYS);
         HBox.setHgrow(gstGrid, Priority.ALWAYS);
 
         // Line items table
         VBox lineItemsSection = createLineItemsSection();
 
-        // Payment details section
+        // Bottom row: Payment details + Supplier details
+        HBox bottomRow = new HBox(12);
         GridPane paymentGrid = createPaymentGrid();
+        GridPane supplierGrid = createSupplierGrid();
+        bottomRow.getChildren().addAll(paymentGrid, supplierGrid);
+        HBox.setHgrow(paymentGrid, Priority.ALWAYS);
+        HBox.setHgrow(supplierGrid, Priority.ALWAYS);
 
         // Footer with totals and buttons
         HBox footerBox = createFooterSection();
 
-        root.getChildren().addAll(headerBox, topRow, lineItemsSection, paymentGrid, footerBox);
+        root.getChildren().addAll(headerBox, topRow, lineItemsSection, bottomRow, footerBox);
         VBox.setVgrow(lineItemsSection, Priority.ALWAYS);
 
         // Load existing invoice data if editing
