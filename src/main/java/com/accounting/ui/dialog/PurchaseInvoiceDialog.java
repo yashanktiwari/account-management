@@ -169,6 +169,19 @@ public class PurchaseInvoiceDialog {
         }
     }
 
+    // Helper method to trigger auto-fill from party selection
+    private void autofillFromParty(Party party) {
+        if (party != null) {
+            supplierAddressField.setText(party.getAddress());
+            supplierContactNumberField.setText(party.getMobile());
+            supplierGstNoField.setText(party.getGstin());
+            paidByCombo.setValue(party.getOwnerName());
+            bankNameField.setText(party.getBankName());
+            bankAccountField.setText(party.getBankAccount());
+            ifscCodeField.setText(party.getIfscCode());
+        }
+    }
+
     private HBox createHeaderSection() {
         Label title = new Label("PURCHASE INVOICE");
         title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
@@ -324,18 +337,21 @@ public class PurchaseInvoiceDialog {
 
         // Supplier Address
         supplierAddressField = new TextField();
+        supplierAddressField.setPrefWidth(300);
         grid.add(label("Supplier Address"), 0, 0);
-        grid.add(supplierAddressField, 1, 0);
+        grid.add(supplierAddressField, 1, 0, 3, 1);
 
         // Contact Number
         supplierContactNumberField = new TextField();
-        grid.add(label("Contact Number"), 2, 0);
-        grid.add(supplierContactNumberField, 3, 0);
+        supplierContactNumberField.setPrefWidth(150);
+        grid.add(label("Contact Number"), 0, 1);
+        grid.add(supplierContactNumberField, 1, 1);
 
         // GSTIN No.
         supplierGstNoField = new TextField();
-        grid.add(label("GSTIN No."), 0, 1);
-        grid.add(supplierGstNoField, 1, 1);
+        supplierGstNoField.setPrefWidth(150);
+        grid.add(label("GSTIN No."), 2, 1);
+        grid.add(supplierGstNoField, 3, 1);
 
         return grid;
     }
@@ -501,13 +517,21 @@ public class PurchaseInvoiceDialog {
                             for (Party p : suppliers) {
                                 if (p.getId() == invoice.getPartyId()) {
                                     partyCombo.setValue(p);
+                                    autofillFromParty(p);
                                     break;
                                 }
                             }
                         } else {
                             partyCombo.setValue(suppliers.get(0));
+                            autofillFromParty(suppliers.get(0));
                         }
                     }
+
+                    // Add listener to auto-fill fields when supplier is selected
+                    partyCombo.setOnAction(e -> {
+                        Party selected = partyCombo.getValue();
+                        autofillFromParty(selected);
+                    });
                 });
             } catch (Exception e) {
                 log.error("Failed to load suppliers", e);
