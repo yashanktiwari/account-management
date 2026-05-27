@@ -43,7 +43,10 @@ public class SaleInvoiceDialog {
     private ObservableList<InvoiceLineItem> lineItems = FXCollections.observableArrayList();
     private TableView<InvoiceLineItem> lineItemTable;
     private Label totalLabel;
-    private ComboBox<Party> partyCombo;
+    private TextField partyField;
+    private ObservableList<Party> allCustomers = FXCollections.observableArrayList();
+    private Popup customerPopup;
+    private ListView<Party> customerListView;
     private TextField invoiceNoField;
     private DatePicker invoiceDatePicker;
     private DatePicker deliveryDatePicker;
@@ -284,10 +287,12 @@ public class SaleInvoiceDialog {
         grid.add(label("Delivery Date"), 0, 1);
         grid.add(deliveryDatePicker, 1, 1);
 
-        partyCombo = new ComboBox<>();
-        partyCombo.setPrefWidth(250);
+        partyField = new TextField();
+        partyField.setPrefWidth(250);
+        setupUppercaseListener(partyField);
+        setupCustomerAutocomplete();
         grid.add(label("Customer"), 2, 1);
-        grid.add(partyCombo, 3, 1);
+        grid.add(partyField, 3, 1);
 
         voucherTypeCombo = new ComboBox<>(FXCollections.observableArrayList(
                 "SALE", "SALE RETURN", "CREDIT NOTE"
@@ -305,11 +310,6 @@ public class SaleInvoiceDialog {
         setupUppercaseListener(accountNameField);
         grid.add(label("Account Name"), 0, 3);
         grid.add(accountNameField, 1, 3);
-
-        remarksField = new TextField();
-        setupUppercaseListener(remarksField);
-        grid.add(label("Remarks"), 2, 3);
-        grid.add(remarksField, 3, 3);
 
         loadParties();
         return grid;
@@ -398,6 +398,12 @@ public class SaleInvoiceDialog {
         setupUppercaseListener(ifscCodeField);
         grid.add(label("IFSC Code"), 0, 2);
         grid.add(ifscCodeField, 1, 2);
+
+        // Remarks
+        remarksField = new TextField();
+        setupUppercaseListener(remarksField);
+        grid.add(label("Remarks"), 2, 2);
+        grid.add(remarksField, 3, 2);
 
         return grid;
     }
@@ -567,14 +573,119 @@ public class SaleInvoiceDialog {
             try {
                 List<Party> customers = new PartyDAO().findByType("CUSTOMER");
                 Platform.runLater(() -> {
-                    partyCombo.setItems(FXCollections.observableArrayList(customers));
-                    if (!customers.isEmpty()) {
-                        partyCombo.setValue(customers.get(0));
+                    allCustomers.setAll(customers);
+
+                    // If editing, select the invoice's party
+                    if (invoice.getId() > 0) {
+                        for (Party p : customers) {
+                            if (p.getId() == invoice.getPartyId()) {
+                                partyField.setText(p.getName());
+                                break;
+                            }
+                        }
                     }
+                    // No default selection for new invoices
                 });
             } catch (Exception e) {
                 log.error("Failed to load customers", e);
                 Platform.runLater(() -> AlertUtil.showError("Error", "Failed to load customers"));
+            }
+        });
+    }
+
+    private void setupCustomerAutocomplete() {
+        customerPopup = new Popup();
+        customerPopup.setAutoHide(true);
+
+        customerListView = new ListView<>();
+        customerListView.setFocusTraversable(false);
+        customerListView.setCellFactory(param -> new ListCell<Party>() {
+            @Override
+            protected void updateItem(Party party, boolean empty) {
+                super.updateItem(party, empty);
+                setText(empty || party == null ? "" : party.getName());
+            }
+        });
+
+        customerPopup.getContent().add(customerListView);
+
+        partyField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal == null || newVal.isBlank()) {
+                customerPopup.hide();
+                return;
+            }
+
+            List<Party> filtered = allCustomers.stream()
+                    .filter(p -> p.getName() != null && p.getName().toLowerCase().contains(newVal.toLowerCase()))
+                    .sorted((p1, p2) -> p1.getName().compareToIgnoreCase(p2.getName()))
+                    .collect(java.util.stream.Collectors.toList());
+
+            if (filtered.isEmpty()) {
+                customerPopup.hide();
+                return;
+            }
+
+            customerListView.getItems().setAll(filtered);
+
+            int visibleRows = Math.min(filtered.size(), 10);
+            customerListView.setPrefHeight(visibleRows * 26 + 2);
+            customerListView.setPrefWidth(partyField.getWidth());
+
+            if (!customerPopup.isShowing()) {
+                javafx.geometry.Point2D p = partyField.localToScreen(0, partyField.getHeight());
+                if (p != null) {
+                    customerPopup.show(partyField, p.getX(), p.getY());
+                }
+            }
+        });
+
+        // Mouse selection
+        customerListView.setOnMouseClicked(e -> {
+            Party selected = customerListView.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                partyField.setText(selected.getName());
+                customerPopup.hide();
+            }
+        });
+
+        // Keyboard navigation
+        partyField.setOnKeyPressed(event -> {
+            switch (event.getCode()) {
+                case DOWN -> {
+                    if (customerPopup.isShowing() && !customerListView.getItems().isEmpty()) {
+                        customerListView.requestFocus();
+                        if (customerListView.getSelectionModel().isEmpty()) {
+                            customerListView.getSelectionModel().selectFirst();
+                        }
+                    }
+                }
+                case ESCAPE -> customerPopup.hide();
+                case TAB -> {
+                    if (customerPopup.isShowing()) {
+                        Party selected = customerListView.getSelectionModel().getSelectedItem();
+                        if (selected != null) {
+                            partyField.setText(selected.getName());
+                        }
+                        customerPopup.hide();
+                    }
+                }
+            }
+        });
+
+        customerListView.setOnKeyPressed(event -> {
+            switch (event.getCode()) {
+                case ENTER -> {
+                    Party selected = customerListView.getSelectionModel().getSelectedItem();
+                    if (selected != null) {
+                        partyField.setText(selected.getName());
+                        partyField.requestFocus();
+                    }
+                    customerPopup.hide();
+                }
+                case ESCAPE -> {
+                    customerPopup.hide();
+                    partyField.requestFocus();
+                }
             }
         });
     }
@@ -591,10 +702,23 @@ public class SaleInvoiceDialog {
     }
 
     private void saveInvoice() {
-        if (partyCombo.getValue() == null) {
+        String customerName = partyField.getText();
+        if (customerName == null || customerName.trim().isEmpty()) {
             AlertUtil.showWarning("Validation", "Please select a customer");
             return;
         }
+
+        // Find the party by name
+        Party selectedParty = allCustomers.stream()
+                .filter(p -> p.getName() != null && p.getName().equalsIgnoreCase(customerName.trim()))
+                .findFirst()
+                .orElse(null);
+
+        if (selectedParty == null) {
+            AlertUtil.showWarning("Validation", "Invalid customer selected");
+            return;
+        }
+
         if (lineItems.isEmpty()) {
             AlertUtil.showWarning("Validation", "Please add at least one line item");
             return;
@@ -603,8 +727,8 @@ public class SaleInvoiceDialog {
         invoice.setInvoiceDate(invoiceDatePicker.getValue());
         invoice.setInvoiceNo(invoiceNoField.getText());
         invoice.setDeliveryDate(deliveryDatePicker.getValue());
-        invoice.setPartyId(partyCombo.getValue().getId());
-        invoice.setPartyName(partyCombo.getValue().getName());
+        invoice.setPartyId(selectedParty.getId());
+        invoice.setPartyName(selectedParty.getName());
         invoice.setVoucherType(voucherTypeCombo.getValue());
         invoice.setRemarks(remarksField.getText());
         invoice.setRcvrName(rcvrNameField.getText());
