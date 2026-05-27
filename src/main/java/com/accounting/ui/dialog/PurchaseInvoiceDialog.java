@@ -465,39 +465,45 @@ public class PurchaseInvoiceDialog {
 
         // Input fields for new line item
         TextField lrNoField = new TextField();
-        lrNoField.setPromptText("LR No");
         lrNoField.setPrefWidth(80);
+        VBox lrNoBox = new VBox(4, new Label("LR No"), lrNoField);
 
         TextField containerNoField = new TextField();
-        containerNoField.setPromptText("Container No");
         containerNoField.setPrefWidth(100);
+        VBox containerBox = new VBox(4, new Label("Container No"), containerNoField);
 
         TextField vehicleNoField = new TextField();
-        vehicleNoField.setPromptText("Vehicle No");
         vehicleNoField.setPrefWidth(100);
+        VBox vehicleBox = new VBox(4, new Label("Vehicle No"), vehicleNoField);
 
         TextField fromField = new TextField();
-        fromField.setPromptText("From");
         fromField.setPrefWidth(100);
+        VBox fromBox = new VBox(4, new Label("From"), fromField);
 
         TextField toField = new TextField();
-        toField.setPromptText("To");
         toField.setPrefWidth(100);
+        VBox toBox = new VBox(4, new Label("To"), toField);
 
         TextField typeField = new TextField();
-        typeField.setPromptText("Type");
         typeField.setPrefWidth(80);
+        VBox typeBox = new VBox(4, new Label("Type"), typeField);
 
         TextField freightField = new TextField();
-        freightField.setPromptText("Basic Freight");
         freightField.setPrefWidth(100);
+        VBox freightBox = new VBox(4, new Label("Basic Freight"), freightField);
 
         TextField detentionField = new TextField();
-        detentionField.setPromptText("Detention Charge");
         detentionField.setPrefWidth(120);
+        VBox detentionBox = new VBox(4, new Label("Detention Charge"), detentionField);
 
-        HBox inputRow = new HBox(8, lrNoField, containerNoField, vehicleNoField, fromField, toField, typeField, freightField, detentionField);
-        inputRow.setPadding(new Insets(8));
+        Button addRowBtn = new Button("+ Add Row");
+        addRowBtn.setStyle("-fx-padding: 8 16 8 16; -fx-font-size: 12px;");
+        addRowBtn.setPrefHeight(50);
+        VBox.setVgrow(addRowBtn, Priority.ALWAYS);
+
+        HBox inputRow = new HBox(12, lrNoBox, containerBox, vehicleBox, fromBox, toBox, typeBox, freightBox, detentionBox, addRowBtn);
+        inputRow.setPadding(new Insets(12));
+        inputRow.setAlignment(Pos.BOTTOM_LEFT);
         inputRow.setStyle("-fx-background-color: #f5f5f5; -fx-border-color: #e2e8f0; -fx-border-radius: 4;");
 
         lineItemTable = new TableView<>(lineItems);
@@ -609,8 +615,7 @@ public class PurchaseInvoiceDialog {
             return row;
         });
 
-        Button addRowBtn = new Button("+ Add Row");
-        addRowBtn.setStyle("-fx-padding: 6 12 6 12; -fx-font-size: 12px;");
+        // Set up the Add Row button action
         addRowBtn.setOnAction(e -> {
             // Validate that at least one field is filled
             if (lrNoField.getText().trim().isEmpty() && containerNoField.getText().trim().isEmpty() &&
@@ -658,10 +663,7 @@ public class PurchaseInvoiceDialog {
             updateTotal();
         });
 
-        HBox buttonRow = new HBox(8, addRowBtn);
-        buttonRow.setPadding(new Insets(8));
-
-        VBox section = new VBox(8, sectionTitle, inputRow, buttonRow, lineItemTable);
+        VBox section = new VBox(8, sectionTitle, inputRow, lineItemTable);
         section.setPadding(new Insets(12));
         section.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
         VBox.setVgrow(lineItemTable, Priority.ALWAYS);
