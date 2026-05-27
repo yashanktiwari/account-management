@@ -149,7 +149,7 @@ public class PurchaseInvoiceListView {
         editItem.setOnAction(e -> {
             PurchaseInvoice selected = table.getSelectionModel().getSelectedItem();
             if (selected != null) {
-                new PurchaseInvoiceDialog().show(MainApp.getPrimaryStage(), selected, this::loadRows);
+                new PurchaseInvoiceDialog(selected).show(MainApp.getPrimaryStage(), this::loadRows);
             }
         });
 

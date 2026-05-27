@@ -51,6 +51,10 @@ public class PurchaseInvoiceDialog {
         this.invoice = new PurchaseInvoice();
     }
 
+    public PurchaseInvoiceDialog(PurchaseInvoice invoice) {
+        this.invoice = invoice;
+    }
+
     public void show(Window owner, Runnable onClose) {
         this.onClose = onClose;
         stage = new Stage();
@@ -88,7 +92,26 @@ public class PurchaseInvoiceDialog {
         root.getChildren().addAll(headerBox, detailsGrid, lineItemsSection, footerBox);
         VBox.setVgrow(lineItemsSection, Priority.ALWAYS);
 
+        // Load existing invoice data if editing
+        loadInvoiceData();
+
         return root;
+    }
+
+    private void loadInvoiceData() {
+        if (invoice.getId() > 0) {
+            // Editing existing invoice
+            invoiceNoField.setText(invoice.getInvoiceNo());
+            invoiceDatePicker.setValue(invoice.getInvoiceDate());
+            voucherTypeCombo.setValue(invoice.getVoucherType());
+            gstCombo.setValue(invoice.getGst());
+            remarksField.setText(invoice.getRemarks());
+            
+            // Load line items
+            lineItems.setAll(invoice.getLineItems());
+            lineItemTable.setItems(lineItems);
+            updateTotal();
+        }
     }
 
     private HBox createHeaderSection() {
@@ -290,7 +313,17 @@ public class PurchaseInvoiceDialog {
                 Platform.runLater(() -> {
                     partyCombo.setItems(FXCollections.observableArrayList(suppliers));
                     if (!suppliers.isEmpty()) {
-                        partyCombo.setValue(suppliers.get(0));
+                        // If editing, select the invoice's party, otherwise select first
+                        if (invoice.getId() > 0) {
+                            for (Party p : suppliers) {
+                                if (p.getId() == invoice.getPartyId()) {
+                                    partyCombo.setValue(p);
+                                    break;
+                                }
+                            }
+                        } else {
+                            partyCombo.setValue(suppliers.get(0));
+                        }
                     }
                 });
             } catch (Exception e) {
