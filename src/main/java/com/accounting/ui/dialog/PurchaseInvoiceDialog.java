@@ -24,7 +24,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.converter.DoubleStringConverter;
-import javafx.util.converter.StringConverter;
+import javafx.util.StringConverter;
 import org.controlsfx.control.textfield.TextFields;
 import org.slf4j.Logger;
 
