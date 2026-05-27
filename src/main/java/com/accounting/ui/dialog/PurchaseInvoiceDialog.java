@@ -817,15 +817,11 @@ public class PurchaseInvoiceDialog {
         printBtn.setStyle("-fx-padding: 8 20 8 20; -fx-font-size: 12px; -fx-background-color: #0891b2; -fx-text-fill: white;");
         printBtn.setOnAction(e -> printInvoice());
 
-        Button settingsBtn = new Button("Settings");
-        settingsBtn.setStyle("-fx-padding: 8 20 8 20; -fx-font-size: 12px; -fx-background-color: #6b7280; -fx-text-fill: white;");
-        settingsBtn.setOnAction(e -> openSettingsDialog());
-
         Button closeBtn = new Button("Close");
         closeBtn.setStyle("-fx-padding: 8 20 8 20; -fx-font-size: 12px;");
         closeBtn.setOnAction(e -> stage.close());
 
-        HBox buttonsBox = new HBox(10, saveBtn, printBtn, settingsBtn, closeBtn);
+        HBox buttonsBox = new HBox(10, saveBtn, printBtn, closeBtn);
         buttonsBox.setAlignment(Pos.CENTER_RIGHT);
 
         HBox footer = new HBox(20, totalsBox, buttonsBox);
@@ -956,56 +952,6 @@ public class PurchaseInvoiceDialog {
 
     private void printInvoice() {
         AlertUtil.showInfo("Info", "Print functionality will be implemented with PDF export");
-    }
-
-    private void openSettingsDialog() {
-        AppExecutor.submit(() -> {
-            try {
-                SettingsDAO settingsDAO = new SettingsDAO();
-                String currentStartingNumber = settingsDAO.getSetting("global_invoice_starting_number");
-                if (currentStartingNumber == null) {
-                    currentStartingNumber = "1";
-                }
-
-                String finalCurrentStartingNumber = currentStartingNumber;
-                Platform.runLater(() -> {
-                    TextInputDialog dialog = new TextInputDialog(finalCurrentStartingNumber);
-                    dialog.setTitle("Global Invoice Settings");
-                    dialog.setHeaderText("Set Global Starting Invoice Number");
-                    dialog.setContentText("This number will be used for all invoices and receipts:");
-
-                    dialog.showAndWait().ifPresent(newNumber -> {
-                        try {
-                            int num = Integer.parseInt(newNumber);
-                            if (num >= 0) {
-                                AppExecutor.submit(() -> {
-                                    try {
-                                        settingsDAO.saveSetting("global_invoice_starting_number", String.valueOf(num));
-                                        Platform.runLater(() -> {
-                                            AlertUtil.showInfo("Success", "Global starting invoice number updated to " + num);
-                                            // Regenerate invoice number if it's a new invoice
-                                            if (invoice.getId() <= 0) {
-                                                generateNextInvoiceNumber();
-                                            }
-                                        });
-                                    } catch (Exception e) {
-                                        log.error("Failed to save setting", e);
-                                        Platform.runLater(() -> AlertUtil.showError("Error", "Failed to save setting"));
-                                    }
-                                });
-                            } else {
-                                AlertUtil.showWarning("Validation", "Please enter a non-negative number");
-                            }
-                        } catch (NumberFormatException e) {
-                            AlertUtil.showWarning("Validation", "Please enter a valid number");
-                        }
-                    });
-                });
-            } catch (Exception e) {
-                log.error("Failed to load settings", e);
-                Platform.runLater(() -> AlertUtil.showError("Error", "Failed to load settings"));
-            }
-        });
     }
 
     private Label label(String text) {

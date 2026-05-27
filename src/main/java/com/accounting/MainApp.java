@@ -2,6 +2,7 @@ package com.accounting;
 
 import atlantafx.base.theme.PrimerLight;
 import com.accounting.dao.DashboardDAO;
+import com.accounting.dao.SettingsDAO;
 import com.accounting.database.AppConfig;
 import com.accounting.database.DBConnection;
 import com.accounting.model.Payment;
@@ -173,13 +174,14 @@ public class MainApp extends Application {
 
         Button dbBtn = sidebarButton("Database Setup", () -> DatabaseSetupDialog.show(primaryStage, () -> {}));
         Button companyBtn = sidebarButton("Company Settings", this::showCompanySettings);
+        Button invoiceBtn = sidebarButton("Invoice Settings", this::showInvoiceSettings);
 
         sidebar.getChildren().addAll(
                 navTitle, dashBtn,
             mastersTitle, partyBtn,
                 invoicesTitle, purchaseInvoiceBtn, saleInvoiceBtn,
                 receiptsTitle, purchaseReceiptBtn, saleReceiptBtn,
-                settingsTitle, dbBtn, companyBtn
+                settingsTitle, dbBtn, companyBtn, invoiceBtn
         );
 
         setActiveSidebarButton(dashBtn);
@@ -515,6 +517,68 @@ public class MainApp extends Application {
                 AppConfig.saveCompanyName(nameField.getText().trim());
                 AppConfig.saveFinancialYear(fyField.getText().trim());
                 NotificationUtil.showSuccess("Saved", "Company settings updated. Restart to see changes.");
+            }
+        });
+    }
+
+    private void showInvoiceSettings() {
+        AppExecutor.submit(() -> {
+            try {
+                SettingsDAO settingsDAO = new SettingsDAO();
+                String currentStartingNumber = settingsDAO.getSetting("global_invoice_starting_number");
+                if (currentStartingNumber == null) {
+                    currentStartingNumber = "1";
+                }
+
+                String finalCurrentStartingNumber = currentStartingNumber;
+                Platform.runLater(() -> {
+                    Dialog<ButtonType> dialog = new Dialog<>();
+                    dialog.setTitle("Invoice Settings");
+                    dialog.initOwner(primaryStage);
+
+                    TextField startingNumberField = new TextField(finalCurrentStartingNumber);
+                    startingNumberField.setPrefWidth(200);
+
+                    GridPane grid = new GridPane();
+                    grid.setHgap(10);
+                    grid.setVgap(10);
+                    grid.setPadding(new Insets(15));
+                    grid.add(new Label("Global Starting Invoice Number:"), 0, 0);
+                    grid.add(startingNumberField, 1, 0);
+                    grid.add(new Label("This number will be used for all invoices and receipts:"), 0, 1);
+                    GridPane.setColumnSpan(grid.getChildren().get(2), 2);
+
+                    dialog.getDialogPane().setContent(grid);
+                    dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+                    dialog.showAndWait().ifPresent(btn -> {
+                        if (btn == ButtonType.OK) {
+                            try {
+                                int num = Integer.parseInt(startingNumberField.getText().trim());
+                                if (num >= 0) {
+                                    AppExecutor.submit(() -> {
+                                        try {
+                                            settingsDAO.saveSetting("global_invoice_starting_number", String.valueOf(num));
+                                            Platform.runLater(() -> {
+                                                AlertUtil.showInfo("Success", "Global starting invoice number updated to " + num);
+                                            });
+                                        } catch (Exception e) {
+                                            log.error("Failed to save setting", e);
+                                            Platform.runLater(() -> AlertUtil.showError("Error", "Failed to save setting"));
+                                        }
+                                    });
+                                } else {
+                                    AlertUtil.showWarning("Validation", "Please enter a non-negative number");
+                                }
+                            } catch (NumberFormatException e) {
+                                AlertUtil.showWarning("Validation", "Please enter a valid number");
+                            }
+                        }
+                    });
+                });
+            } catch (Exception e) {
+                log.error("Failed to load settings", e);
+                Platform.runLater(() -> AlertUtil.showError("Error", "Failed to load settings"));
             }
         });
     }
