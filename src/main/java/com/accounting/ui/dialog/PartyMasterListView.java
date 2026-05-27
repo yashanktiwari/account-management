@@ -19,6 +19,10 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class PartyMasterListView {
 
@@ -26,6 +30,11 @@ public class PartyMasterListView {
     private final ObservableList<Party> rows = FXCollections.observableArrayList();
     private TableView<Party> table;
     private TextField searchField;
+    private final Set<String> searchTerms = new HashSet<>();
+    private final ObservableList<String> searchTagsList = FXCollections.observableArrayList();
+    private Timer debounceTimer;
+    private static final int DEBOUNCE_DELAY = 500;
+    private static final int MAX_SEARCH_TERMS = 5;
 
     public Parent createContent() {
         VBox root = new VBox(10);
@@ -44,21 +53,77 @@ public class PartyMasterListView {
         refreshBtn.setOnAction(e -> loadRows());
 
         searchField = new TextField();
-        searchField.setPromptText("Search in all columns...");
-        searchField.setOnAction(e -> searchRows());
+        searchField.setPromptText("Type and press Enter to add search term...");
+        searchField.setOnKeyPressed(e -> {
+            if (e.getCode().toString().equals("ENTER")) {
+                addSearchTerm();
+                e.consume();
+            }
+        });
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (debounceTimer != null) {
+                debounceTimer.cancel();
+            }
+            debounceTimer = new Timer();
+            debounceTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    Platform.runLater(PartyMasterListView.this::searchRows);
+                }
+            }, DEBOUNCE_DELAY);
+        });
 
-        Button searchBtn = new Button("Search");
-        searchBtn.getStyleClass().add("primary-button");
-        searchBtn.setOnAction(e -> searchRows());
+        Button clearBtn = new Button("Clear");
+        clearBtn.setOnAction(e -> {
+            searchField.clear();
+            searchTerms.clear();
+            searchTagsList.clear();
+            loadRows();
+        });
 
-        HBox actions = new HBox(10, addBtn, refreshBtn, new Label("Search:"), searchField, searchBtn);
-        actions.setAlignment(Pos.CENTER_LEFT);
+        HBox searchBox = new HBox(10, new Label("Search:"), searchField, clearBtn);
+        searchBox.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(searchField, Priority.ALWAYS);
+
+        FlowPane tagsPane = new FlowPane(8, 8);
+        tagsPane.setStyle("-fx-padding: 8px; -fx-border-color: #e0e0e0; -fx-border-radius: 4;");
+        tagsPane.setPrefHeight(50);
+        tagsPane.setItems(searchTagsList);
+        tagsPane.setCellFactory(param -> new ListCell<String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                } else {
+                    HBox tag = new HBox(5);
+                    tag.setStyle("-fx-padding: 4px 8px; -fx-background-color: #e3f2fd; -fx-border-color: #1976d2; -fx-border-radius: 4; -fx-alignment: CENTER;");
+                    Label label = new Label(item);
+                    Button removeBtn = new Button("✕");
+                    removeBtn.setStyle("-fx-padding: 0; -fx-font-size: 12px;");
+                    removeBtn.setOnAction(e -> removeSearchTerm(item));
+                    tag.getChildren().addAll(label, removeBtn);
+                    setGraphic(tag);
+                }
+            }
+        });
+
+        VBox searchSection = new VBox(8);
+        searchSection.getChildren().addAll(searchBox, tagsPane);
+
+        HBox actions = new HBox(10, addBtn, refreshBtn);
+        actions.setAlignment(Pos.CENTER_LEFT);
 
         table = new TableView<>();
         table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
 
-        table.getColumns().add(col("ID",           "id",          70));
+        TableColumn<Party, Integer> serialCol = new TableColumn<>("S.No");
+        serialCol.setCellValueFactory(cellData -> {
+            int index = table.getItems().indexOf(cellData.getValue());
+            return new javafx.beans.property.SimpleObjectProperty<>(index + 1);
+        });
+        serialCol.setPrefWidth(70);
+        table.getColumns().add(serialCol);
         table.getColumns().add(col("Company Name", "name",       200));
         table.getColumns().add(col("Owner Name",   "ownerName",  160));
         table.getColumns().add(col("Mobile",       "mobile",     130));
@@ -127,7 +192,7 @@ public class PartyMasterListView {
         });
 
         VBox.setVgrow(table, Priority.ALWAYS);
-        root.getChildren().addAll(heading, actions, table);
+        root.getChildren().addAll(heading, actions, searchSection, table);
 
         loadRows();
         return root;
@@ -145,19 +210,40 @@ public class PartyMasterListView {
     }
 
     private void searchRows() {
-        String keyword = searchField.getText();
-        if (keyword == null || keyword.isBlank()) {
+        if (searchTerms.isEmpty()) {
             loadRows();
             return;
         }
         AppExecutor.submit(() -> {
             try {
-                List<Party> data = dao.searchAllColumns(keyword.trim());
+                List<Party> data = dao.getAll();
+                for (String term : searchTerms) {
+                    data.retainAll(dao.searchAllColumns(term.trim()));
+                }
                 Platform.runLater(() -> rows.setAll(data));
             } catch (Exception ignored) {
                 Platform.runLater(rows::clear);
             }
         });
+    }
+
+    private void addSearchTerm() {
+        String term = searchField.getText().trim();
+        if (term.isEmpty() || searchTerms.size() >= MAX_SEARCH_TERMS) {
+            return;
+        }
+        if (!searchTerms.contains(term)) {
+            searchTerms.add(term);
+            searchTagsList.add(term);
+            searchField.clear();
+            searchRows();
+        }
+    }
+
+    private void removeSearchTerm(String term) {
+        searchTerms.remove(term);
+        searchTagsList.remove(term);
+        searchRows();
     }
 
     private TableColumn<Party, Object> col(String title, String property, double width) {
