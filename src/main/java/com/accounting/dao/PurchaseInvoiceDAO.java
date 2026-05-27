@@ -149,6 +149,18 @@ public class PurchaseInvoiceDAO {
         return invoices;
     }
 
+    public String getLastInvoiceNumber() throws Exception {
+        String sql = "SELECT invoice_no FROM purchase_invoices ORDER BY id DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                return rs.getString("invoice_no");
+            }
+        }
+        return null;
+    }
+
     public List<PurchaseInvoice> searchAllColumns(String keyword) throws Exception {
         String sql = """
                 SELECT *

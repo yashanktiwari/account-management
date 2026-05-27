@@ -2,6 +2,7 @@ package com.accounting.ui.dialog;
 
 import com.accounting.dao.PartyDAO;
 import com.accounting.dao.PurchaseInvoiceDAO;
+import com.accounting.dao.SettingsDAO;
 import com.accounting.model.InvoiceLineItem;
 import com.accounting.model.Party;
 import com.accounting.model.PurchaseInvoice;
@@ -139,27 +140,27 @@ public class PurchaseInvoiceDialog {
             invoiceDatePicker.setValue(invoice.getInvoiceDate());
             voucherTypeCombo.setValue(invoice.getVoucherType());
             remarksField.setText(invoice.getRemarks());
-            
+
             // Credit/Debit
             creditDebitCombo.setValue(invoice.getCreditDebit() != null ? invoice.getCreditDebit() : "Debit");
-            
+
             // Account Name
             accountNameField.setText(invoice.getAccountName());
-            
+
             // Paid by
             paidByCombo.setValue(invoice.getPaidBy());
-            
+
             // Bank details
             bankNameField.setText(invoice.getBankName());
             bankAccountField.setText(invoice.getBankAccount());
             ifscCodeField.setText(invoice.getIfscCode());
-            
+
             // Supplier details
             supplierField.setText(invoice.getPartyName()); // Load supplier name
             supplierAddressField.setText(invoice.getSupplierAddress());
             supplierContactNumberField.setText(invoice.getSupplierContactNumber());
             supplierGstNoField.setText(invoice.getSupplierGstNo());
-            
+
             // Set GST checkboxes based on values
             sgstCheckBox.setSelected(invoice.getSgstAmount() > 0);
             sgstValueField.setText(String.valueOf((int) invoice.getSgstAmount()));
@@ -167,12 +168,49 @@ public class PurchaseInvoiceDialog {
             cgstValueField.setText(String.valueOf((int) invoice.getCgstAmount()));
             igstCheckBox.setSelected(invoice.getIgstAmount() > 0);
             igstValueField.setText(String.valueOf((int) invoice.getIgstAmount()));
-            
+
             // Load line items
             lineItems.setAll(invoice.getLineItems());
             lineItemTable.setItems(lineItems);
             updateTotal();
+        } else {
+            // New invoice - auto-generate invoice number
+            generateNextInvoiceNumber();
         }
+    }
+
+    private void generateNextInvoiceNumber() {
+        AppExecutor.submit(() -> {
+            try {
+                SettingsDAO settingsDAO = new SettingsDAO();
+                String startingNumberStr = settingsDAO.getSetting("purchase_invoice_starting_number");
+                int startingNumber = startingNumberStr != null ? Integer.parseInt(startingNumberStr) : 1;
+
+                // Get the last invoice number from database
+                String lastInvoiceNo = new PurchaseInvoiceDAO().getLastInvoiceNumber();
+                int lastNumber = 0;
+                if (lastInvoiceNo != null && !lastInvoiceNo.isEmpty()) {
+                    try {
+                        lastNumber = Integer.parseInt(lastInvoiceNo);
+                    } catch (NumberFormatException e) {
+                        // If invoice number is not a number, use starting number
+                        lastNumber = startingNumber - 1;
+                    }
+                }
+
+                // Next invoice number is max of starting number and last number + 1
+                int nextNumber = Math.max(startingNumber, lastNumber + 1);
+
+                Platform.runLater(() -> {
+                    invoiceNoField.setText(String.valueOf(nextNumber));
+                });
+            } catch (Exception e) {
+                log.error("Failed to generate invoice number", e);
+                Platform.runLater(() -> {
+                    invoiceNoField.setText("1"); // Default to 1 if there's an error
+                });
+            }
+        });
     }
 
     // Helper method to trigger auto-fill from party selection
@@ -714,11 +752,15 @@ public class PurchaseInvoiceDialog {
         printBtn.setStyle("-fx-padding: 8 20 8 20; -fx-font-size: 12px; -fx-background-color: #0891b2; -fx-text-fill: white;");
         printBtn.setOnAction(e -> printInvoice());
 
+        Button settingsBtn = new Button("Settings");
+        settingsBtn.setStyle("-fx-padding: 8 20 8 20; -fx-font-size: 12px; -fx-background-color: #6b7280; -fx-text-fill: white;");
+        settingsBtn.setOnAction(e -> openSettingsDialog());
+
         Button closeBtn = new Button("Close");
         closeBtn.setStyle("-fx-padding: 8 20 8 20; -fx-font-size: 12px;");
         closeBtn.setOnAction(e -> stage.close());
 
-        HBox buttonsBox = new HBox(10, saveBtn, printBtn, closeBtn);
+        HBox buttonsBox = new HBox(10, saveBtn, printBtn, settingsBtn, closeBtn);
         buttonsBox.setAlignment(Pos.CENTER_RIGHT);
 
         HBox footer = new HBox(20, totalsBox, buttonsBox);
@@ -827,6 +869,15 @@ public class PurchaseInvoiceDialog {
         AppExecutor.submit(() -> {
             try {
                 new PurchaseInvoiceDAO().save(invoice);
+
+                // Update the next invoice number in settings
+                try {
+                    int currentInvoiceNo = Integer.parseInt(invoice.getInvoiceNo());
+                    new SettingsDAO().saveSetting("purchase_invoice_starting_number", String.valueOf(currentInvoiceNo + 1));
+                } catch (Exception e) {
+                    log.error("Failed to update invoice number in settings", e);
+                }
+
                 Platform.runLater(() -> {
                     NotificationUtil.showSuccess("Success", "Invoice saved successfully");
                     stage.close();
@@ -840,6 +891,56 @@ public class PurchaseInvoiceDialog {
 
     private void printInvoice() {
         AlertUtil.showInfo("Info", "Print functionality will be implemented with PDF export");
+    }
+
+    private void openSettingsDialog() {
+        AppExecutor.submit(() -> {
+            try {
+                SettingsDAO settingsDAO = new SettingsDAO();
+                String currentStartingNumber = settingsDAO.getSetting("purchase_invoice_starting_number");
+                if (currentStartingNumber == null) {
+                    currentStartingNumber = "1";
+                }
+
+                String finalCurrentStartingNumber = currentStartingNumber;
+                Platform.runLater(() -> {
+                    TextInputDialog dialog = new TextInputDialog(finalCurrentStartingNumber);
+                    dialog.setTitle("Invoice Settings");
+                    dialog.setHeaderText("Set Starting Invoice Number");
+                    dialog.setContentText("Enter the starting invoice number:");
+
+                    dialog.showAndWait().ifPresent(newNumber -> {
+                        try {
+                            int num = Integer.parseInt(newNumber);
+                            if (num >= 0) {
+                                AppExecutor.submit(() -> {
+                                    try {
+                                        settingsDAO.saveSetting("purchase_invoice_starting_number", String.valueOf(num));
+                                        Platform.runLater(() -> {
+                                            AlertUtil.showSuccess("Success", "Starting invoice number updated to " + num);
+                                            // Regenerate invoice number if it's a new invoice
+                                            if (invoice.getId() <= 0) {
+                                                generateNextInvoiceNumber();
+                                            }
+                                        });
+                                    } catch (Exception e) {
+                                        log.error("Failed to save setting", e);
+                                        Platform.runLater(() -> AlertUtil.showError("Error", "Failed to save setting"));
+                                    }
+                                });
+                            } else {
+                                AlertUtil.showWarning("Validation", "Please enter a non-negative number");
+                            }
+                        } catch (NumberFormatException e) {
+                            AlertUtil.showWarning("Validation", "Please enter a valid number");
+                        }
+                    });
+                });
+            } catch (Exception e) {
+                log.error("Failed to load settings", e);
+                Platform.runLater(() -> AlertUtil.showError("Error", "Failed to load settings"));
+            }
+        });
     }
 
     private Label label(String text) {
