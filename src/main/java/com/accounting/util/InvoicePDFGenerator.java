@@ -65,11 +65,6 @@ public class InvoicePDFGenerator {
             // Add bank and GST details
             addBankAndGSTDetails(document, invoice);
 
-            // Add remarks
-            if (invoice.getRemarks() != null && !invoice.getRemarks().isEmpty()) {
-                addRemarks(document, invoice.getRemarks());
-            }
-
             // Add terms and signature
             addTermsAndSignature(document);
 
@@ -129,11 +124,6 @@ public class InvoicePDFGenerator {
 
             // Add bank and GST details
             addBankAndGSTDetails(document, invoice);
-
-            // Add remarks
-            if (invoice.getRemarks() != null && !invoice.getRemarks().isEmpty()) {
-                addRemarks(document, invoice.getRemarks());
-            }
 
             // Add terms and signature
             addTermsAndSignature(document);
@@ -224,18 +214,18 @@ public class InvoicePDFGenerator {
     }
 
     private static void addPurchaseInvoiceDetails(Document document, PurchaseInvoice invoice) throws DocumentException {
-        PdfPTable table = new PdfPTable(2);
-        table.setWidthPercentage(100);
-        table.setWidths(new float[]{1f, 1f});
-        table.setSpacingBefore(10);
+        // Invoice No and Date section with border
+        PdfPTable invoiceTable = new PdfPTable(2);
+        invoiceTable.setWidthPercentage(100);
+        invoiceTable.setWidths(new float[]{1f, 1f});
+        invoiceTable.setSpacingBefore(10);
 
-        // Invoice No and Date
-        addDetailCell(table, "Invoice No -", invoice.getInvoiceNo() != null ? invoice.getInvoiceNo() : "", true);
-        addDetailCell(table, "Invoice Date -", invoice.getInvoiceDate() != null ? invoice.getInvoiceDate().format(DATE_FORMATTER) : "", true);
+        addDetailCell(invoiceTable, "Invoice No -", invoice.getInvoiceNo() != null ? invoice.getInvoiceNo() : "", true);
+        addDetailCell(invoiceTable, "Invoice Date -", invoice.getInvoiceDate() != null ? invoice.getInvoiceDate().format(DATE_FORMATTER) : "", true);
 
-        document.add(table);
+        document.add(invoiceTable);
 
-        // Billed To section - separate table
+        // Billed To section - separate table with border
         PdfPTable billedToTable = new PdfPTable(1);
         billedToTable.setWidthPercentage(100);
         billedToTable.setSpacingBefore(5);
@@ -251,7 +241,7 @@ public class InvoicePDFGenerator {
 
         document.add(billedToTable);
 
-        // GSTIN, PAN, State Code in one line
+        // GSTIN, PAN, State Code in one line with border
         PdfPTable gstTable = new PdfPTable(3);
         gstTable.setWidthPercentage(100);
         gstTable.setWidths(new float[]{2f, 1.5f, 1f});
@@ -263,7 +253,7 @@ public class InvoicePDFGenerator {
 
         document.add(gstTable);
 
-        // State and Contact in next line
+        // State and Contact in next line with border
         PdfPTable stateContactTable = new PdfPTable(2);
         stateContactTable.setWidthPercentage(100);
         stateContactTable.setWidths(new float[]{2f, 2f});
@@ -276,18 +266,18 @@ public class InvoicePDFGenerator {
     }
 
     private static void addSaleInvoiceDetails(Document document, SaleInvoice invoice) throws DocumentException {
-        PdfPTable table = new PdfPTable(2);
-        table.setWidthPercentage(100);
-        table.setWidths(new float[]{1f, 1f});
-        table.setSpacingBefore(10);
+        // Invoice No and Date section with border
+        PdfPTable invoiceTable = new PdfPTable(2);
+        invoiceTable.setWidthPercentage(100);
+        invoiceTable.setWidths(new float[]{1f, 1f});
+        invoiceTable.setSpacingBefore(10);
 
-        // Invoice No and Date
-        addDetailCell(table, "Invoice No -", invoice.getInvoiceNo() != null ? invoice.getInvoiceNo() : "", true);
-        addDetailCell(table, "Invoice Date -", invoice.getInvoiceDate() != null ? invoice.getInvoiceDate().format(DATE_FORMATTER) : "", true);
+        addDetailCell(invoiceTable, "Invoice No -", invoice.getInvoiceNo() != null ? invoice.getInvoiceNo() : "", true);
+        addDetailCell(invoiceTable, "Invoice Date -", invoice.getInvoiceDate() != null ? invoice.getInvoiceDate().format(DATE_FORMATTER) : "", true);
 
-        document.add(table);
+        document.add(invoiceTable);
 
-        // Billed To section - separate table
+        // Billed To section - separate table with border
         PdfPTable billedToTable = new PdfPTable(1);
         billedToTable.setWidthPercentage(100);
         billedToTable.setSpacingBefore(5);
@@ -303,7 +293,7 @@ public class InvoicePDFGenerator {
 
         document.add(billedToTable);
 
-        // GSTIN, PAN, State Code in one line
+        // GSTIN, PAN, State Code in one line with border
         PdfPTable gstTable = new PdfPTable(3);
         gstTable.setWidthPercentage(100);
         gstTable.setWidths(new float[]{2f, 1.5f, 1f});
@@ -315,7 +305,7 @@ public class InvoicePDFGenerator {
 
         document.add(gstTable);
 
-        // State and Contact in next line
+        // State and Contact in next line with border
         PdfPTable stateContactTable = new PdfPTable(2);
         stateContactTable.setWidthPercentage(100);
         stateContactTable.setWidths(new float[]{2f, 2f});
@@ -363,16 +353,6 @@ public class InvoicePDFGenerator {
             addTableCell(table, String.format("%.2f", item.getTotal()));
             totalAmount += item.getTotal();
         }
-
-        // Total row
-        PdfPCell totalLabelCell = createCell("Total Amount:", true);
-        totalLabelCell.setColspan(10);
-        totalLabelCell.setBorder(Rectangle.NO_BORDER);
-        table.addCell(totalLabelCell);
-        
-        PdfPCell totalValueCell = createCell(String.format("%.2f", totalAmount), true);
-        totalValueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        table.addCell(totalValueCell);
 
         document.add(table);
     }
@@ -497,6 +477,18 @@ public class InvoicePDFGenerator {
         amountWords.setSpacingBefore(10);
         amountWords.setAlignment(Element.ALIGN_LEFT);
         document.add(amountWords);
+
+        // Remarks section
+        String remarks = "";
+        if (invoice instanceof PurchaseInvoice) {
+            remarks = ((PurchaseInvoice) invoice).getRemarks();
+        } else if (invoice instanceof SaleInvoice) {
+            remarks = ((SaleInvoice) invoice).getRemarks();
+        }
+        
+        if (remarks != null && !remarks.isEmpty()) {
+            addRemarks(document, remarks);
+        }
     }
 
     private static String convertNumberToWords(double amount) {
