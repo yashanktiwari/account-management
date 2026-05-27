@@ -16,6 +16,7 @@ public class PurchaseInvoiceDAO {
     private static final Logger log = get(PurchaseInvoiceDAO.class);
 
     public void save(PurchaseInvoice invoice) throws Exception {
+        ensureInvoiceColumns();
         String sql = """
                 INSERT INTO purchase_invoices (invoice_no, invoice_date, party_id, party_name, voucher_type,
                 gst, taxable_amount, sgst_amount, cgst_amount, igst_amount, total_gst, net_amount, remarks,
@@ -62,6 +63,7 @@ public class PurchaseInvoiceDAO {
     }
 
     public void update(PurchaseInvoice invoice) throws Exception {
+        ensureInvoiceColumns();
         String sql = """
                 UPDATE purchase_invoices SET invoice_no=?, invoice_date=?, party_id=?, party_name=?,
                 voucher_type=?, gst=?, taxable_amount=?, sgst_amount=?, cgst_amount=?, igst_amount=?,
@@ -227,6 +229,39 @@ public class PurchaseInvoiceDAO {
             try (Statement stmt = conn.createStatement()) {
                 if (!existing.contains("date")) {
                     stmt.executeUpdate("ALTER TABLE invoice_line_items ADD COLUMN date VARCHAR(20)");
+                }
+            }
+        }
+    }
+
+    private void ensureInvoiceColumns() throws Exception {
+        try (Connection conn = DBConnection.getConnection()) {
+            DatabaseMetaData meta = conn.getMetaData();
+            List<String> existing = new ArrayList<>();
+            try (ResultSet rs = meta.getColumns(conn.getCatalog(), null, "purchase_invoices", null)) {
+                while (rs.next()) {
+                    existing.add(rs.getString("COLUMN_NAME").toLowerCase());
+                }
+            }
+
+            try (Statement stmt = conn.createStatement()) {
+                if (!existing.contains("credit_debit")) {
+                    stmt.executeUpdate("ALTER TABLE purchase_invoices ADD COLUMN credit_debit VARCHAR(20)");
+                }
+                if (!existing.contains("account_name")) {
+                    stmt.executeUpdate("ALTER TABLE purchase_invoices ADD COLUMN account_name VARCHAR(255)");
+                }
+                if (!existing.contains("paid_by")) {
+                    stmt.executeUpdate("ALTER TABLE purchase_invoices ADD COLUMN paid_by VARCHAR(100)");
+                }
+                if (!existing.contains("supplier_address")) {
+                    stmt.executeUpdate("ALTER TABLE purchase_invoices ADD COLUMN supplier_address VARCHAR(255)");
+                }
+                if (!existing.contains("supplier_contact_number")) {
+                    stmt.executeUpdate("ALTER TABLE purchase_invoices ADD COLUMN supplier_contact_number VARCHAR(20)");
+                }
+                if (!existing.contains("supplier_gst_no")) {
+                    stmt.executeUpdate("ALTER TABLE purchase_invoices ADD COLUMN supplier_gst_no VARCHAR(20)");
                 }
             }
         }
