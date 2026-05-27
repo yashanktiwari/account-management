@@ -32,16 +32,18 @@ public class InvoicePDFGenerator {
             // Add horizontal line after header
             LineSeparator headerLine = new LineSeparator(1, 100, new Color(0, 51, 102), Element.ALIGN_CENTER, -2);
             document.add(new Chunk(headerLine));
+            document.add(new Paragraph("\n")); // Add spacing after line
 
             // Add Original/Duplicate and Tax Invoice title
             PdfPTable titleTable = new PdfPTable(1);
             titleTable.setWidthPercentage(100);
 
             Paragraph origDup = new Paragraph("Original / Duplicate", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10));
-            origDup.setAlignment(Element.ALIGN_CENTER);
+            origDup.setAlignment(Element.ALIGN_RIGHT);
             PdfPCell origDupCell = new PdfPCell(origDup);
             origDupCell.setBorder(Rectangle.NO_BORDER);
             origDupCell.setPadding(2);
+            origDupCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
             titleTable.addCell(origDupCell);
 
             Paragraph title = new Paragraph("Tax Invoice", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, Color.WHITE));
@@ -95,16 +97,18 @@ public class InvoicePDFGenerator {
             // Add horizontal line after header
             LineSeparator headerLine = new LineSeparator(1, 100, new Color(0, 51, 102), Element.ALIGN_CENTER, -2);
             document.add(new Chunk(headerLine));
+            document.add(new Paragraph("\n")); // Add spacing after line
 
             // Add Original/Duplicate and Tax Invoice title
             PdfPTable titleTable = new PdfPTable(1);
             titleTable.setWidthPercentage(100);
 
             Paragraph origDup = new Paragraph("Original / Duplicate", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10));
-            origDup.setAlignment(Element.ALIGN_CENTER);
+            origDup.setAlignment(Element.ALIGN_RIGHT);
             PdfPCell origDupCell = new PdfPCell(origDup);
             origDupCell.setBorder(Rectangle.NO_BORDER);
             origDupCell.setPadding(2);
+            origDupCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
             titleTable.addCell(origDupCell);
 
             Paragraph title = new Paragraph("Tax Invoice", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, Color.WHITE));
@@ -423,11 +427,11 @@ public class InvoicePDFGenerator {
         PdfPCell bankDetails = new PdfPCell();
         bankDetails.setBorder(Rectangle.BOX);
         Paragraph bankPara = new Paragraph();
-        bankPara.add(new Chunk("A/C NAME - SIHAG ENTERPRISE\n", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8)));
-        bankPara.add(new Chunk("Bank Detail - AXIS BANK,\n", FontFactory.getFont(FontFactory.HELVETICA, 8)));
-        bankPara.add(new Chunk("Branch - Mundra\n", FontFactory.getFont(FontFactory.HELVETICA, 8)));
-        bankPara.add(new Chunk("Bank Account - 922020026748406\n", FontFactory.getFont(FontFactory.HELVETICA, 8)));
-        bankPara.add(new Chunk("IFSC Code - UTIB0000460\n", FontFactory.getFont(FontFactory.HELVETICA, 8)));
+        bankPara.add(new Chunk("A/C NAME - SIHAG ENTERPRISE\n", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9)));
+        bankPara.add(new Chunk("Bank Detail - AXIS BANK,\n", FontFactory.getFont(FontFactory.HELVETICA, 9)));
+        bankPara.add(new Chunk("Branch - Mundra\n", FontFactory.getFont(FontFactory.HELVETICA, 9)));
+        bankPara.add(new Chunk("Bank Account - 922020026748406\n", FontFactory.getFont(FontFactory.HELVETICA, 9)));
+        bankPara.add(new Chunk("IFSC Code - UTIB0000460\n", FontFactory.getFont(FontFactory.HELVETICA, 9)));
         bankDetails.addElement(bankPara);
         table.addCell(bankDetails);
 
@@ -467,23 +471,24 @@ public class InvoicePDFGenerator {
         othersDetails.addElement(othersTable);
         table.addCell(othersDetails);
 
-        // GST Amount and Net Amount row
+        document.add(table);
+
+        // GST Amount and Net Amount row - separate table below bank details
         PdfPTable gstNetTable = new PdfPTable(2);
         gstNetTable.setWidthPercentage(100);
         gstNetTable.setWidths(new float[]{1f, 1f});
         gstNetTable.setSpacingBefore(5);
 
         PdfPCell gstAmountLabel = createCell("GST Amount - " + String.format("%.2f", totalGst), true);
-        gstAmountLabel.setBorder(Rectangle.NO_BORDER);
+        gstAmountLabel.setBorder(Rectangle.BOX);
         gstNetTable.addCell(gstAmountLabel);
 
         PdfPCell netAmountCell = createCell("Net Amount - " + String.format("%.2f", netAmount), true);
         netAmountCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        netAmountCell.setBorder(Rectangle.NO_BORDER);
+        netAmountCell.setBorder(Rectangle.BOX);
         gstNetTable.addCell(netAmountCell);
 
         document.add(gstNetTable);
-        document.add(table);
 
         // Amount in words
         Paragraph amountWords = new Paragraph();
@@ -630,23 +635,25 @@ public class InvoicePDFGenerator {
     }
 
     private static void addDetailCell(PdfPTable table, String label, String value, boolean bold) {
-        Font font = bold ? FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9) : FontFactory.getFont(FontFactory.HELVETICA, 9);
+        Font font = bold ? FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10) : FontFactory.getFont(FontFactory.HELVETICA, 10);
         PdfPCell cell = new PdfPCell(new Phrase(label + " " + value, font));
         cell.setBorder(Rectangle.BOX);
         cell.setPadding(3);
+        cell.setNoWrap(false); // Enable text wrapping
         table.addCell(cell);
     }
 
     private static PdfPCell createCell(String text, boolean bold) {
-        Font font = bold ? FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9) : FontFactory.getFont(FontFactory.HELVETICA, 9);
+        Font font = bold ? FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10) : FontFactory.getFont(FontFactory.HELVETICA, 10);
         PdfPCell cell = new PdfPCell(new Phrase(text, font));
         cell.setBorder(Rectangle.BOX);
         cell.setPadding(3);
+        cell.setNoWrap(false); // Enable text wrapping
         return cell;
     }
 
     private static void addTableHeader(PdfPTable table, String text) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7)));
+        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8)));
         cell.setBackgroundColor(new Color(220, 220, 220));
         cell.setBorder(Rectangle.BOX);
         cell.setPadding(2);
@@ -655,22 +662,25 @@ public class InvoicePDFGenerator {
     }
 
     private static void addTableCell(PdfPTable table, String text) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA, 6)));
+        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA, 7)));
         cell.setBorder(Rectangle.BOX);
-        cell.setPadding(1);
+        cell.setPadding(2);
+        cell.setNoWrap(false); // Enable text wrapping
         table.addCell(cell);
     }
 
     private static void addGSTRow(PdfPTable table, String label, String value) {
-        PdfPCell labelCell = new PdfPCell(new Phrase(label, FontFactory.getFont(FontFactory.HELVETICA, 8)));
+        PdfPCell labelCell = new PdfPCell(new Phrase(label, FontFactory.getFont(FontFactory.HELVETICA, 9)));
         labelCell.setBorder(Rectangle.NO_BORDER);
         labelCell.setPadding(2);
+        labelCell.setNoWrap(false); // Enable text wrapping
         table.addCell(labelCell);
 
-        PdfPCell valueCell = new PdfPCell(new Phrase(value, FontFactory.getFont(FontFactory.HELVETICA, 8)));
+        PdfPCell valueCell = new PdfPCell(new Phrase(value, FontFactory.getFont(FontFactory.HELVETICA, 9)));
         valueCell.setBorder(Rectangle.NO_BORDER);
         valueCell.setPadding(2);
         valueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        valueCell.setNoWrap(false); // Enable text wrapping
         table.addCell(valueCell);
     }
 }
