@@ -20,18 +20,14 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.*;
-import javafx.scene.input.KeyCode;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.converter.DoubleStringConverter;
-import javafx.util.StringConverter;
 import org.controlsfx.control.textfield.TextFields;
 import org.slf4j.Logger;
 
 import java.time.LocalDate;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.List;
 import java.util.Objects;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -44,7 +40,6 @@ public class PurchaseInvoiceDialog {
     private ObservableList<InvoiceLineItem> lineItems = FXCollections.observableArrayList();
     private TableView<InvoiceLineItem> lineItemTable;
     private Label totalLabel;
-    private ComboBox<Party> partyCombo;
     private TextField invoiceNoField;
     private DatePicker invoiceDatePicker;
     private ComboBox<String> voucherTypeCombo;
@@ -66,10 +61,10 @@ public class PurchaseInvoiceDialog {
     private TextField supplierAddressField;
     private TextField supplierContactNumberField;
     private TextField supplierGstNoField;
+    private TextField supplierField; // Changed from ComboBox to TextField
     private ObservableList<Party> allParties = FXCollections.observableArrayList();
-    private ObservableList<Party> filteredParties = FXCollections.observableArrayList();
-    private Timer searchTimer;
-    private boolean isSelectingParty = false; // Flag to prevent re-filtering during selection
+    private Popup supplierPopup;
+    private ListView<Party> supplierListView;
     private Runnable onClose;
 
     public PurchaseInvoiceDialog() {
@@ -159,6 +154,7 @@ public class PurchaseInvoiceDialog {
             ifscCodeField.setText(invoice.getIfscCode());
             
             // Supplier details
+            supplierField.setText(invoice.getPartyName()); // Load supplier name
             supplierAddressField.setText(invoice.getSupplierAddress());
             supplierContactNumberField.setText(invoice.getSupplierContactNumber());
             supplierGstNoField.setText(invoice.getSupplierGstNo());
@@ -181,6 +177,7 @@ public class PurchaseInvoiceDialog {
     // Helper method to trigger auto-fill from party selection
     private void autofillFromParty(Party party) {
         if (party != null) {
+            supplierField.setText(party.getName());
             supplierAddressField.setText(party.getAddress());
             supplierContactNumberField.setText(party.getMobile());
             supplierGstNoField.setText(party.getGstin());
@@ -191,15 +188,99 @@ public class PurchaseInvoiceDialog {
         }
     }
 
-    private void filterSuppliers(String searchText) {
-        if (searchText == null || searchText.trim().isEmpty()) {
-            filteredParties.setAll(allParties);
-        } else {
-            String lower = searchText.toLowerCase();
-            filteredParties.setAll(allParties.stream()
-                    .filter(p -> p.getName() != null && p.getName().toLowerCase().contains(lower))
-                    .collect(java.util.stream.Collectors.toList()));
-        }
+    private void setupSupplierAutocomplete() {
+        supplierPopup = new Popup();
+        supplierPopup.setAutoHide(true);
+
+        supplierListView = new ListView<>();
+        supplierListView.setFocusTraversable(false);
+        supplierListView.setCellFactory(param -> new ListCell<Party>() {
+            @Override
+            protected void updateItem(Party party, boolean empty) {
+                super.updateItem(party, empty);
+                setText(empty || party == null ? "" : party.getName());
+            }
+        });
+
+        supplierPopup.getContent().add(supplierListView);
+
+        supplierField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal == null || newVal.isBlank()) {
+                supplierPopup.hide();
+                return;
+            }
+
+            List<Party> filtered = allParties.stream()
+                    .filter(p -> p.getName() != null && p.getName().toLowerCase().contains(newVal.toLowerCase()))
+                    .sorted((p1, p2) -> p1.getName().compareToIgnoreCase(p2.getName()))
+                    .collect(java.util.stream.Collectors.toList());
+
+            if (filtered.isEmpty()) {
+                supplierPopup.hide();
+                return;
+            }
+
+            supplierListView.getItems().setAll(filtered);
+
+            int visibleRows = Math.min(filtered.size(), 10);
+            supplierListView.setPrefHeight(visibleRows * 26 + 2);
+            supplierListView.setPrefWidth(supplierField.getWidth());
+
+            if (!supplierPopup.isShowing()) {
+                javafx.geometry.Point2D p = supplierField.localToScreen(0, supplierField.getHeight());
+                if (p != null) {
+                    supplierPopup.show(supplierField, p.getX(), p.getY());
+                }
+            }
+        });
+
+        // Mouse selection
+        supplierListView.setOnMouseClicked(e -> {
+            Party selected = supplierListView.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                supplierField.setText(selected.getName());
+                supplierPopup.hide();
+                autofillFromParty(selected);
+            }
+        });
+
+        // Keyboard navigation
+        supplierField.setOnKeyPressed(event -> {
+            switch (event.getCode()) {
+                case DOWN -> {
+                    if (supplierPopup.isShowing() && !supplierListView.getItems().isEmpty()) {
+                        supplierListView.requestFocus();
+                        if (supplierListView.getSelectionModel().isEmpty()) {
+                            supplierListView.getSelectionModel().selectFirst();
+                        }
+                    }
+                }
+                case ESCAPE -> supplierPopup.hide();
+                case TAB -> {
+                    if (supplierPopup.isShowing() && !supplierListView.getItems().isEmpty()) {
+                        Party first = supplierListView.getItems().get(0);
+                        supplierField.setText(first.getName());
+                        supplierPopup.hide();
+                        autofillFromParty(first);
+                    }
+                }
+                case ENTER -> {
+                    if (supplierPopup.isShowing() && !supplierListView.getItems().isEmpty()) {
+                        Party selected = supplierListView.getSelectionModel().getSelectedItem();
+                        if (selected != null) {
+                            supplierField.setText(selected.getName());
+                            supplierPopup.hide();
+                            autofillFromParty(selected);
+                        } else {
+                            Party first = supplierListView.getItems().get(0);
+                            supplierField.setText(first.getName());
+                            supplierPopup.hide();
+                            autofillFromParty(first);
+                        }
+                    }
+                }
+            }
+        });
     }
 
     private HBox createHeaderSection() {
@@ -256,70 +337,12 @@ public class PurchaseInvoiceDialog {
         grid.add(label("Account Name"), 0, 2);
         grid.add(accountNameField, 1, 2);
 
-        // Party (Supplier) with editable combo
-        partyCombo = new ComboBox<>();
-        partyCombo.setPrefWidth(250);
-        partyCombo.setEditable(true);
-        partyCombo.setVisibleRowCount(10); // Max 10 items, but will show fewer if less available
-        partyCombo.setItems(filteredParties);
-        partyCombo.setCellFactory(param -> new ListCell<Party>() {
-            @Override
-            protected void updateItem(Party party, boolean empty) {
-                super.updateItem(party, empty);
-                setText(empty || party == null ? "" : party.getName());
-            }
-        });
-        partyCombo.setConverter(new StringConverter<Party>() {
-            @Override
-            public String toString(Party party) {
-                return party == null ? "" : party.getName();
-            }
-            @Override
-            public Party fromString(String string) {
-                return null;
-            }
-        });
-
-        // Adjust visible row count based on actual number of items
-        partyCombo.showingProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal) {
-                int itemCount = partyCombo.getItems().size();
-                partyCombo.setVisibleRowCount(Math.min(itemCount, 10));
-            }
-        });
-
-        // Search debouncing on combo editor
-        partyCombo.getEditor().textProperty().addListener((obs, oldVal, newVal) -> {
-            if (isSelectingParty) return; // Don't filter while selecting
-            if (searchTimer != null) {
-                searchTimer.cancel();
-            }
-            searchTimer = new Timer();
-            searchTimer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    Platform.runLater(() -> {
-                        filterSuppliers(newVal);
-                        if (!newVal.isEmpty()) {
-                            partyCombo.show(); // Show dropdown when typing
-                        }
-                    });
-                }
-            }, 300);
-        });
-
-        // Prevent re-filtering when user selects an item
-        partyCombo.setOnAction(e -> {
-            isSelectingParty = true;
-            Party selected = partyCombo.getValue();
-            autofillFromParty(selected);
-            Platform.runLater(() -> {
-                isSelectingParty = false;
-            });
-        });
-
+        // Party (Supplier) with autocomplete TextField
+        supplierField = new TextField();
+        supplierField.setPrefWidth(250);
+        setupSupplierAutocomplete();
         grid.add(label("Supplier"), 2, 2);
-        grid.add(partyCombo, 3, 2);
+        grid.add(supplierField, 3, 2);
 
         loadParties();
         return grid;
@@ -615,13 +638,11 @@ public class PurchaseInvoiceDialog {
                 List<Party> parties = new PartyDAO().getAll();
                 Platform.runLater(() -> {
                     allParties.setAll(parties);
-                    filteredParties.setAll(parties);
 
                     // If editing, select the invoice's party
                     if (invoice.getId() > 0) {
                         for (Party p : parties) {
                             if (p.getId() == invoice.getPartyId()) {
-                                partyCombo.setValue(p);
                                 autofillFromParty(p);
                                 break;
                             }
@@ -652,18 +673,31 @@ public class PurchaseInvoiceDialog {
     }
 
     private void saveInvoice() {
-        if (partyCombo.getValue() == null) {
+        String supplierName = supplierField.getText();
+        if (supplierName == null || supplierName.trim().isEmpty()) {
             AlertUtil.showWarning("Validation", "Please select a supplier");
             return;
         }
+
+        // Find the party by name
+        Party selectedParty = allParties.stream()
+                .filter(p -> p.getName() != null && p.getName().equalsIgnoreCase(supplierName.trim()))
+                .findFirst()
+                .orElse(null);
+
+        if (selectedParty == null) {
+            AlertUtil.showWarning("Validation", "Invalid supplier selected");
+            return;
+        }
+
         if (lineItems.isEmpty()) {
             AlertUtil.showWarning("Validation", "Please add at least one line item");
             return;
         }
 
         invoice.setInvoiceDate(invoiceDatePicker.getValue());
-        invoice.setPartyId(partyCombo.getValue().getId());
-        invoice.setPartyName(partyCombo.getValue().getName());
+        invoice.setPartyId(selectedParty.getId());
+        invoice.setPartyName(selectedParty.getName());
         invoice.setVoucherType(voucherTypeCombo.getValue());
         invoice.setRemarks(remarksField.getText());
         invoice.setLineItems(new java.util.ArrayList<>(lineItems));
@@ -682,13 +716,13 @@ public class PurchaseInvoiceDialog {
 
         double total = lineItems.stream().mapToDouble(InvoiceLineItem::getTotal).sum();
         invoice.setTaxableAmount(total);
-        
+
         // Calculate GST amounts based on checkbox states
         double sgst = sgstCheckBox.isSelected() ? total * 0.09 : 0;
         double cgst = cgstCheckBox.isSelected() ? total * 0.09 : 0;
         double igst = igstCheckBox.isSelected() ? total * 0.18 : 0;
         double totalGst = sgst + cgst + igst;
-        
+
         invoice.setSgstAmount(sgst);
         invoice.setCgstAmount(cgst);
         invoice.setIgstAmount(igst);
