@@ -85,10 +85,9 @@ public class PartyMasterListView {
         searchBox.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(searchField, Priority.ALWAYS);
 
-        FlowPane tagsPane = new FlowPane(8, 8);
+        ListView<String> tagsPane = new ListView<>(searchTagsList);
         tagsPane.setStyle("-fx-padding: 8px; -fx-border-color: #e0e0e0; -fx-border-radius: 4;");
         tagsPane.setPrefHeight(50);
-        tagsPane.setItems(searchTagsList);
         tagsPane.setCellFactory(param -> new ListCell<String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
