@@ -247,8 +247,9 @@ public class PartyMasterListView {
                     data = new java.util.ArrayList<>();
                 }
                 
-                System.out.println("Search - Terms: " + searchTerms + ", Live text: '" + liveSearchText + "', Results: " + data.size());
-                Platform.runLater(() -> rows.setAll(data));
+                final List<Party> finalData = data;
+                System.out.println("Search - Terms: " + searchTerms + ", Live text: '" + liveSearchText + "', Results: " + finalData.size());
+                Platform.runLater(() -> rows.setAll(finalData));
             } catch (Exception e) {
                 e.printStackTrace();
                 Platform.runLater(rows::clear);
