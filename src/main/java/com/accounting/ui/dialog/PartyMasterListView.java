@@ -54,6 +54,7 @@ public class PartyMasterListView {
 
         searchField = new TextField();
         searchField.setPromptText("Type and press Enter to add search term...");
+        searchField.setPrefWidth(250);
         searchField.setOnKeyPressed(e -> {
             if (e.getCode().toString().equals("ENTER")) {
                 addSearchTerm();
@@ -64,13 +65,15 @@ public class PartyMasterListView {
             if (debounceTimer != null) {
                 debounceTimer.cancel();
             }
-            debounceTimer = new Timer();
-            debounceTimer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    Platform.runLater(PartyMasterListView.this::searchRows);
-                }
-            }, DEBOUNCE_DELAY);
+            if (!searchTerms.isEmpty()) {
+                debounceTimer = new Timer();
+                debounceTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        Platform.runLater(PartyMasterListView.this::searchRows);
+                    }
+                }, DEBOUNCE_DELAY);
+            }
         });
 
         Button clearBtn = new Button("Clear");
@@ -81,37 +84,30 @@ public class PartyMasterListView {
             loadRows();
         });
 
-        HBox searchBox = new HBox(10, new Label("Search:"), searchField, clearBtn);
-        searchBox.setAlignment(Pos.CENTER_LEFT);
-        HBox.setHgrow(searchField, Priority.ALWAYS);
-
-        ListView<String> tagsPane = new ListView<>(searchTagsList);
-        tagsPane.setStyle("-fx-padding: 8px; -fx-border-color: #e0e0e0; -fx-border-radius: 4;");
-        tagsPane.setPrefHeight(50);
-        tagsPane.setCellFactory(param -> new ListCell<String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setGraphic(null);
-                } else {
-                    HBox tag = new HBox(5);
-                    tag.setStyle("-fx-padding: 4px 8px; -fx-background-color: #e3f2fd; -fx-border-color: #1976d2; -fx-border-radius: 4; -fx-alignment: CENTER;");
-                    Label label = new Label(item);
-                    Button removeBtn = new Button("✕");
-                    removeBtn.setStyle("-fx-padding: 0; -fx-font-size: 12px;");
-                    removeBtn.setOnAction(e -> removeSearchTerm(item));
-                    tag.getChildren().addAll(label, removeBtn);
-                    setGraphic(tag);
-                }
+        HBox tagsContainer = new HBox(8);
+        tagsContainer.setAlignment(Pos.CENTER_LEFT);
+        tagsContainer.setPrefHeight(32);
+        searchTagsList.addListener((javafx.collections.ListChangeListener<String>) change -> {
+            tagsContainer.getChildren().clear();
+            for (String term : searchTagsList) {
+                HBox tag = new HBox(5);
+                tag.setStyle("-fx-padding: 4px 8px; -fx-background-color: #e3f2fd; -fx-border-color: #1976d2; -fx-border-radius: 4; -fx-alignment: CENTER;");
+                Label label = new Label(term);
+                Button removeBtn = new Button("✕");
+                removeBtn.setStyle("-fx-padding: 0; -fx-font-size: 12px;");
+                removeBtn.setOnAction(e -> removeSearchTerm(term));
+                tag.getChildren().addAll(label, removeBtn);
+                tagsContainer.getChildren().add(tag);
             }
         });
 
-        VBox searchSection = new VBox(8);
-        searchSection.getChildren().addAll(searchBox, tagsPane);
-
-        HBox actions = new HBox(10, addBtn, refreshBtn);
+        HBox actions = new HBox(10, addBtn, refreshBtn, new Label("Search:"), searchField, clearBtn);
         actions.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(tagsContainer, Priority.ALWAYS);
+
+        HBox searchRow = new HBox(10, actions, tagsContainer);
+        searchRow.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(tagsContainer, Priority.ALWAYS);
 
         table = new TableView<>();
         table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
@@ -191,7 +187,7 @@ public class PartyMasterListView {
         });
 
         VBox.setVgrow(table, Priority.ALWAYS);
-        root.getChildren().addAll(heading, actions, searchSection, table);
+        root.getChildren().addAll(heading, searchRow, table);
 
         loadRows();
         return root;
