@@ -285,10 +285,7 @@ public class PurchaseInvoiceDialog {
             supplierAddressField.setText(party.getAddress());
             supplierContactNumberField.setText(party.getMobile());
             supplierGstNoField.setText(party.getGstin());
-            // Don't auto-fill paidBy - let user choose
-            bankNameField.setText(party.getBankName());
-            bankAccountField.setText(party.getBankAccount());
-            ifscCodeField.setText(party.getIfscCode());
+            // Don't auto-fill paidBy, bank details - let user choose
         }
     }
 
@@ -894,6 +891,7 @@ public class PurchaseInvoiceDialog {
         }
 
         invoice.setInvoiceDate(invoiceDatePicker.getValue());
+        invoice.setInvoiceNo(invoiceNoField.getText());
         invoice.setPartyId(selectedParty.getId());
         invoice.setPartyName(selectedParty.getName());
         invoice.setVoucherType(voucherTypeCombo.getValue());
