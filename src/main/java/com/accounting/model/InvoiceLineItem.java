@@ -4,6 +4,7 @@ public class InvoiceLineItem {
 
     private int id;
     private int invoiceId;
+    private String date;
     private String lrNo;
     private String containerNo;
     private String vehicleNo;
@@ -34,6 +35,9 @@ public class InvoiceLineItem {
 
     public int getInvoiceId() { return invoiceId; }
     public void setInvoiceId(int invoiceId) { this.invoiceId = invoiceId; }
+
+    public String getDate() { return date; }
+    public void setDate(String date) { this.date = date; }
 
     public String getLrNo() { return lrNo; }
     public void setLrNo(String lrNo) { this.lrNo = lrNo; }

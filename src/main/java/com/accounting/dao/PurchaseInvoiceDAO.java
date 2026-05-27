@@ -191,24 +191,44 @@ public class PurchaseInvoiceDAO {
     }
 
     private void saveLineItem(int invoiceId, InvoiceLineItem item) throws Exception {
+        ensureLineItemColumns();
         String sql = """
-                INSERT INTO invoice_line_items (invoice_id, lr_no, container_no, vehicle_no, from_location,
+                INSERT INTO invoice_line_items (invoice_id, date, lr_no, container_no, vehicle_no, from_location,
                 to_location, type, basic_freight, detention_charge, total)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, invoiceId);
-            pstmt.setString(2, item.getLrNo());
-            pstmt.setString(3, item.getContainerNo());
-            pstmt.setString(4, item.getVehicleNo());
-            pstmt.setString(5, item.getFrom());
-            pstmt.setString(6, item.getTo());
-            pstmt.setString(7, item.getType());
-            pstmt.setDouble(8, item.getBasicFreight());
-            pstmt.setDouble(9, item.getDetentionCharge());
-            pstmt.setDouble(10, item.getTotal());
+            pstmt.setString(2, item.getDate());
+            pstmt.setString(3, item.getLrNo());
+            pstmt.setString(4, item.getContainerNo());
+            pstmt.setString(5, item.getVehicleNo());
+            pstmt.setString(6, item.getFrom());
+            pstmt.setString(7, item.getTo());
+            pstmt.setString(8, item.getType());
+            pstmt.setDouble(9, item.getBasicFreight());
+            pstmt.setDouble(10, item.getDetentionCharge());
+            pstmt.setDouble(11, item.getTotal());
             pstmt.executeUpdate();
+        }
+    }
+
+    private void ensureLineItemColumns() throws Exception {
+        try (Connection conn = DBConnection.getConnection()) {
+            DatabaseMetaData meta = conn.getMetaData();
+            List<String> existing = new ArrayList<>();
+            try (ResultSet rs = meta.getColumns(conn.getCatalog(), null, "invoice_line_items", null)) {
+                while (rs.next()) {
+                    existing.add(rs.getString("COLUMN_NAME").toLowerCase());
+                }
+            }
+
+            try (Statement stmt = conn.createStatement()) {
+                if (!existing.contains("date")) {
+                    stmt.executeUpdate("ALTER TABLE invoice_line_items ADD COLUMN date VARCHAR(20)");
+                }
+            }
         }
     }
 
@@ -269,6 +289,7 @@ public class PurchaseInvoiceDAO {
         InvoiceLineItem item = new InvoiceLineItem();
         item.setId(rs.getInt("id"));
         item.setInvoiceId(rs.getInt("invoice_id"));
+        item.setDate(rs.getString("date"));
         item.setLrNo(rs.getString("lr_no"));
         item.setContainerNo(rs.getString("container_no"));
         item.setVehicleNo(rs.getString("vehicle_no"));

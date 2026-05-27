@@ -24,12 +24,16 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.converter.DoubleStringConverter;
+import javafx.util.converter.StringConverter;
 import org.controlsfx.control.textfield.TextFields;
 import org.slf4j.Logger;
 
 import java.time.LocalDate;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.List;
 import java.util.Objects;
+import javafx.beans.property.SimpleIntegerProperty;
 
 public class PurchaseInvoiceDialog {
 
@@ -61,6 +65,10 @@ public class PurchaseInvoiceDialog {
     private TextField supplierAddressField;
     private TextField supplierContactNumberField;
     private TextField supplierGstNoField;
+    private TextField supplierSearchField;
+    private ObservableList<Party> allParties = FXCollections.observableArrayList();
+    private ObservableList<Party> filteredParties = FXCollections.observableArrayList();
+    private Timer searchTimer;
     private Runnable onClose;
 
     public PurchaseInvoiceDialog() {
@@ -175,10 +183,21 @@ public class PurchaseInvoiceDialog {
             supplierAddressField.setText(party.getAddress());
             supplierContactNumberField.setText(party.getMobile());
             supplierGstNoField.setText(party.getGstin());
-            paidByCombo.setValue(party.getOwnerName());
+            // Don't auto-fill paidBy - let user choose
             bankNameField.setText(party.getBankName());
             bankAccountField.setText(party.getBankAccount());
             ifscCodeField.setText(party.getIfscCode());
+        }
+    }
+
+    private void filterSuppliers(String searchText) {
+        if (searchText == null || searchText.trim().isEmpty()) {
+            filteredParties.setAll(allParties);
+        } else {
+            String lower = searchText.toLowerCase();
+            filteredParties.setAll(allParties.stream()
+                    .filter(p -> p.getName() != null && p.getName().toLowerCase().contains(lower))
+                    .collect(java.util.stream.Collectors.toList()));
         }
     }
 
@@ -236,11 +255,48 @@ public class PurchaseInvoiceDialog {
         grid.add(label("Account Name"), 0, 2);
         grid.add(accountNameField, 1, 2);
 
-        // Party (Supplier)
+        // Party (Supplier) with search
+        VBox supplierBox = new VBox(4);
+        supplierSearchField = new TextField();
+        supplierSearchField.setPromptText("Search supplier...");
         partyCombo = new ComboBox<>();
         partyCombo.setPrefWidth(250);
+        partyCombo.setItems(filteredParties);
+        partyCombo.setCellFactory(param -> new ListCell<Party>() {
+            @Override
+            protected void updateItem(Party party, boolean empty) {
+                super.updateItem(party, empty);
+                setText(empty || party == null ? "" : party.getName());
+            }
+        });
+        partyCombo.setConverter(new StringConverter<Party>() {
+            @Override
+            public String toString(Party party) {
+                return party == null ? "" : party.getName();
+            }
+            @Override
+            public Party fromString(String string) {
+                return null;
+            }
+        });
+
+        // Search debouncing
+        supplierSearchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (searchTimer != null) {
+                searchTimer.cancel();
+            }
+            searchTimer = new Timer();
+            searchTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    Platform.runLater(() -> filterSuppliers(newVal));
+                }
+            }, 300);
+        });
+
+        supplierBox.getChildren().addAll(supplierSearchField, partyCombo);
         grid.add(label("Supplier"), 2, 2);
-        grid.add(partyCombo, 3, 2);
+        grid.add(supplierBox, 3, 2);
 
         loadParties();
         return grid;
@@ -362,78 +418,56 @@ public class PurchaseInvoiceDialog {
 
         lineItemTable = new TableView<>(lineItems);
         lineItemTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
-        lineItemTable.setEditable(true);
+        lineItemTable.setEditable(false);
+
+        // Sr. No. column (auto-filled, read-only)
+        TableColumn<InvoiceLineItem, Integer> srNoCol = new TableColumn<>("Sr. No");
+        srNoCol.setCellValueFactory(cellData -> new SimpleIntegerProperty(lineItems.indexOf(cellData.getValue()) + 1).asObject());
+        srNoCol.setPrefWidth(60);
+
+        // Date column (auto-filled, read-only)
+        TableColumn<InvoiceLineItem, String> dateCol = new TableColumn<>("Date");
+        dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
+        dateCol.setPrefWidth(100);
 
         TableColumn<InvoiceLineItem, String> lrNoCol = new TableColumn<>("LR No");
         lrNoCol.setCellValueFactory(new PropertyValueFactory<>("lrNo"));
-        lrNoCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        lrNoCol.setOnEditCommit(e -> e.getRowValue().setLrNo(e.getNewValue()));
         lrNoCol.setPrefWidth(80);
 
         TableColumn<InvoiceLineItem, String> containerCol = new TableColumn<>("Container No");
         containerCol.setCellValueFactory(new PropertyValueFactory<>("containerNo"));
-        containerCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        containerCol.setOnEditCommit(e -> e.getRowValue().setContainerNo(e.getNewValue()));
         containerCol.setPrefWidth(100);
 
         TableColumn<InvoiceLineItem, String> vehicleCol = new TableColumn<>("Vehicle No");
         vehicleCol.setCellValueFactory(new PropertyValueFactory<>("vehicleNo"));
-        vehicleCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        vehicleCol.setOnEditCommit(e -> e.getRowValue().setVehicleNo(e.getNewValue()));
         vehicleCol.setPrefWidth(100);
 
         TableColumn<InvoiceLineItem, String> fromCol = new TableColumn<>("From");
         fromCol.setCellValueFactory(new PropertyValueFactory<>("from"));
-        fromCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        fromCol.setOnEditCommit(e -> e.getRowValue().setFrom(e.getNewValue()));
         fromCol.setPrefWidth(100);
 
         TableColumn<InvoiceLineItem, String> toCol = new TableColumn<>("To");
         toCol.setCellValueFactory(new PropertyValueFactory<>("to"));
-        toCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        toCol.setOnEditCommit(e -> e.getRowValue().setTo(e.getNewValue()));
         toCol.setPrefWidth(100);
 
         TableColumn<InvoiceLineItem, String> typeCol = new TableColumn<>("Type");
         typeCol.setCellValueFactory(new PropertyValueFactory<>("type"));
-        typeCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        typeCol.setOnEditCommit(e -> e.getRowValue().setType(e.getNewValue()));
         typeCol.setPrefWidth(80);
 
         TableColumn<InvoiceLineItem, Double> freightCol = new TableColumn<>("Basic Freight");
         freightCol.setCellValueFactory(new PropertyValueFactory<>("basicFreight"));
-        freightCol.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
-        freightCol.setOnEditCommit(e -> {
-            e.getRowValue().setBasicFreight(e.getNewValue());
-            updateTotal();
-        });
         freightCol.setPrefWidth(100);
 
         TableColumn<InvoiceLineItem, Double> detentionCol = new TableColumn<>("Detention Charge");
         detentionCol.setCellValueFactory(new PropertyValueFactory<>("detentionCharge"));
-        detentionCol.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
-        detentionCol.setOnEditCommit(e -> {
-            e.getRowValue().setDetentionCharge(e.getNewValue());
-            updateTotal();
-        });
         detentionCol.setPrefWidth(120);
 
         TableColumn<InvoiceLineItem, Double> totalCol = new TableColumn<>("Total");
         totalCol.setCellValueFactory(new PropertyValueFactory<>("total"));
         totalCol.setPrefWidth(100);
 
-        lineItemTable.getColumns().addAll(lrNoCol, containerCol, vehicleCol, fromCol, toCol, typeCol,
+        lineItemTable.getColumns().addAll(srNoCol, dateCol, lrNoCol, containerCol, vehicleCol, fromCol, toCol, typeCol,
                 freightCol, detentionCol, totalCol);
-
-        // Make table editable with single click
-        lineItemTable.setOnMouseClicked(e -> {
-            if (e.getClickCount() == 1) {
-                TablePosition pos = lineItemTable.getFocusModel().getFocusedCell();
-                if (pos != null) {
-                    lineItemTable.edit(pos.getRow(), pos.getTableColumn());
-                }
-            }
-        });
 
         // Right-click context menu for deleting rows
         ContextMenu contextMenu = new ContextMenu();
@@ -461,13 +495,88 @@ public class PurchaseInvoiceDialog {
 
         Button addRowBtn = new Button("+ Add Row");
         addRowBtn.setStyle("-fx-padding: 6 12 6 12; -fx-font-size: 12px;");
-        addRowBtn.setOnAction(e -> lineItems.add(new InvoiceLineItem()));
+        addRowBtn.setOnAction(e -> showAddLineItemDialog());
 
         VBox section = new VBox(8, sectionTitle, addRowBtn, lineItemTable);
         section.setPadding(new Insets(12));
         section.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
         VBox.setVgrow(lineItemTable, Priority.ALWAYS);
         return section;
+    }
+
+    private void showAddLineItemDialog() {
+        Stage dialogStage = new Stage();
+        dialogStage.initModality(Modality.APPLICATION_MODAL);
+        dialogStage.setTitle("Add Line Item");
+        dialogStage.initOwner(stage);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(16);
+        grid.setVgap(12);
+        grid.setPadding(new Insets(20));
+
+        TextField lrNoField = new TextField();
+        TextField containerField = new TextField();
+        TextField vehicleField = new TextField();
+        TextField fromField = new TextField();
+        TextField toField = new TextField();
+        TextField typeField = new TextField();
+        TextField freightField = new TextField();
+        TextField detentionField = new TextField();
+
+        grid.add(new Label("LR No:"), 0, 0);
+        grid.add(lrNoField, 1, 0);
+        grid.add(new Label("Container No:"), 2, 0);
+        grid.add(containerField, 3, 0);
+        grid.add(new Label("Vehicle No:"), 0, 1);
+        grid.add(vehicleField, 1, 1);
+        grid.add(new Label("From:"), 2, 1);
+        grid.add(fromField, 3, 1);
+        grid.add(new Label("To:"), 0, 2);
+        grid.add(toField, 1, 2);
+        grid.add(new Label("Type:"), 2, 2);
+        grid.add(typeField, 3, 2);
+        grid.add(new Label("Basic Freight:"), 0, 3);
+        grid.add(freightField, 1, 3);
+        grid.add(new Label("Detention Charge:"), 2, 3);
+        grid.add(detentionField, 3, 3);
+
+        Button saveBtn = new Button("Save");
+        Button cancelBtn = new Button("Cancel");
+        HBox buttonBox = new HBox(10, saveBtn, cancelBtn);
+        buttonBox.setAlignment(Pos.CENTER_RIGHT);
+        grid.add(buttonBox, 1, 6, 2, 1);
+
+        saveBtn.setOnAction(e -> {
+            try {
+                double freight = freightField.getText().isEmpty() ? 0 : Double.parseDouble(freightField.getText());
+                double detention = detentionField.getText().isEmpty() ? 0 : Double.parseDouble(detentionField.getText());
+
+                InvoiceLineItem item = new InvoiceLineItem();
+                item.setDate(java.time.LocalDate.now().toString());
+                item.setLrNo(lrNoField.getText());
+                item.setContainerNo(containerField.getText());
+                item.setVehicleNo(vehicleField.getText());
+                item.setFrom(fromField.getText());
+                item.setTo(toField.getText());
+                item.setType(typeField.getText());
+                item.setBasicFreight(freight);
+                item.setDetentionCharge(detention);
+                item.setTotal(freight + detention);
+
+                lineItems.add(item);
+                updateTotal();
+                dialogStage.close();
+            } catch (NumberFormatException ex) {
+                AlertUtil.showError("Error", "Please enter valid numbers for freight and detention charges");
+            }
+        });
+
+        cancelBtn.setOnAction(e -> dialogStage.close());
+
+        Scene scene = new Scene(grid, 500, 350);
+        dialogStage.setScene(scene);
+        dialogStage.showAndWait();
     }
 
     private HBox createFooterSection() {
@@ -518,24 +627,22 @@ public class PurchaseInvoiceDialog {
     private void loadParties() {
         AppExecutor.submit(() -> {
             try {
-                List<Party> allParties = new PartyDAO().getAll();
+                List<Party> parties = new PartyDAO().getAll();
                 Platform.runLater(() -> {
-                    partyCombo.setItems(FXCollections.observableArrayList(allParties));
-                    if (!allParties.isEmpty()) {
-                        // If editing, select the invoice's party, otherwise select first
-                        if (invoice.getId() > 0) {
-                            for (Party p : allParties) {
-                                if (p.getId() == invoice.getPartyId()) {
-                                    partyCombo.setValue(p);
-                                    autofillFromParty(p);
-                                    break;
-                                }
+                    allParties.setAll(parties);
+                    filteredParties.setAll(parties);
+
+                    // If editing, select the invoice's party
+                    if (invoice.getId() > 0) {
+                        for (Party p : parties) {
+                            if (p.getId() == invoice.getPartyId()) {
+                                partyCombo.setValue(p);
+                                autofillFromParty(p);
+                                break;
                             }
-                        } else {
-                            partyCombo.setValue(allParties.get(0));
-                            autofillFromParty(allParties.get(0));
                         }
                     }
+                    // No default selection for new invoices
 
                     // Add listener to auto-fill fields when supplier is selected
                     partyCombo.setOnAction(e -> {
