@@ -129,16 +129,8 @@ public class PurchaseInvoiceListView {
         table.getColumns().add(col("Invoice Date", "invoiceDate", 120));
         table.getColumns().add(col("Party Name", "partyName", 200));
         table.getColumns().add(col("Voucher Type", "voucherType", 120));
-        table.getColumns().add(col("GST", "gst", 100));
-        table.getColumns().add(col("Taxable Amount", "taxableAmount", 120));
-        table.getColumns().add(col("SGST", "sgstAmount", 80));
-        table.getColumns().add(col("CGST", "cgstAmount", 80));
-        table.getColumns().add(col("IGST", "igstAmount", 80));
-        table.getColumns().add(col("Total GST", "totalGst", 100));
-        table.getColumns().add(col("Net Amount", "netAmount", 120));
-        table.getColumns().add(col("Status", "status", 100));
+        table.getColumns().add(col("Total Amount", "netAmount", 120));
         table.getColumns().add(col("Created At", "createdAt", 120));
-        table.getColumns().add(col("Updated At", "updatedAt", 120));
 
         table.setItems(rows);
 

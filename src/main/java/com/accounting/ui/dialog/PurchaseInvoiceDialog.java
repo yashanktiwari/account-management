@@ -43,8 +43,15 @@ public class PurchaseInvoiceDialog {
     private TextField invoiceNoField;
     private DatePicker invoiceDatePicker;
     private ComboBox<String> voucherTypeCombo;
-    private ComboBox<String> gstCombo;
     private TextField remarksField;
+    private CheckBox sgstCheckBox;
+    private CheckBox cgstCheckBox;
+    private CheckBox igstCheckBox;
+    private TextField sgstValueField;
+    private TextField cgstValueField;
+    private TextField igstValueField;
+    private Label taxableValueLabel;
+    private Label gstValueLabel;
     private Runnable onClose;
 
     public PurchaseInvoiceDialog() {
@@ -104,8 +111,15 @@ public class PurchaseInvoiceDialog {
             invoiceNoField.setText(invoice.getInvoiceNo());
             invoiceDatePicker.setValue(invoice.getInvoiceDate());
             voucherTypeCombo.setValue(invoice.getVoucherType());
-            gstCombo.setValue(invoice.getGst());
             remarksField.setText(invoice.getRemarks());
+            
+            // Set GST checkboxes based on values
+            sgstCheckBox.setSelected(invoice.getSgstAmount() > 0);
+            sgstValueField.setText(String.valueOf((int) invoice.getSgstAmount()));
+            cgstCheckBox.setSelected(invoice.getCgstAmount() > 0);
+            cgstValueField.setText(String.valueOf((int) invoice.getCgstAmount()));
+            igstCheckBox.setSelected(invoice.getIgstAmount() > 0);
+            igstValueField.setText(String.valueOf((int) invoice.getIgstAmount()));
             
             // Load line items
             lineItems.setAll(invoice.getLineItems());
@@ -163,18 +177,47 @@ public class PurchaseInvoiceDialog {
         grid.add(label("Voucher Type"), 2, 1);
         grid.add(voucherTypeCombo, 3, 1);
 
-        // GST
-        gstCombo = new ComboBox<>(FXCollections.observableArrayList(
-                "5%", "12%", "18%", "28%"
-        ));
-        gstCombo.setValue("18%");
+        // GST Checkboxes
+        sgstCheckBox = new CheckBox("SGST");
+        sgstValueField = new TextField("0");
+        sgstValueField.setPrefWidth(80);
+        sgstValueField.setEditable(false);
+        sgstCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            sgstValueField.setText(newVal ? "9" : "0");
+            updateTotal();
+        });
+        HBox sgstBox = new HBox(10, sgstCheckBox, sgstValueField);
         grid.add(label("GST"), 0, 2);
-        grid.add(gstCombo, 1, 2);
+        grid.add(sgstBox, 1, 2);
+
+        cgstCheckBox = new CheckBox("CGST");
+        cgstValueField = new TextField("0");
+        cgstValueField.setPrefWidth(80);
+        cgstValueField.setEditable(false);
+        cgstCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            cgstValueField.setText(newVal ? "9" : "0");
+            updateTotal();
+        });
+        HBox cgstBox = new HBox(10, cgstCheckBox, cgstValueField);
+        grid.add(label(""), 2, 2);
+        grid.add(cgstBox, 3, 2);
+
+        igstCheckBox = new CheckBox("IGST");
+        igstValueField = new TextField("0");
+        igstValueField.setPrefWidth(80);
+        igstValueField.setEditable(false);
+        igstCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            igstValueField.setText(newVal ? "18" : "0");
+            updateTotal();
+        });
+        HBox igstBox = new HBox(10, igstCheckBox, igstValueField);
+        grid.add(label(""), 0, 3);
+        grid.add(igstBox, 1, 3);
 
         // Remarks
         remarksField = new TextField();
-        grid.add(label("Remarks"), 2, 2);
-        grid.add(remarksField, 3, 2);
+        grid.add(label("Remarks"), 2, 3);
+        grid.add(remarksField, 3, 3);
 
         loadParties();
         return grid;
@@ -276,12 +319,26 @@ public class PurchaseInvoiceDialog {
     }
 
     private HBox createFooterSection() {
-        Label totalLbl = new Label("Total Amount:");
-        totalLbl.setStyle("-fx-font-size: 13px; -fx-font-weight: bold;");
+        Label taxableLbl = new Label("Taxable Amount:");
+        taxableLbl.setStyle("-fx-font-size: 12px;");
+        taxableValueLabel = new Label("0.00");
+        taxableValueLabel.setStyle("-fx-font-size: 12px;");
+        
+        Label gstLbl = new Label("GST:");
+        gstLbl.setStyle("-fx-font-size: 12px;");
+        gstValueLabel = new Label("0.00");
+        gstValueLabel.setStyle("-fx-font-size: 12px;");
+        
+        Label netLbl = new Label("Net Amount:");
+        netLbl.setStyle("-fx-font-size: 13px; -fx-font-weight: bold;");
         totalLabel = new Label("0.00");
         totalLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #dc2626;");
 
-        HBox totalsBox = new HBox(12, totalLbl, totalLabel);
+        VBox taxableBox = new VBox(2, taxableLbl, taxableValueLabel);
+        VBox gstBox = new VBox(2, gstLbl, gstValueLabel);
+        VBox netBox = new VBox(2, netLbl, totalLabel);
+        
+        HBox totalsBox = new HBox(20, taxableBox, gstBox, netBox);
         totalsBox.setAlignment(Pos.CENTER_RIGHT);
         HBox.setHgrow(totalsBox, Priority.ALWAYS);
 
@@ -334,8 +391,18 @@ public class PurchaseInvoiceDialog {
     }
 
     private void updateTotal() {
-        double total = lineItems.stream().mapToDouble(InvoiceLineItem::getTotal).sum();
-        totalLabel.setText(String.format("%.2f", total));
+        double taxable = lineItems.stream().mapToDouble(InvoiceLineItem::getTotal).sum();
+        
+        // Calculate GST based on checkbox states
+        double sgst = sgstCheckBox.isSelected() ? taxable * 0.09 : 0;
+        double cgst = cgstCheckBox.isSelected() ? taxable * 0.09 : 0;
+        double igst = igstCheckBox.isSelected() ? taxable * 0.18 : 0;
+        double totalGst = sgst + cgst + igst;
+        double netAmount = taxable + totalGst;
+        
+        taxableValueLabel.setText(String.format("%.2f", taxable));
+        gstValueLabel.setText(String.format("%.2f", totalGst));
+        totalLabel.setText(String.format("%.2f", netAmount));
     }
 
     private void saveInvoice() {
@@ -352,14 +419,24 @@ public class PurchaseInvoiceDialog {
         invoice.setPartyId(partyCombo.getValue().getId());
         invoice.setPartyName(partyCombo.getValue().getName());
         invoice.setVoucherType(voucherTypeCombo.getValue());
-        invoice.setGst(gstCombo.getValue());
         invoice.setRemarks(remarksField.getText());
         invoice.setLineItems(new java.util.ArrayList<>(lineItems));
         invoice.setStatus("SAVED");
 
         double total = lineItems.stream().mapToDouble(InvoiceLineItem::getTotal).sum();
         invoice.setTaxableAmount(total);
-        invoice.setNetAmount(total);
+        
+        // Calculate GST amounts based on checkbox states
+        double sgst = sgstCheckBox.isSelected() ? total * 0.09 : 0;
+        double cgst = cgstCheckBox.isSelected() ? total * 0.09 : 0;
+        double igst = igstCheckBox.isSelected() ? total * 0.18 : 0;
+        double totalGst = sgst + cgst + igst;
+        
+        invoice.setSgstAmount(sgst);
+        invoice.setCgstAmount(cgst);
+        invoice.setIgstAmount(igst);
+        invoice.setTotalGst(totalGst);
+        invoice.setNetAmount(total + totalGst);
 
         AppExecutor.submit(() -> {
             try {
