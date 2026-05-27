@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.prefs.Preferences;
+import java.util.Arrays;
 
 public class PartyMasterListView {
 
@@ -138,11 +140,37 @@ public class PartyMasterListView {
         table.getColumns().add(col("TAN No.",      "tanNo",      110));
         table.getColumns().add(col("TDS",          "tds",         80));
         table.getColumns().add(col("Aadhar No.",   "aadharNo",   150));
-        table.getColumns().add(col("Routes",       "routes",     200));
+        
+        // Routes column with custom formatting
+        TableColumn<Party, String> routesCol = new TableColumn<>("Routes");
+        routesCol.setCellValueFactory(new PropertyValueFactory<>("routes"));
+        routesCol.setPrefWidth(200);
+        routesCol.setCellFactory(col -> new TableCell<Party, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null || item.trim().isEmpty()) {
+                    setText("");
+                } else {
+                    String[] routes = item.split("\\|");
+                    String formatted = String.join(", ", routes);
+                    setText(formatted);
+                    setWrapText(true);
+                }
+            }
+        });
+        table.getColumns().add(routesCol);
+        
         table.getColumns().add(col("Created At",   "createdAt",  170));
         table.getColumns().add(col("Updated At",   "updatedAt",  170));
 
         table.setItems(rows);
+        
+        // Save column state when columns change
+        table.getColumns().addListener((javafx.collections.ListChangeListener<TableColumn<Party, ?>>) change -> saveColumnState());
+        
+        // Load saved column state
+        loadColumnState();
 
         // ── Right-click context menu ──────────────────────────────────────────
         ContextMenu ctxMenu = new ContextMenu();
@@ -278,5 +306,44 @@ public class PartyMasterListView {
         column.setCellValueFactory(new PropertyValueFactory<>(property));
         column.setPrefWidth(width);
         return column;
+    }
+
+    private void saveColumnState() {
+        Preferences prefs = Preferences.userNodeForPackage(PartyMasterListView.class);
+        StringBuilder columnOrder = new StringBuilder();
+        StringBuilder columnWidths = new StringBuilder();
+        
+        for (int i = 0; i < table.getColumns().size(); i++) {
+            TableColumn<Party, ?> col = table.getColumns().get(i);
+            if (i > 0) {
+                columnOrder.append(",");
+                columnWidths.append(",");
+            }
+            columnOrder.append(col.getText());
+            columnWidths.append((int) col.getWidth());
+        }
+        
+        prefs.put("partyTable_columnOrder", columnOrder.toString());
+        prefs.put("partyTable_columnWidths", columnWidths.toString());
+    }
+
+    private void loadColumnState() {
+        Preferences prefs = Preferences.userNodeForPackage(PartyMasterListView.class);
+        String columnWidthsStr = prefs.get("partyTable_columnWidths", "");
+        
+        if (!columnWidthsStr.isEmpty()) {
+            String[] widths = columnWidthsStr.split(",");
+            int[] parsedWidths = new int[widths.length];
+            try {
+                for (int i = 0; i < widths.length && i < table.getColumns().size(); i++) {
+                    parsedWidths[i] = Integer.parseInt(widths[i]);
+                    if (parsedWidths[i] > 0) {
+                        table.getColumns().get(i).setPrefWidth(parsedWidths[i]);
+                    }
+                }
+            } catch (NumberFormatException e) {
+                // Ignore if preferences are corrupted
+            }
+        }
     }
 }
