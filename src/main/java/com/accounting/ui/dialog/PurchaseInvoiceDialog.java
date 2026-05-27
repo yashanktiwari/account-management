@@ -917,7 +917,7 @@ public class PurchaseInvoiceDialog {
                                     try {
                                         settingsDAO.saveSetting("purchase_invoice_starting_number", String.valueOf(num));
                                         Platform.runLater(() -> {
-                                            AlertUtil.showSuccess("Success", "Starting invoice number updated to " + num);
+                                            AlertUtil.showInfo("Success", "Starting invoice number updated to " + num);
                                             // Regenerate invoice number if it's a new invoice
                                             if (invoice.getId() <= 0) {
                                                 generateNextInvoiceNumber();
