@@ -167,6 +167,14 @@ public class SaleInvoiceListView {
             }
         });
 
+        MenuItem printItem = new MenuItem("Print");
+        printItem.setOnAction(e -> {
+            SaleInvoice selected = table.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                printInvoice(selected);
+            }
+        });
+
         MenuItem deleteItem = new MenuItem("Delete");
         deleteItem.setOnAction(e -> {
             SaleInvoice selected = table.getSelectionModel().getSelectedItem();
@@ -188,7 +196,7 @@ public class SaleInvoiceListView {
             });
         });
 
-        ctxMenu.getItems().addAll(editItem, new SeparatorMenuItem(), deleteItem);
+        ctxMenu.getItems().addAll(editItem, printItem, new SeparatorMenuItem(), deleteItem);
 
         // Show menu only on rows that have data
         table.setRowFactory(tv -> {
@@ -289,6 +297,29 @@ public class SaleInvoiceListView {
         searchTerms.remove(term);
         searchTagsList.remove(term);
         searchRows();
+    }
+
+    private void printInvoice(SaleInvoice invoice) {
+        try {
+            // Create invoices directory if it doesn't exist
+            java.io.File invoicesDir = new java.io.File("invoices");
+            if (!invoicesDir.exists()) {
+                invoicesDir.mkdirs();
+            }
+
+            // Generate PDF file name
+            String fileName = "invoices/Sale_Invoice_" + invoice.getInvoiceNo() + "_" + 
+                            java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".pdf";
+
+            // Generate PDF
+            com.accounting.util.InvoicePDFGenerator.generateSaleInvoicePDF(invoice, fileName);
+
+            // Show print preview dialog
+            new PrintPreviewDialog(fileName).show(MainApp.getPrimaryStage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            AlertUtil.showError("Error", "Failed to generate PDF: " + e.getMessage());
+        }
     }
 
     private TableColumn<SaleInvoice, Object> col(String title, String property, double width) {

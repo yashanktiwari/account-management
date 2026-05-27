@@ -8,6 +8,7 @@ import com.lowagie.text.pdf.*;
 import org.slf4j.Logger;
 
 import java.awt.Color;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -16,6 +17,7 @@ public class InvoicePDFGenerator {
 
     private static final Logger log = AppLogger.get(InvoicePDFGenerator.class);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private static final String IMAGES_FOLDER = "src/main/resources/images";
 
     public static void generatePurchaseInvoicePDF(PurchaseInvoice invoice, String outputPath) {
         try {
@@ -120,11 +122,36 @@ public class InvoicePDFGenerator {
     }
 
     private static void addHeader(Document document) throws DocumentException {
+        try {
+            // Try to load header image
+            File headerFile = new File(IMAGES_FOLDER + "/HEADER.PNG");
+            if (!headerFile.exists()) {
+                headerFile = new File(IMAGES_FOLDER + "/HEADER.png");
+            }
+            
+            if (headerFile.exists()) {
+                Image headerImage = Image.getInstance(headerFile.getAbsolutePath());
+                // Scale image to fit page width
+                headerImage.scaleToFit(PageSize.A4.getWidth() - 72, 100);
+                headerImage.setAlignment(Element.ALIGN_CENTER);
+                document.add(headerImage);
+            } else {
+                // Fallback to text-based header if image not found
+                log.warn("Header image not found at: {}. Using text-based header.", headerFile.getAbsolutePath());
+                addTextBasedHeader(document);
+            }
+        } catch (Exception e) {
+            log.error("Failed to load header image, using text-based header", e);
+            addTextBasedHeader(document);
+        }
+    }
+
+    private static void addTextBasedHeader(Document document) throws DocumentException {
         PdfPTable headerTable = new PdfPTable(3);
         headerTable.setWidthPercentage(100);
         headerTable.setWidths(new float[]{1, 3, 2});
 
-        // Logo placeholder (you can add actual logo later)
+        // Logo placeholder
         PdfPCell logoCell = new PdfPCell(new Phrase("SE", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 36, new Color(0, 51, 153))));
         logoCell.setBorder(Rectangle.NO_BORDER);
         logoCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
@@ -444,6 +471,31 @@ public class InvoicePDFGenerator {
     }
 
     private static void addFooter(Document document) throws DocumentException {
+        try {
+            // Try to load footer image
+            File footerFile = new File(IMAGES_FOLDER + "/FOOTER.PNG");
+            if (!footerFile.exists()) {
+                footerFile = new File(IMAGES_FOLDER + "/FOOTER.png");
+            }
+            
+            if (footerFile.exists()) {
+                Image footerImage = Image.getInstance(footerFile.getAbsolutePath());
+                // Scale image to fit page width
+                footerImage.scaleToFit(PageSize.A4.getWidth() - 72, 80);
+                footerImage.setAlignment(Element.ALIGN_CENTER);
+                document.add(footerImage);
+            } else {
+                // Fallback to text-based footer if image not found
+                log.warn("Footer image not found at: {}. Using text-based footer.", footerFile.getAbsolutePath());
+                addTextBasedFooter(document);
+            }
+        } catch (Exception e) {
+            log.error("Failed to load footer image, using text-based footer", e);
+            addTextBasedFooter(document);
+        }
+    }
+
+    private static void addTextBasedFooter(Document document) throws DocumentException {
         // Location marker
         Paragraph location = new Paragraph();
         location.add(new Chunk("📍", FontFactory.getFont(FontFactory.HELVETICA, 10, new Color(204, 0, 0))));

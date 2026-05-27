@@ -838,15 +838,11 @@ public class PurchaseInvoiceDialog {
         saveBtn.setStyle("-fx-padding: 8 20 8 20; -fx-font-size: 12px; -fx-background-color: #16a34a; -fx-text-fill: white;");
         saveBtn.setOnAction(e -> saveInvoice());
 
-        Button printBtn = new Button("Print");
-        printBtn.setStyle("-fx-padding: 8 20 8 20; -fx-font-size: 12px; -fx-background-color: #0891b2; -fx-text-fill: white;");
-        printBtn.setOnAction(e -> printInvoice());
-
         Button closeBtn = new Button("Close");
         closeBtn.setStyle("-fx-padding: 8 20 8 20; -fx-font-size: 12px;");
         closeBtn.setOnAction(e -> stage.close());
 
-        HBox buttonsBox = new HBox(10, saveBtn, printBtn, closeBtn);
+        HBox buttonsBox = new HBox(10, saveBtn, closeBtn);
         buttonsBox.setAlignment(Pos.CENTER_RIGHT);
 
         HBox footer = new HBox(20, totalsBox, buttonsBox);
