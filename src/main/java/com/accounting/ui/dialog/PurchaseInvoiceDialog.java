@@ -425,6 +425,16 @@ public class PurchaseInvoiceDialog {
         lineItemTable.getColumns().addAll(lrNoCol, containerCol, vehicleCol, fromCol, toCol, typeCol,
                 freightCol, detentionCol, totalCol);
 
+        // Make table editable with single click
+        lineItemTable.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 1) {
+                TablePosition pos = lineItemTable.getFocusModel().getFocusedCell();
+                if (pos != null) {
+                    lineItemTable.edit(pos.getRow(), pos.getTableColumn());
+                }
+            }
+        });
+
         // Right-click context menu for deleting rows
         ContextMenu contextMenu = new ContextMenu();
         MenuItem deleteItem = new MenuItem("Delete Row");
@@ -508,13 +518,13 @@ public class PurchaseInvoiceDialog {
     private void loadParties() {
         AppExecutor.submit(() -> {
             try {
-                List<Party> suppliers = new PartyDAO().findByType("SUPPLIER");
+                List<Party> allParties = new PartyDAO().getAll();
                 Platform.runLater(() -> {
-                    partyCombo.setItems(FXCollections.observableArrayList(suppliers));
-                    if (!suppliers.isEmpty()) {
+                    partyCombo.setItems(FXCollections.observableArrayList(allParties));
+                    if (!allParties.isEmpty()) {
                         // If editing, select the invoice's party, otherwise select first
                         if (invoice.getId() > 0) {
-                            for (Party p : suppliers) {
+                            for (Party p : allParties) {
                                 if (p.getId() == invoice.getPartyId()) {
                                     partyCombo.setValue(p);
                                     autofillFromParty(p);
@@ -522,8 +532,8 @@ public class PurchaseInvoiceDialog {
                                 }
                             }
                         } else {
-                            partyCombo.setValue(suppliers.get(0));
-                            autofillFromParty(suppliers.get(0));
+                            partyCombo.setValue(allParties.get(0));
+                            autofillFromParty(allParties.get(0));
                         }
                     }
 
@@ -534,8 +544,8 @@ public class PurchaseInvoiceDialog {
                     });
                 });
             } catch (Exception e) {
-                log.error("Failed to load suppliers", e);
-                Platform.runLater(() -> AlertUtil.showError("Error", "Failed to load suppliers"));
+                log.error("Failed to load parties", e);
+                Platform.runLater(() -> AlertUtil.showError("Error", "Failed to load parties"));
             }
         });
     }
