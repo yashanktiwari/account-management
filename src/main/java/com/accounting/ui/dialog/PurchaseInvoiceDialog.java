@@ -69,6 +69,7 @@ public class PurchaseInvoiceDialog {
     private ObservableList<Party> allParties = FXCollections.observableArrayList();
     private ObservableList<Party> filteredParties = FXCollections.observableArrayList();
     private Timer searchTimer;
+    private boolean isSelectingParty = false; // Flag to prevent re-filtering during selection
     private Runnable onClose;
 
     public PurchaseInvoiceDialog() {
@@ -289,6 +290,7 @@ public class PurchaseInvoiceDialog {
 
         // Search debouncing on combo editor
         partyCombo.getEditor().textProperty().addListener((obs, oldVal, newVal) -> {
+            if (isSelectingParty) return; // Don't filter while selecting
             if (searchTimer != null) {
                 searchTimer.cancel();
             }
@@ -298,10 +300,22 @@ public class PurchaseInvoiceDialog {
                 public void run() {
                     Platform.runLater(() -> {
                         filterSuppliers(newVal);
-                        partyCombo.show(); // Show dropdown when typing
+                        if (!newVal.isEmpty()) {
+                            partyCombo.show(); // Show dropdown when typing
+                        }
                     });
                 }
             }, 300);
+        });
+
+        // Prevent re-filtering when user selects an item
+        partyCombo.setOnAction(e -> {
+            isSelectingParty = true;
+            Party selected = partyCombo.getValue();
+            autofillFromParty(selected);
+            Platform.runLater(() -> {
+                isSelectingParty = false;
+            });
         });
 
         grid.add(label("Supplier"), 2, 2);
@@ -429,22 +443,6 @@ public class PurchaseInvoiceDialog {
         lineItemTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         lineItemTable.setEditable(true);
 
-        // Ensure table refreshes when items change
-        lineItems.addListener((javafx.collections.ListChangeListener<InvoiceLineItem>) c -> {
-            while (c.next()) {
-                if (c.wasAdded() || c.wasRemoved()) {
-                    lineItemTable.refresh();
-                }
-            }
-        });
-
-        // Commit edit on focus lost to prevent data loss
-        lineItemTable.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal) {
-                lineItemTable.edit(-1, null); // Commit any pending edit
-            }
-        });
-
         // Sr. No. column (auto-filled, read-only)
         TableColumn<InvoiceLineItem, Integer> srNoCol = new TableColumn<>("Sr. No");
         srNoCol.setCellValueFactory(cellData -> new SimpleIntegerProperty(lineItems.indexOf(cellData.getValue()) + 1).asObject());
@@ -556,8 +554,6 @@ public class PurchaseInvoiceDialog {
             InvoiceLineItem item = new InvoiceLineItem();
             item.setDate(java.time.LocalDate.now().toString());
             lineItems.add(item);
-            lineItemTable.refresh(); // Refresh table to show new row
-            lineItemTable.getSelectionModel().select(item); // Select the new row
             updateTotal();
         });
 
@@ -632,12 +628,6 @@ public class PurchaseInvoiceDialog {
                         }
                     }
                     // No default selection for new invoices
-
-                    // Add listener to auto-fill fields when supplier is selected
-                    partyCombo.setOnAction(e -> {
-                        Party selected = partyCombo.getValue();
-                        autofillFromParty(selected);
-                    });
                 });
             } catch (Exception e) {
                 log.error("Failed to load parties", e);
