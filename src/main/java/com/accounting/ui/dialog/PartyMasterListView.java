@@ -65,15 +65,13 @@ public class PartyMasterListView {
             if (debounceTimer != null) {
                 debounceTimer.cancel();
             }
-            if (!searchTerms.isEmpty()) {
-                debounceTimer = new Timer();
-                debounceTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        Platform.runLater(PartyMasterListView.this::searchRows);
-                    }
-                }, DEBOUNCE_DELAY);
-            }
+            debounceTimer = new Timer();
+            debounceTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    Platform.runLater(PartyMasterListView.this::searchRows);
+                }
+            }, DEBOUNCE_DELAY);
         });
 
         Button clearBtn = new Button("Clear");
@@ -101,13 +99,19 @@ public class PartyMasterListView {
             }
         });
 
-        HBox actions = new HBox(10, addBtn, refreshBtn, new Label("Search:"), searchField, clearBtn);
-        actions.setAlignment(Pos.CENTER_LEFT);
+        HBox searchControls = new HBox(10, new Label("Search:"), searchField, clearBtn);
+        searchControls.setAlignment(Pos.CENTER_LEFT);
+
+        HBox searchRow = new HBox(10);
+        searchRow.setAlignment(Pos.CENTER_LEFT);
+        searchRow.getChildren().addAll(searchControls, tagsContainer);
         HBox.setHgrow(tagsContainer, Priority.ALWAYS);
 
-        HBox searchRow = new HBox(10, actions, tagsContainer);
-        searchRow.setAlignment(Pos.CENTER_LEFT);
-        HBox.setHgrow(tagsContainer, Priority.ALWAYS);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        HBox topBar = new HBox(10, searchRow, spacer, addBtn, refreshBtn);
+        topBar.setAlignment(Pos.CENTER_LEFT);
 
         table = new TableView<>();
         table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
@@ -187,7 +191,7 @@ public class PartyMasterListView {
         });
 
         VBox.setVgrow(table, Priority.ALWAYS);
-        root.getChildren().addAll(heading, searchRow, table);
+        root.getChildren().addAll(heading, topBar, table);
 
         loadRows();
         return root;
@@ -205,16 +209,27 @@ public class PartyMasterListView {
     }
 
     private void searchRows() {
-        if (searchTerms.isEmpty()) {
+        String liveSearchText = searchField.getText().trim();
+        
+        if (searchTerms.isEmpty() && liveSearchText.isEmpty()) {
             loadRows();
             return;
         }
+        
         AppExecutor.submit(() -> {
             try {
                 List<Party> data = dao.getAll();
-                for (String term : searchTerms) {
-                    data.retainAll(dao.searchAllColumns(term.trim()));
+                
+                if (!searchTerms.isEmpty()) {
+                    for (String term : searchTerms) {
+                        data.retainAll(dao.searchAllColumns(term.trim()));
+                    }
                 }
+                
+                if (!liveSearchText.isEmpty()) {
+                    data.retainAll(dao.searchAllColumns(liveSearchText));
+                }
+                
                 Platform.runLater(() -> rows.setAll(data));
             } catch (Exception ignored) {
                 Platform.runLater(rows::clear);
