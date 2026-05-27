@@ -466,6 +466,23 @@ public class PurchaseInvoiceDialog {
         lineItemTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         lineItemTable.setEditable(true);
 
+        // Commit edit when focused cell changes (moving between columns)
+        lineItemTable.getFocusModel().focusedCellProperty().addListener((obs, oldCell, newCell) -> {
+            if (oldCell != null && newCell != null) {
+                // Commit edit if moving to a different column in the same row or different row
+                if (oldCell.getRow() != newCell.getRow() || oldCell.getColumn() != newCell.getColumn()) {
+                    lineItemTable.edit(-1, null);
+                }
+            }
+        });
+
+        // Commit edit when table loses focus
+        lineItemTable.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) {
+                lineItemTable.edit(-1, null);
+            }
+        });
+
         // Sr. No. column (auto-filled, read-only)
         TableColumn<InvoiceLineItem, Integer> srNoCol = new TableColumn<>("Sr. No");
         srNoCol.setCellValueFactory(cellData -> new SimpleIntegerProperty(lineItems.indexOf(cellData.getValue()) + 1).asObject());
