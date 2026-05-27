@@ -919,7 +919,37 @@ public class SaleInvoiceDialog {
     }
 
     private void printInvoice() {
-        AlertUtil.showInfo("Info", "Print functionality will be implemented with PDF export");
+        if (invoice.getId() == 0) {
+            AlertUtil.showWarning("Warning", "Please save the invoice before printing");
+            return;
+        }
+
+        try {
+            // Create invoices directory if it doesn't exist
+            java.io.File invoicesDir = new java.io.File("invoices");
+            if (!invoicesDir.exists()) {
+                invoicesDir.mkdirs();
+            }
+
+            // Generate PDF file name
+            String fileName = "invoices/Sale_Invoice_" + invoice.getInvoiceNo() + "_" + 
+                            java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".pdf";
+
+            // Generate PDF
+            com.accounting.util.InvoicePDFGenerator.generateSaleInvoicePDF(invoice, fileName);
+
+            // Open the PDF
+            java.io.File pdfFile = new java.io.File(fileName);
+            if (pdfFile.exists()) {
+                if (java.awt.Desktop.isDesktopSupported()) {
+                    java.awt.Desktop.getDesktop().open(pdfFile);
+                }
+                AlertUtil.showInfo("Success", "Invoice PDF generated successfully!\nSaved to: " + fileName);
+            }
+        } catch (Exception e) {
+            log.error("Failed to generate PDF", e);
+            AlertUtil.showError("Error", "Failed to generate PDF: " + e.getMessage());
+        }
     }
 
     private Label label(String text) {
