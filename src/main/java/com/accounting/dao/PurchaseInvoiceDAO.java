@@ -20,9 +20,9 @@ public class PurchaseInvoiceDAO {
         String sql = """
                 INSERT INTO purchase_invoices (invoice_no, invoice_date, party_id, party_name, voucher_type,
                 gst, taxable_amount, sgst_amount, cgst_amount, igst_amount, total_gst, net_amount, remarks,
-                bank_name, bank_account, ifsc_code, credit_debit, account_name, paid_by, supplier_address,
+                bank_name, bank_account, ifsc_code, credit_debit, account_name, paid_by, payment_mode, supplier_address,
                 supplier_contact_number, supplier_gst_no, status, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -45,10 +45,11 @@ public class PurchaseInvoiceDAO {
             pstmt.setString(17, invoice.getCreditDebit());
             pstmt.setString(18, invoice.getAccountName());
             pstmt.setString(19, invoice.getPaidBy());
-            pstmt.setString(20, invoice.getSupplierAddress());
-            pstmt.setString(21, invoice.getSupplierContactNumber());
-            pstmt.setString(22, invoice.getSupplierGstNo());
-            pstmt.setString(23, invoice.getStatus());
+            pstmt.setString(20, invoice.getPaymentMode());
+            pstmt.setString(21, invoice.getSupplierAddress());
+            pstmt.setString(22, invoice.getSupplierContactNumber());
+            pstmt.setString(23, invoice.getSupplierGstNo());
+            pstmt.setString(24, invoice.getStatus());
 
             pstmt.executeUpdate();
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
@@ -68,7 +69,7 @@ public class PurchaseInvoiceDAO {
                 UPDATE purchase_invoices SET invoice_no=?, invoice_date=?, party_id=?, party_name=?,
                 voucher_type=?, gst=?, taxable_amount=?, sgst_amount=?, cgst_amount=?, igst_amount=?,
                 total_gst=?, net_amount=?, remarks=?, bank_name=?, bank_account=?, ifsc_code=?,
-                credit_debit=?, account_name=?, paid_by=?, supplier_address=?, supplier_contact_number=?,
+                credit_debit=?, account_name=?, paid_by=?, payment_mode=?, supplier_address=?, supplier_contact_number=?,
                 supplier_gst_no=?, status=?, updated_at=NOW() WHERE id=?
                 """;
         try (Connection conn = DBConnection.getConnection();
@@ -92,11 +93,12 @@ public class PurchaseInvoiceDAO {
             pstmt.setString(17, invoice.getCreditDebit());
             pstmt.setString(18, invoice.getAccountName());
             pstmt.setString(19, invoice.getPaidBy());
-            pstmt.setString(20, invoice.getSupplierAddress());
-            pstmt.setString(21, invoice.getSupplierContactNumber());
-            pstmt.setString(22, invoice.getSupplierGstNo());
-            pstmt.setString(23, invoice.getStatus());
-            pstmt.setInt(24, invoice.getId());
+            pstmt.setString(20, invoice.getPaymentMode());
+            pstmt.setString(21, invoice.getSupplierAddress());
+            pstmt.setString(22, invoice.getSupplierContactNumber());
+            pstmt.setString(23, invoice.getSupplierGstNo());
+            pstmt.setString(24, invoice.getStatus());
+            pstmt.setInt(25, invoice.getId());
 
             pstmt.executeUpdate();
             deleteLineItems(invoice.getId());
@@ -264,7 +266,10 @@ public class PurchaseInvoiceDAO {
                     stmt.executeUpdate("ALTER TABLE purchase_invoices ADD COLUMN account_name VARCHAR(255)");
                 }
                 if (!existing.contains("paid_by")) {
-                    stmt.executeUpdate("ALTER TABLE purchase_invoices ADD COLUMN paid_by VARCHAR(100)");
+                    stmt.executeUpdate("ALTER TABLE purchase_invoices ADD COLUMN paid_by VARCHAR(255)");
+                }
+                if (!existing.contains("payment_mode")) {
+                    stmt.executeUpdate("ALTER TABLE purchase_invoices ADD COLUMN payment_mode VARCHAR(50)");
                 }
                 if (!existing.contains("supplier_address")) {
                     stmt.executeUpdate("ALTER TABLE purchase_invoices ADD COLUMN supplier_address VARCHAR(255)");
@@ -323,6 +328,7 @@ public class PurchaseInvoiceDAO {
         inv.setCreditDebit(rs.getString("credit_debit"));
         inv.setAccountName(rs.getString("account_name"));
         inv.setPaidBy(rs.getString("paid_by"));
+        inv.setPaymentMode(rs.getString("payment_mode"));
         inv.setSupplierAddress(rs.getString("supplier_address"));
         inv.setSupplierContactNumber(rs.getString("supplier_contact_number"));
         inv.setSupplierGstNo(rs.getString("supplier_gst_no"));

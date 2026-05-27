@@ -60,7 +60,8 @@ public class PurchaseInvoiceDialog {
     private Label gstValueLabel;
     private ComboBox<String> creditDebitCombo;
     private TextField accountNameField;
-    private ComboBox<String> paidByCombo;
+    private TextField paidByField;
+    private ComboBox<String> paymentModeCombo;
     private TextField bankNameField;
     private TextField bankAccountField;
     private TextField ifscCodeField;
@@ -151,8 +152,11 @@ public class PurchaseInvoiceDialog {
             // Account Name
             accountNameField.setText(invoice.getAccountName());
 
-            // Paid by
-            paidByCombo.setValue(invoice.getPaidBy());
+            // Paid by (Person name)
+            paidByField.setText(invoice.getPaidBy());
+
+            // Payment Mode
+            paymentModeCombo.setValue(invoice.getPaymentMode() != null ? invoice.getPaymentMode() : "Cash");
 
             // Bank details
             bankNameField.setText(invoice.getBankName());
@@ -505,34 +509,41 @@ public class PurchaseInvoiceDialog {
         grid.setPadding(new Insets(12));
         grid.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
 
-        // Paid by
-        paidByCombo = new ComboBox<>(FXCollections.observableArrayList("Cash", "Bank Transfer", "UPI", "Cheque"));
+        // Paid by (Person name)
+        paidByField = new TextField();
+        setupUppercaseListener(paidByField);
         grid.add(label("Paid by"), 0, 0);
-        grid.add(paidByCombo, 1, 0);
+        grid.add(paidByField, 1, 0);
+
+        // Payment Mode
+        paymentModeCombo = new ComboBox<>(FXCollections.observableArrayList("Cash", "Bank Transfer", "UPI", "Cheque"));
+        paymentModeCombo.setValue("Cash");
+        grid.add(label("Mode"), 2, 0);
+        grid.add(paymentModeCombo, 3, 0);
 
         // Bank Name
         bankNameField = new TextField();
         setupUppercaseListener(bankNameField);
-        grid.add(label("Bank Name"), 2, 0);
-        grid.add(bankNameField, 3, 0);
+        grid.add(label("Bank Name"), 0, 1);
+        grid.add(bankNameField, 1, 1);
 
         // Bank Account
         bankAccountField = new TextField();
         setupUppercaseListener(bankAccountField);
-        grid.add(label("Bank A/c"), 0, 1);
-        grid.add(bankAccountField, 1, 1);
+        grid.add(label("Bank A/c"), 2, 1);
+        grid.add(bankAccountField, 3, 1);
 
         // IFSC Code
         ifscCodeField = new TextField();
         setupUppercaseListener(ifscCodeField);
-        grid.add(label("IFSC Code"), 2, 1);
-        grid.add(ifscCodeField, 3, 1);
+        grid.add(label("IFSC Code"), 0, 2);
+        grid.add(ifscCodeField, 1, 2);
 
         // Remarks
         remarksField = new TextField();
         setupUppercaseListener(remarksField);
-        grid.add(label("Remarks"), 0, 2);
-        grid.add(remarksField, 1, 2, 3, 1);
+        grid.add(label("Remarks"), 2, 2);
+        grid.add(remarksField, 3, 2);
 
         return grid;
     }
@@ -917,7 +928,8 @@ public class PurchaseInvoiceDialog {
         // New fields
         invoice.setCreditDebit(creditDebitCombo.getValue());
         invoice.setAccountName(accountNameField.getText());
-        invoice.setPaidBy(paidByCombo.getValue());
+        invoice.setPaidBy(paidByField.getText());
+        invoice.setPaymentMode(paymentModeCombo.getValue());
         invoice.setBankName(bankNameField.getText());
         invoice.setBankAccount(bankAccountField.getText());
         invoice.setIfscCode(ifscCodeField.getText());

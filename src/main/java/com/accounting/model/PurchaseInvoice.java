@@ -26,6 +26,7 @@ public class PurchaseInvoice {
     private String creditDebit;
     private String accountName;
     private String paidBy;
+    private String paymentMode;
     private String supplierAddress;
     private String supplierContactNumber;
     private String supplierGstNo;
@@ -95,6 +96,9 @@ public class PurchaseInvoice {
 
     public String getPaidBy() { return paidBy; }
     public void setPaidBy(String paidBy) { this.paidBy = paidBy; }
+
+    public String getPaymentMode() { return paymentMode; }
+    public void setPaymentMode(String paymentMode) { this.paymentMode = paymentMode; }
 
     public String getSupplierAddress() { return supplierAddress; }
     public void setSupplierAddress(String supplierAddress) { this.supplierAddress = supplierAddress; }
