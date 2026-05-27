@@ -48,7 +48,14 @@ public class SaleInvoiceDialog {
     private DatePicker invoiceDatePicker;
     private DatePicker deliveryDatePicker;
     private ComboBox<String> voucherTypeCombo;
-    private ComboBox<String> gstCombo;
+    private CheckBox sgstCheckBox;
+    private CheckBox cgstCheckBox;
+    private CheckBox igstCheckBox;
+    private TextField sgstValueField;
+    private TextField cgstValueField;
+    private TextField igstValueField;
+    private Label taxableValueLabel;
+    private Label gstValueLabel;
     private TextField remarksField;
     private TextField rcvrNameField;
     private TextField rcvrAddressField;
@@ -193,6 +200,14 @@ public class SaleInvoiceDialog {
         rcvrContactField.setText(invoice.getRcvrContactNo());
         rcvrGstinField.setText(invoice.getRcvrGstin());
 
+        // Set GST checkboxes based on values
+        sgstCheckBox.setSelected(invoice.getSgstAmount() > 0);
+        sgstValueField.setText(sgstCheckBox.isSelected() ? "9" : "0");
+        cgstCheckBox.setSelected(invoice.getCgstAmount() > 0);
+        cgstValueField.setText(cgstCheckBox.isSelected() ? "9" : "0");
+        igstCheckBox.setSelected(invoice.getIgstAmount() > 0);
+        igstValueField.setText(igstCheckBox.isSelected() ? "18" : "0");
+
         // Load line items
         lineItems.setAll(invoice.getLineItems());
         lineItemTable.setItems(lineItems);
@@ -203,13 +218,32 @@ public class SaleInvoiceDialog {
         VBox root = new VBox(12);
         root.setPadding(new Insets(16));
 
+        // Header section
         HBox headerBox = createHeaderSection();
-        GridPane detailsGrid = createDetailsGrid();
-        GridPane paymentGrid = createPaymentGrid();
+
+        // Top row: Invoice details + GST
+        HBox topRow = new HBox(12);
+        GridPane invoiceDetailsGrid = createInvoiceDetailsGrid();
+        GridPane gstGrid = createGstGrid();
+        topRow.getChildren().addAll(invoiceDetailsGrid, gstGrid);
+        HBox.setHgrow(invoiceDetailsGrid, Priority.ALWAYS);
+        HBox.setHgrow(gstGrid, Priority.ALWAYS);
+
+        // Line items table
         VBox lineItemsSection = createLineItemsSection();
+
+        // Bottom row: Payment details + Receiver details
+        HBox bottomRow = new HBox(12);
+        GridPane paymentGrid = createPaymentGrid();
+        GridPane receiverGrid = createReceiverGrid();
+        bottomRow.getChildren().addAll(paymentGrid, receiverGrid);
+        HBox.setHgrow(paymentGrid, Priority.ALWAYS);
+        HBox.setHgrow(receiverGrid, Priority.ALWAYS);
+
+        // Footer with totals and buttons
         HBox footerBox = createFooterSection();
 
-        root.getChildren().addAll(headerBox, detailsGrid, paymentGrid, lineItemsSection, footerBox);
+        root.getChildren().addAll(headerBox, topRow, lineItemsSection, bottomRow, footerBox);
         VBox.setVgrow(lineItemsSection, Priority.ALWAYS);
 
         return root;
@@ -231,7 +265,7 @@ public class SaleInvoiceDialog {
         return header;
     }
 
-    private GridPane createDetailsGrid() {
+    private GridPane createInvoiceDetailsGrid() {
         GridPane grid = new GridPane();
         grid.setHgap(16);
         grid.setVgap(12);
@@ -249,66 +283,95 @@ public class SaleInvoiceDialog {
         grid.add(invoiceDatePicker, 3, 0);
 
         deliveryDatePicker = new DatePicker(LocalDate.now());
-        grid.add(label("Delivery Date"), 4, 0);
-        grid.add(deliveryDatePicker, 5, 0);
+        grid.add(label("Delivery Date"), 0, 1);
+        grid.add(deliveryDatePicker, 1, 1);
 
         partyCombo = new ComboBox<>();
         partyCombo.setPrefWidth(250);
-        grid.add(label("Customer"), 0, 1);
-        grid.add(partyCombo, 1, 1);
+        grid.add(label("Customer"), 2, 1);
+        grid.add(partyCombo, 3, 1);
 
         voucherTypeCombo = new ComboBox<>(FXCollections.observableArrayList(
                 "SALE", "SALE RETURN", "CREDIT NOTE"
         ));
         voucherTypeCombo.setValue("SALE");
-        grid.add(label("Voucher Type"), 2, 1);
-        grid.add(voucherTypeCombo, 3, 1);
+        grid.add(label("Voucher Type"), 0, 2);
+        grid.add(voucherTypeCombo, 1, 2);
 
         creditDebitCombo = new ComboBox<>(FXCollections.observableArrayList("Credit", "Debit"));
         creditDebitCombo.setValue("Credit");
-        grid.add(label("Credit/Debit"), 4, 1);
-        grid.add(creditDebitCombo, 5, 1);
+        grid.add(label("Credit/Debit"), 2, 2);
+        grid.add(creditDebitCombo, 3, 2);
 
-        gstCombo = new ComboBox<>(FXCollections.observableArrayList(
-                "5%", "12%", "18%", "28%"
-        ));
-        gstCombo.setValue("18%");
-        grid.add(label("GST"), 0, 2);
-        grid.add(gstCombo, 1, 2);
-
-        // Account Name
         accountNameField = new TextField();
         setupUppercaseListener(accountNameField);
-        grid.add(label("Account Name"), 2, 2);
-        grid.add(accountNameField, 3, 2);
-
-        // Receiver details
-        rcvrNameField = new TextField();
-        setupUppercaseListener(rcvrNameField);
-        grid.add(label("Receiver Name"), 4, 2);
-        grid.add(rcvrNameField, 5, 2);
-
-        rcvrAddressField = new TextField();
-        setupUppercaseListener(rcvrAddressField);
-        grid.add(label("Receiver Address"), 0, 3);
-        grid.add(rcvrAddressField, 1, 3);
-
-        rcvrContactField = new TextField();
-        setupUppercaseListener(rcvrContactField);
-        grid.add(label("Contact No"), 2, 3);
-        grid.add(rcvrContactField, 3, 3);
-
-        rcvrGstinField = new TextField();
-        setupUppercaseListener(rcvrGstinField);
-        grid.add(label("GSTIN"), 4, 3);
-        grid.add(rcvrGstinField, 5, 3);
+        grid.add(label("Account Name"), 0, 3);
+        grid.add(accountNameField, 1, 3);
 
         remarksField = new TextField();
         setupUppercaseListener(remarksField);
-        grid.add(label("Remarks"), 0, 4);
-        grid.add(remarksField, 1, 4, 5, 1);
+        grid.add(label("Remarks"), 2, 3);
+        grid.add(remarksField, 3, 3);
 
         loadParties();
+        return grid;
+    }
+
+    private GridPane createGstGrid() {
+        GridPane grid = new GridPane();
+        grid.setHgap(16);
+        grid.setVgap(12);
+        grid.setPadding(new Insets(12));
+        grid.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
+
+        // GST Checkboxes
+        sgstCheckBox = new CheckBox("SGST");
+        sgstValueField = new TextField("0");
+        sgstValueField.setPrefWidth(80);
+        sgstValueField.setEditable(false);
+        sgstCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            sgstValueField.setText(newVal ? "9" : "0");
+            updateTotal();
+        });
+        HBox sgstBox = new HBox(10, sgstCheckBox, sgstValueField);
+        grid.add(label("GST"), 0, 0);
+        grid.add(sgstBox, 1, 0);
+
+        cgstCheckBox = new CheckBox("CGST");
+        cgstValueField = new TextField("0");
+        cgstValueField.setPrefWidth(80);
+        cgstValueField.setEditable(false);
+        cgstCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            cgstValueField.setText(newVal ? "9" : "0");
+            updateTotal();
+        });
+        HBox cgstBox = new HBox(10, cgstCheckBox, cgstValueField);
+        grid.add(label(""), 2, 0);
+        grid.add(cgstBox, 3, 0);
+
+        igstCheckBox = new CheckBox("IGST");
+        igstValueField = new TextField("0");
+        igstValueField.setPrefWidth(80);
+        igstValueField.setEditable(false);
+        igstCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            igstValueField.setText(newVal ? "18" : "0");
+            updateTotal();
+        });
+        HBox igstBox = new HBox(10, igstCheckBox, igstValueField);
+        grid.add(label(""), 0, 1);
+        grid.add(igstBox, 1, 1);
+
+        // Taxable value and GST value labels
+        taxableValueLabel = new Label("0.00");
+        taxableValueLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
+        grid.add(label("Taxable Value"), 2, 1);
+        grid.add(taxableValueLabel, 3, 1);
+
+        gstValueLabel = new Label("0.00");
+        gstValueLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
+        grid.add(label("GST Value"), 0, 2);
+        grid.add(gstValueLabel, 1, 2);
+
         return grid;
     }
 
@@ -348,6 +411,40 @@ public class SaleInvoiceDialog {
         setupUppercaseListener(ifscCodeField);
         grid.add(label("IFSC Code"), 0, 2);
         grid.add(ifscCodeField, 1, 2);
+
+        return grid;
+    }
+
+    private GridPane createReceiverGrid() {
+        GridPane grid = new GridPane();
+        grid.setHgap(16);
+        grid.setVgap(12);
+        grid.setPadding(new Insets(12));
+        grid.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
+
+        // Receiver Name
+        rcvrNameField = new TextField();
+        setupUppercaseListener(rcvrNameField);
+        grid.add(label("Receiver Name"), 0, 0);
+        grid.add(rcvrNameField, 1, 0, 3, 1);
+
+        // Receiver Address
+        rcvrAddressField = new TextField();
+        setupUppercaseListener(rcvrAddressField);
+        grid.add(label("Receiver Address"), 0, 1);
+        grid.add(rcvrAddressField, 1, 1, 3, 1);
+
+        // Contact Number
+        rcvrContactField = new TextField();
+        setupUppercaseListener(rcvrContactField);
+        grid.add(label("Contact No"), 0, 2);
+        grid.add(rcvrContactField, 1, 2);
+
+        // GSTIN No.
+        rcvrGstinField = new TextField();
+        setupUppercaseListener(rcvrGstinField);
+        grid.add(label("GSTIN"), 2, 2);
+        grid.add(rcvrGstinField, 3, 2);
 
         return grid;
     }
@@ -448,12 +545,26 @@ public class SaleInvoiceDialog {
     }
 
     private HBox createFooterSection() {
-        Label totalLbl = new Label("Total Amount:");
-        totalLbl.setStyle("-fx-font-size: 13px; -fx-font-weight: bold;");
+        Label taxableLbl = new Label("Taxable Value:");
+        taxableLbl.setStyle("-fx-font-size: 12px;");
+        taxableValueLabel = new Label("0.00");
+        taxableValueLabel.setStyle("-fx-font-size: 12px;");
+
+        Label gstLbl = new Label("GST:");
+        gstLbl.setStyle("-fx-font-size: 12px;");
+        gstValueLabel = new Label("0.00");
+        gstValueLabel.setStyle("-fx-font-size: 12px;");
+
+        Label netLbl = new Label("Net Amount:");
+        netLbl.setStyle("-fx-font-size: 13px; -fx-font-weight: bold;");
         totalLabel = new Label("0.00");
         totalLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #dc2626;");
 
-        HBox totalsBox = new HBox(12, totalLbl, totalLabel);
+        VBox taxableBox = new VBox(2, taxableLbl, taxableValueLabel);
+        VBox gstBox = new VBox(2, gstLbl, gstValueLabel);
+        VBox netBox = new VBox(2, netLbl, totalLabel);
+
+        HBox totalsBox = new HBox(20, taxableBox, gstBox, netBox);
         totalsBox.setAlignment(Pos.CENTER_RIGHT);
         HBox.setHgrow(totalsBox, Priority.ALWAYS);
 
@@ -496,8 +607,16 @@ public class SaleInvoiceDialog {
     }
 
     private void updateTotal() {
-        double total = lineItems.stream().mapToDouble(InvoiceLineItem::getTotal).sum();
-        totalLabel.setText(String.format("%.2f", total));
+        double taxable = lineItems.stream().mapToDouble(InvoiceLineItem::getTotal).sum();
+        double sgst = sgstCheckBox.isSelected() ? taxable * 0.09 : 0;
+        double cgst = cgstCheckBox.isSelected() ? taxable * 0.09 : 0;
+        double igst = igstCheckBox.isSelected() ? taxable * 0.18 : 0;
+        double totalGst = sgst + cgst + igst;
+        double netAmount = taxable + totalGst;
+
+        taxableValueLabel.setText(String.format("%.2f", taxable));
+        gstValueLabel.setText(String.format("%.2f", totalGst));
+        totalLabel.setText(String.format("%.2f", netAmount));
     }
 
     private void saveInvoice() {
@@ -516,7 +635,6 @@ public class SaleInvoiceDialog {
         invoice.setPartyId(partyCombo.getValue().getId());
         invoice.setPartyName(partyCombo.getValue().getName());
         invoice.setVoucherType(voucherTypeCombo.getValue());
-        invoice.setGst(gstCombo.getValue());
         invoice.setRemarks(remarksField.getText());
         invoice.setRcvrName(rcvrNameField.getText());
         invoice.setRcvrAddress(rcvrAddressField.getText());
@@ -534,7 +652,18 @@ public class SaleInvoiceDialog {
 
         double total = lineItems.stream().mapToDouble(InvoiceLineItem::getTotal).sum();
         invoice.setTaxableAmount(total);
-        invoice.setNetAmount(total);
+
+        // Calculate GST amounts based on checkbox states
+        double sgst = sgstCheckBox.isSelected() ? total * 0.09 : 0;
+        double cgst = cgstCheckBox.isSelected() ? total * 0.09 : 0;
+        double igst = igstCheckBox.isSelected() ? total * 0.18 : 0;
+        double totalGst = sgst + cgst + igst;
+
+        invoice.setSgstAmount(sgst);
+        invoice.setCgstAmount(cgst);
+        invoice.setIgstAmount(igst);
+        invoice.setTotalGst(totalGst);
+        invoice.setNetAmount(total + totalGst);
 
         AppExecutor.submit(() -> {
             try {
@@ -543,6 +672,14 @@ public class SaleInvoiceDialog {
                     dao.update(invoice);
                 } else {
                     dao.save(invoice);
+
+                    // Update the next invoice number in settings
+                    try {
+                        int currentInvoiceNo = Integer.parseInt(invoice.getInvoiceNo());
+                        new SettingsDAO().saveSetting("global_invoice_starting_number", String.valueOf(currentInvoiceNo + 1));
+                    } catch (Exception e) {
+                        log.error("Failed to update invoice number in settings", e);
+                    }
                 }
                 Platform.runLater(() -> {
                     NotificationUtil.showSuccess("Success", "Invoice saved successfully");
