@@ -227,7 +227,7 @@ public class MainApp extends Application {
     }
 
     private void showPurchaseInvoice() {
-        new PurchaseInvoiceDialog().show(primaryStage, this::refreshDashboard);
+        showContent(new PurchaseInvoiceListView().createContent());
     }
 
     private void showSaleInvoice() {

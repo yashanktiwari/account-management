@@ -107,4 +107,17 @@ public class PurchaseInvoice {
     public double calculateTotal() {
         return lineItems.stream().mapToDouble(InvoiceLineItem::getTotal).sum();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PurchaseInvoice that = (PurchaseInvoice) o;
+        return id == that.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(id);
+    }
 }

@@ -133,6 +133,49 @@ public class PurchaseInvoiceDAO {
         return invoices;
     }
 
+    public List<PurchaseInvoice> searchAllColumns(String keyword) throws Exception {
+        String sql = """
+                SELECT *
+                FROM purchase_invoices
+                WHERE CONCAT_WS(' ',
+                    IFNULL(CAST(id AS CHAR), ''),
+                    IFNULL(invoice_no, ''),
+                    IFNULL(CAST(invoice_date AS CHAR), ''),
+                    IFNULL(CAST(party_id AS CHAR), ''),
+                    IFNULL(party_name, ''),
+                    IFNULL(voucher_type, ''),
+                    IFNULL(gst, ''),
+                    IFNULL(CAST(taxable_amount AS CHAR), ''),
+                    IFNULL(CAST(sgst_amount AS CHAR), ''),
+                    IFNULL(CAST(cgst_amount AS CHAR), ''),
+                    IFNULL(CAST(igst_amount AS CHAR), ''),
+                    IFNULL(CAST(total_gst AS CHAR), ''),
+                    IFNULL(CAST(net_amount AS CHAR), ''),
+                    IFNULL(remarks, ''),
+                    IFNULL(bank_name, ''),
+                    IFNULL(bank_account, ''),
+                    IFNULL(ifsc_code, ''),
+                    IFNULL(status, ''),
+                    IFNULL(CAST(created_at AS CHAR), ''),
+                    IFNULL(CAST(updated_at AS CHAR), '')
+                ) LIKE ?
+                ORDER BY invoice_date DESC
+                """;
+        List<PurchaseInvoice> invoices = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, "%" + keyword + "%");
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    PurchaseInvoice inv = mapInvoice(rs);
+                    inv.setLineItems(getLineItems(inv.getId()));
+                    invoices.add(inv);
+                }
+            }
+        }
+        return invoices;
+    }
+
     private void saveLineItem(int invoiceId, InvoiceLineItem item) throws Exception {
         String sql = """
                 INSERT INTO invoice_line_items (invoice_id, lr_no, container_no, vehicle_no, from_location,
