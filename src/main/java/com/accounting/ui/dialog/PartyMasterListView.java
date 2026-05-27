@@ -66,13 +66,16 @@ public class PartyMasterListView {
             if (debounceTimer != null) {
                 debounceTimer.cancel();
             }
-            debounceTimer = new Timer();
-            debounceTimer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    Platform.runLater(PartyMasterListView.this::searchRows);
-                }
-            }, DEBOUNCE_DELAY);
+            // Only trigger debounced search if there are search terms OR if the field has text
+            if (!searchTerms.isEmpty() || (newVal != null && !newVal.trim().isEmpty())) {
+                debounceTimer = new Timer();
+                debounceTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        Platform.runLater(PartyMasterListView.this::searchRows);
+                    }
+                }, DEBOUNCE_DELAY);
+            }
         });
 
         Button clearBtn = new Button("Clear");
@@ -219,23 +222,32 @@ public class PartyMasterListView {
         
         AppExecutor.submit(() -> {
             try {
-                // Use a Set to avoid duplicates
-                Set<Party> dataSet = new java.util.HashSet<>();
+                List<Party> data = null;
                 
-                // Collect all search terms including live search text
-                Set<String> allSearchTerms = new HashSet<>(searchTerms);
+                // If there are search terms (chips), use AND logic
+                if (!searchTerms.isEmpty()) {
+                    data = dao.searchAllColumns(searchTerms.iterator().next());
+                    for (String term : searchTerms) {
+                        List<Party> termResults = dao.searchAllColumns(term);
+                        data.retainAll(termResults);
+                    }
+                }
+                
+                // If there's live search text, apply it as additional filter
                 if (!liveSearchText.isEmpty()) {
-                    allSearchTerms.add(liveSearchText);
+                    List<Party> liveResults = dao.searchAllColumns(liveSearchText);
+                    if (data == null) {
+                        data = liveResults;
+                    } else {
+                        data.retainAll(liveResults);
+                    }
                 }
                 
-                // Search for each term and combine results (OR logic)
-                for (String term : allSearchTerms) {
-                    List<Party> termResults = dao.searchAllColumns(term.trim());
-                    dataSet.addAll(termResults);
+                if (data == null) {
+                    data = new java.util.ArrayList<>();
                 }
                 
-                List<Party> data = new java.util.ArrayList<>(dataSet);
-                System.out.println("Search terms: " + allSearchTerms + ", Results found: " + data.size());
+                System.out.println("Search - Terms: " + searchTerms + ", Live text: '" + liveSearchText + "', Results: " + data.size());
                 Platform.runLater(() -> rows.setAll(data));
             } catch (Exception e) {
                 e.printStackTrace();
