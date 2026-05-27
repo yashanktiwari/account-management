@@ -66,16 +66,13 @@ public class PartyMasterListView {
             if (debounceTimer != null) {
                 debounceTimer.cancel();
             }
-            // Only trigger debounced search if there are search terms OR if the field has text
-            if (!searchTerms.isEmpty() || (newVal != null && !newVal.trim().isEmpty())) {
-                debounceTimer = new Timer();
-                debounceTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        Platform.runLater(PartyMasterListView.this::searchRows);
-                    }
-                }, DEBOUNCE_DELAY);
-            }
+            debounceTimer = new Timer();
+            debounceTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    Platform.runLater(PartyMasterListView.this::searchRows);
+                }
+            }, DEBOUNCE_DELAY);
         });
 
         Button clearBtn = new Button("Clear");
