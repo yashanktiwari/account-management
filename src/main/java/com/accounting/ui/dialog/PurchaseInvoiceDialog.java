@@ -619,15 +619,6 @@ public class PurchaseInvoiceDialog {
 
         // Set up the Add Row button action
         addRowBtn.setOnAction(e -> {
-            // Validate that at least one field is filled
-            if (lrNoField.getText().trim().isEmpty() && containerNoField.getText().trim().isEmpty() &&
-                vehicleNoField.getText().trim().isEmpty() && fromField.getText().trim().isEmpty() &&
-                toField.getText().trim().isEmpty() && typeField.getText().trim().isEmpty() &&
-                freightField.getText().trim().isEmpty() && detentionField.getText().trim().isEmpty()) {
-                AlertUtil.showWarning("Validation", "Please fill in at least one field");
-                return;
-            }
-
             InvoiceLineItem item = new InvoiceLineItem();
             item.setDate(java.time.LocalDate.now().toString());
             item.setLrNo(lrNoField.getText().trim());
@@ -637,17 +628,26 @@ public class PurchaseInvoiceDialog {
             item.setTo(toField.getText().trim());
             item.setType(typeField.getText().trim());
 
-            // Parse numeric fields
+            // Parse numeric fields (default to 0 if empty or invalid)
+            double freight = 0;
+            double detention = 0;
             try {
-                double freight = freightField.getText().trim().isEmpty() ? 0 : Double.parseDouble(freightField.getText().trim());
-                double detention = detentionField.getText().trim().isEmpty() ? 0 : Double.parseDouble(detentionField.getText().trim());
-                item.setBasicFreight(freight);
-                item.setDetentionCharge(detention);
-                item.setTotal(freight + detention);
+                if (!freightField.getText().trim().isEmpty()) {
+                    freight = Double.parseDouble(freightField.getText().trim());
+                }
             } catch (NumberFormatException ex) {
-                AlertUtil.showError("Validation Error", "Freight and Detention Charge must be valid numbers");
-                return;
+                // Ignore invalid input, default to 0
             }
+            try {
+                if (!detentionField.getText().trim().isEmpty()) {
+                    detention = Double.parseDouble(detentionField.getText().trim());
+                }
+            } catch (NumberFormatException ex) {
+                // Ignore invalid input, default to 0
+            }
+            item.setBasicFreight(freight);
+            item.setDetentionCharge(detention);
+            item.setTotal(freight + detention);
 
             lineItems.add(item);
 
