@@ -218,20 +218,32 @@ public class PartyMasterListView {
         
         AppExecutor.submit(() -> {
             try {
-                List<Party> data = dao.getAll();
+                List<Party> data;
                 
                 if (!searchTerms.isEmpty()) {
+                    // Start with first search term
+                    String firstTerm = searchTerms.iterator().next();
+                    data = dao.searchAllColumns(firstTerm.trim());
+                    
+                    // Intersect with remaining search terms
                     for (String term : searchTerms) {
-                        data.retainAll(dao.searchAllColumns(term.trim()));
+                        if (!term.equals(firstTerm)) {
+                            data.retainAll(dao.searchAllColumns(term.trim()));
+                        }
                     }
-                }
-                
-                if (!liveSearchText.isEmpty()) {
-                    data.retainAll(dao.searchAllColumns(liveSearchText));
+                    
+                    // Also intersect with live search text if present
+                    if (!liveSearchText.isEmpty()) {
+                        data.retainAll(dao.searchAllColumns(liveSearchText));
+                    }
+                } else {
+                    // Only live search text
+                    data = dao.searchAllColumns(liveSearchText);
                 }
                 
                 Platform.runLater(() -> rows.setAll(data));
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                e.printStackTrace();
                 Platform.runLater(rows::clear);
             }
         });
