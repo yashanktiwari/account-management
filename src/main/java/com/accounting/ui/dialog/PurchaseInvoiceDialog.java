@@ -463,33 +463,46 @@ public class PurchaseInvoiceDialog {
         Label sectionTitle = new Label("Line Items");
         sectionTitle.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
 
+        // Input fields for new line item
+        TextField lrNoField = new TextField();
+        lrNoField.setPromptText("LR No");
+        lrNoField.setPrefWidth(80);
+
+        TextField containerNoField = new TextField();
+        containerNoField.setPromptText("Container No");
+        containerNoField.setPrefWidth(100);
+
+        TextField vehicleNoField = new TextField();
+        vehicleNoField.setPromptText("Vehicle No");
+        vehicleNoField.setPrefWidth(100);
+
+        TextField fromField = new TextField();
+        fromField.setPromptText("From");
+        fromField.setPrefWidth(100);
+
+        TextField toField = new TextField();
+        toField.setPromptText("To");
+        toField.setPrefWidth(100);
+
+        TextField typeField = new TextField();
+        typeField.setPromptText("Type");
+        typeField.setPrefWidth(80);
+
+        TextField freightField = new TextField();
+        freightField.setPromptText("Basic Freight");
+        freightField.setPrefWidth(100);
+
+        TextField detentionField = new TextField();
+        detentionField.setPromptText("Detention Charge");
+        detentionField.setPrefWidth(120);
+
+        HBox inputRow = new HBox(8, lrNoField, containerNoField, vehicleNoField, fromField, toField, typeField, freightField, detentionField);
+        inputRow.setPadding(new Insets(8));
+        inputRow.setStyle("-fx-background-color: #f5f5f5; -fx-border-color: #e2e8f0; -fx-border-radius: 4;");
+
         lineItemTable = new TableView<>(lineItems);
         lineItemTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
-        lineItemTable.setEditable(true);
-
-        // Enable single-click editing and handle cell navigation
-        lineItemTable.setOnMouseClicked(e -> {
-            if (e.getClickCount() == 1) {
-                TablePosition<InvoiceLineItem, ?> pos = lineItemTable.getFocusModel().getFocusedCell();
-                if (pos != null && pos.getColumn() > 1) { // Skip Sr. No. (col 0) and Date (col 1)
-                    // Commit any pending edit first
-                    if (lineItemTable.getEditingCell() != null) {
-                        lineItemTable.edit(-1, null);
-                    }
-                    // Delay the edit start to allow selection to complete
-                    Platform.runLater(() -> {
-                        lineItemTable.edit(pos.getRow(), pos.getTableColumn());
-                    });
-                }
-            }
-        });
-
-        // Commit edit when table loses focus
-        lineItemTable.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal && lineItemTable.getEditingCell() != null) {
-                lineItemTable.edit(-1, null);
-            }
-        });
+        lineItemTable.setEditable(false);
 
         // Sr. No. column (auto-filled, read-only)
         TableColumn<InvoiceLineItem, Integer> srNoCol = new TableColumn<>("Sr. No");
@@ -599,13 +612,56 @@ public class PurchaseInvoiceDialog {
         Button addRowBtn = new Button("+ Add Row");
         addRowBtn.setStyle("-fx-padding: 6 12 6 12; -fx-font-size: 12px;");
         addRowBtn.setOnAction(e -> {
+            // Validate that at least one field is filled
+            if (lrNoField.getText().trim().isEmpty() && containerNoField.getText().trim().isEmpty() &&
+                vehicleNoField.getText().trim().isEmpty() && fromField.getText().trim().isEmpty() &&
+                toField.getText().trim().isEmpty() && typeField.getText().trim().isEmpty() &&
+                freightField.getText().trim().isEmpty() && detentionField.getText().trim().isEmpty()) {
+                AlertUtil.showWarning("Validation", "Please fill in at least one field");
+                return;
+            }
+
             InvoiceLineItem item = new InvoiceLineItem();
             item.setDate(java.time.LocalDate.now().toString());
+            item.setLrNo(lrNoField.getText().trim());
+            item.setContainerNo(containerNoField.getText().trim());
+            item.setVehicleNo(vehicleNoField.getText().trim());
+            item.setFrom(fromField.getText().trim());
+            item.setTo(toField.getText().trim());
+            item.setType(typeField.getText().trim());
+
+            // Parse numeric fields
+            try {
+                double freight = freightField.getText().trim().isEmpty() ? 0 : Double.parseDouble(freightField.getText().trim());
+                double detention = detentionField.getText().trim().isEmpty() ? 0 : Double.parseDouble(detentionField.getText().trim());
+                item.setBasicFreight(freight);
+                item.setDetentionCharge(detention);
+                item.setTotal(freight + detention);
+            } catch (NumberFormatException ex) {
+                AlertUtil.showError("Validation Error", "Freight and Detention Charge must be valid numbers");
+                return;
+            }
+
             lineItems.add(item);
+
+            // Clear all fields
+            lrNoField.clear();
+            containerNoField.clear();
+            vehicleNoField.clear();
+            fromField.clear();
+            toField.clear();
+            typeField.clear();
+            freightField.clear();
+            detentionField.clear();
+            lrNoField.requestFocus();
+
             updateTotal();
         });
 
-        VBox section = new VBox(8, sectionTitle, addRowBtn, lineItemTable);
+        HBox buttonRow = new HBox(8, addRowBtn);
+        buttonRow.setPadding(new Insets(8));
+
+        VBox section = new VBox(8, sectionTitle, inputRow, buttonRow, lineItemTable);
         section.setPadding(new Insets(12));
         section.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
         VBox.setVgrow(lineItemTable, Priority.ALWAYS);
