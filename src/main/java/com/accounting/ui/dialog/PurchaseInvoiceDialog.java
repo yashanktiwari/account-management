@@ -499,6 +499,8 @@ public class PurchaseInvoiceDialog {
         Button addRowBtn = new Button("+ Add Row");
         addRowBtn.setStyle("-fx-padding: 4 12 4 12; -fx-font-size: 12px;");
         addRowBtn.setPrefHeight(35);
+        addRowBtn.setMinWidth(90);
+        addRowBtn.setWrapText(false);
         VBox.setVgrow(addRowBtn, Priority.ALWAYS);
 
         HBox inputRow = new HBox(8, lrNoBox, containerBox, vehicleBox, fromBox, toBox, typeBox, freightBox, detentionBox, addRowBtn);
