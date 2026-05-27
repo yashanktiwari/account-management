@@ -49,7 +49,6 @@ public class SaleInvoiceDialog {
     private ListView<Party> customerListView;
     private TextField invoiceNoField;
     private DatePicker invoiceDatePicker;
-    private DatePicker deliveryDatePicker;
     private ComboBox<String> voucherTypeCombo;
     private CheckBox sgstCheckBox;
     private CheckBox cgstCheckBox;
@@ -174,7 +173,6 @@ public class SaleInvoiceDialog {
     private void loadInvoiceData() {
         invoiceNoField.setText(invoice.getInvoiceNo());
         invoiceDatePicker.setValue(invoice.getInvoiceDate());
-        deliveryDatePicker.setValue(invoice.getDeliveryDate());
         voucherTypeCombo.setValue(invoice.getVoucherType());
         remarksField.setText(invoice.getRemarks());
 
@@ -283,33 +281,29 @@ public class SaleInvoiceDialog {
         grid.add(label("Invoice Date"), 2, 0);
         grid.add(invoiceDatePicker, 3, 0);
 
-        deliveryDatePicker = new DatePicker(LocalDate.now());
-        grid.add(label("Delivery Date"), 0, 1);
-        grid.add(deliveryDatePicker, 1, 1);
+        voucherTypeCombo = new ComboBox<>(FXCollections.observableArrayList(
+                "SALE", "SALE RETURN", "CREDIT NOTE"
+        ));
+        voucherTypeCombo.setValue("SALE");
+        grid.add(label("Voucher Type"), 0, 1);
+        grid.add(voucherTypeCombo, 1, 1);
+
+        creditDebitCombo = new ComboBox<>(FXCollections.observableArrayList("Credit", "Debit"));
+        creditDebitCombo.setValue("Credit");
+        grid.add(label("Credit/Debit"), 2, 1);
+        grid.add(creditDebitCombo, 3, 1);
+
+        accountNameField = new TextField();
+        setupUppercaseListener(accountNameField);
+        grid.add(label("Account Name"), 0, 2);
+        grid.add(accountNameField, 1, 2);
 
         partyField = new TextField();
         partyField.setPrefWidth(250);
         setupUppercaseListener(partyField);
         setupCustomerAutocomplete();
-        grid.add(label("Customer"), 2, 1);
-        grid.add(partyField, 3, 1);
-
-        voucherTypeCombo = new ComboBox<>(FXCollections.observableArrayList(
-                "SALE", "SALE RETURN", "CREDIT NOTE"
-        ));
-        voucherTypeCombo.setValue("SALE");
-        grid.add(label("Voucher Type"), 0, 2);
-        grid.add(voucherTypeCombo, 1, 2);
-
-        creditDebitCombo = new ComboBox<>(FXCollections.observableArrayList("Credit", "Debit"));
-        creditDebitCombo.setValue("Credit");
-        grid.add(label("Credit/Debit"), 2, 2);
-        grid.add(creditDebitCombo, 3, 2);
-
-        accountNameField = new TextField();
-        setupUppercaseListener(accountNameField);
-        grid.add(label("Account Name"), 0, 3);
-        grid.add(accountNameField, 1, 3);
+        grid.add(label("Customer"), 2, 2);
+        grid.add(partyField, 3, 2);
 
         loadParties();
         return grid;
@@ -726,7 +720,6 @@ public class SaleInvoiceDialog {
 
         invoice.setInvoiceDate(invoiceDatePicker.getValue());
         invoice.setInvoiceNo(invoiceNoField.getText());
-        invoice.setDeliveryDate(deliveryDatePicker.getValue());
         invoice.setPartyId(selectedParty.getId());
         invoice.setPartyName(selectedParty.getName());
         invoice.setVoucherType(voucherTypeCombo.getValue());
