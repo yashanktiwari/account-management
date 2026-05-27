@@ -81,7 +81,7 @@ public class PurchaseInvoiceDialog {
             stage.setOnHidden(e -> onClose.run());
         }
 
-        Scene scene = new Scene(createContent(), 1200, 700);
+        Scene scene = new Scene(createContent(), 1200, 850);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );
@@ -96,11 +96,15 @@ public class PurchaseInvoiceDialog {
         // Header section
         HBox headerBox = createHeaderSection();
 
-        // Invoice details section
+        // Top row: Invoice details + Supplier details + GST
+        HBox topRow = new HBox(12);
         GridPane invoiceDetailsGrid = createInvoiceDetailsGrid();
-
-        // GST checkboxes section
+        GridPane supplierGrid = createSupplierGrid();
         GridPane gstGrid = createGstGrid();
+        topRow.getChildren().addAll(invoiceDetailsGrid, supplierGrid, gstGrid);
+        HBox.setHgrow(invoiceDetailsGrid, Priority.ALWAYS);
+        HBox.setHgrow(supplierGrid, Priority.ALWAYS);
+        HBox.setHgrow(gstGrid, Priority.ALWAYS);
 
         // Line items table
         VBox lineItemsSection = createLineItemsSection();
@@ -108,13 +112,10 @@ public class PurchaseInvoiceDialog {
         // Payment details section
         GridPane paymentGrid = createPaymentGrid();
 
-        // Supplier details section
-        GridPane supplierGrid = createSupplierGrid();
-
         // Footer with totals and buttons
         HBox footerBox = createFooterSection();
 
-        root.getChildren().addAll(headerBox, invoiceDetailsGrid, gstGrid, lineItemsSection, paymentGrid, supplierGrid, footerBox);
+        root.getChildren().addAll(headerBox, topRow, lineItemsSection, paymentGrid, footerBox);
         VBox.setVgrow(lineItemsSection, Priority.ALWAYS);
 
         // Load existing invoice data if editing
@@ -402,23 +403,32 @@ public class PurchaseInvoiceDialog {
         totalCol.setCellValueFactory(new PropertyValueFactory<>("total"));
         totalCol.setPrefWidth(100);
 
-        TableColumn<InvoiceLineItem, Void> deleteCol = new TableColumn<>("Action");
-        deleteCol.setCellFactory(col -> new TableCell<>() {
-            private final Button deleteBtn = new Button("Delete");
-            {
-                deleteBtn.setStyle("-fx-padding: 4 8 4 8; -fx-font-size: 11px;");
-                deleteBtn.setOnAction(e -> lineItems.remove(getIndex()));
-            }
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : deleteBtn);
+        lineItemTable.getColumns().addAll(lrNoCol, containerCol, vehicleCol, fromCol, toCol, typeCol,
+                freightCol, detentionCol, totalCol);
+
+        // Right-click context menu for deleting rows
+        ContextMenu contextMenu = new ContextMenu();
+        MenuItem deleteItem = new MenuItem("Delete Row");
+        deleteItem.setOnAction(e -> {
+            InvoiceLineItem selected = lineItemTable.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                lineItems.remove(selected);
+                updateTotal();
             }
         });
-        deleteCol.setPrefWidth(80);
+        contextMenu.getItems().add(deleteItem);
 
-        lineItemTable.getColumns().addAll(lrNoCol, containerCol, vehicleCol, fromCol, toCol, typeCol,
-                freightCol, detentionCol, totalCol, deleteCol);
+        lineItemTable.setRowFactory(tv -> {
+            TableRow<InvoiceLineItem> row = new TableRow<>();
+            row.setOnContextMenuRequested(e -> {
+                if (!row.isEmpty()) {
+                    lineItemTable.getSelectionModel().select(row.getItem());
+                    contextMenu.show(row, e.getScreenX(), e.getScreenY());
+                }
+                e.consume();
+            });
+            return row;
+        });
 
         Button addRowBtn = new Button("+ Add Row");
         addRowBtn.setStyle("-fx-padding: 6 12 6 12; -fx-font-size: 12px;");
