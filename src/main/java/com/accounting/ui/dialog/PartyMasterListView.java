@@ -329,21 +329,47 @@ public class PartyMasterListView {
 
     private void loadColumnState() {
         Preferences prefs = Preferences.userNodeForPackage(PartyMasterListView.class);
+        String columnOrderStr = prefs.get("partyTable_columnOrder", "");
         String columnWidthsStr = prefs.get("partyTable_columnWidths", "");
         
-        if (!columnWidthsStr.isEmpty()) {
-            String[] widths = columnWidthsStr.split(",");
-            int[] parsedWidths = new int[widths.length];
-            try {
-                for (int i = 0; i < widths.length && i < table.getColumns().size(); i++) {
-                    parsedWidths[i] = Integer.parseInt(widths[i]);
-                    if (parsedWidths[i] > 0) {
-                        table.getColumns().get(i).setPrefWidth(parsedWidths[i]);
+        try {
+            // Restore column order
+            if (!columnOrderStr.isEmpty()) {
+                String[] columnNames = columnOrderStr.split(",");
+                List<TableColumn<Party, ?>> currentColumns = new java.util.ArrayList<>(table.getColumns());
+                
+                // Reorder columns based on saved order
+                for (int i = 0; i < columnNames.length && i < currentColumns.size(); i++) {
+                    String targetName = columnNames[i];
+                    for (int j = i; j < currentColumns.size(); j++) {
+                        if (currentColumns.get(j).getText().equals(targetName)) {
+                            // Swap columns
+                            TableColumn<Party, ?> temp = currentColumns.get(i);
+                            currentColumns.set(i, currentColumns.get(j));
+                            currentColumns.set(j, temp);
+                            break;
+                        }
                     }
                 }
-            } catch (NumberFormatException e) {
-                // Ignore if preferences are corrupted
+                
+                // Clear and re-add columns in correct order
+                table.getColumns().clear();
+                table.getColumns().addAll(currentColumns);
             }
+            
+            // Restore column widths
+            if (!columnWidthsStr.isEmpty()) {
+                String[] widths = columnWidthsStr.split(",");
+                for (int i = 0; i < widths.length && i < table.getColumns().size(); i++) {
+                    int width = Integer.parseInt(widths[i]);
+                    if (width > 0) {
+                        table.getColumns().get(i).setPrefWidth(width);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Ignore if preferences are corrupted
+            e.printStackTrace();
         }
     }
 }
