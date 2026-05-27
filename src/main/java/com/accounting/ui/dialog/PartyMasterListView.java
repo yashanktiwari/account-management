@@ -6,6 +6,7 @@ import com.accounting.model.Party;
 import com.accounting.util.AlertUtil;
 import com.accounting.util.AppExecutor;
 import com.accounting.util.NotificationUtil;
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -13,22 +14,29 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PartyMasterListView {
 
+    private static final int MAX_TAGS = 5;
+
     private final PartyDAO dao = new PartyDAO();
     private final ObservableList<Party> rows = FXCollections.observableArrayList();
+    private final ObservableList<String> searchTags = FXCollections.observableArrayList();
+
     private TableView<Party> table;
     private TextField searchField;
+    private FlowPane tagsPane;
 
     public Parent createContent() {
-        VBox root = new VBox(10);
+        VBox root = new VBox(8);
         root.setPadding(new Insets(16));
 
         Label heading = new Label("Party List");
@@ -36,29 +44,74 @@ public class PartyMasterListView {
 
         Button addBtn = new Button("Add New Party");
         addBtn.getStyleClass().add("primary-button");
-        addBtn.setOnAction(e -> {
-            new PartyMasterDialog().show(MainApp.getPrimaryStage(), this::loadRows);
-        });
+        addBtn.setOnAction(e -> new PartyMasterDialog().show(MainApp.getPrimaryStage(), this::loadRows));
 
         Button refreshBtn = new Button("Refresh");
-        refreshBtn.setOnAction(e -> loadRows());
+        refreshBtn.setOnAction(e -> {
+            searchTags.clear();
+            searchField.clear();
+            tagsPane.getChildren().clear();
+            loadRows();
+        });
 
+        // ── Search field with clear button ────────────────────────────────────
         searchField = new TextField();
-        searchField.setPromptText("Search in all columns...");
-        searchField.setOnAction(e -> searchRows());
+        searchField.setPromptText("Type and press Enter to add search tag…");
 
-        Button searchBtn = new Button("Search");
-        searchBtn.getStyleClass().add("primary-button");
-        searchBtn.setOnAction(e -> searchRows());
+        Button clearBtn = new Button("✕");
+        clearBtn.setTooltip(new Tooltip("Clear search text"));
+        clearBtn.setStyle("-fx-cursor: hand;");
+        clearBtn.setOnAction(e -> searchField.clear());
 
-        HBox actions = new HBox(10, addBtn, refreshBtn, new Label("Search:"), searchField, searchBtn);
-        actions.setAlignment(Pos.CENTER_LEFT);
+        HBox searchBox = new HBox(0, searchField, clearBtn);
         HBox.setHgrow(searchField, Priority.ALWAYS);
+        searchBox.setAlignment(Pos.CENTER_LEFT);
 
+        HBox actions = new HBox(10, addBtn, refreshBtn, new Label("Search:"), searchBox);
+        actions.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(searchBox, Priority.ALWAYS);
+
+        // ── Tags chip strip ───────────────────────────────────────────────────
+        tagsPane = new FlowPane(6, 4);
+        tagsPane.setAlignment(Pos.CENTER_LEFT);
+
+        // ── Debounce: auto-search 400 ms after typing stops ───────────────────
+        PauseTransition debounce = new PauseTransition(Duration.millis(400));
+        debounce.setOnFinished(e -> triggerSearch());
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> debounce.playFromStart());
+
+        // ── Enter key: add tag ────────────────────────────────────────────────
+        searchField.setOnAction(e -> {
+            String text = searchField.getText().trim();
+            if (!text.isEmpty() && !searchTags.contains(text)) {
+                if (searchTags.size() >= MAX_TAGS) {
+                    NotificationUtil.showWarning("Limit reached", "Maximum " + MAX_TAGS + " search tags allowed.");
+                    return;
+                }
+                searchTags.add(text);
+                tagsPane.getChildren().add(buildTagChip(text));
+                searchField.clear();
+                triggerSearch();
+            }
+        });
+
+        // ── Table ─────────────────────────────────────────────────────────────
         table = new TableView<>();
         table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
 
-        table.getColumns().add(col("ID",           "id",          70));
+        // Serial number column
+        TableColumn<Party, Void> seqCol = new TableColumn<>("#");
+        seqCol.setPrefWidth(50);
+        seqCol.setSortable(false);
+        seqCol.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : String.valueOf(getIndex() + 1));
+            }
+        });
+
+        table.getColumns().add(seqCol);
         table.getColumns().add(col("Company Name", "name",       200));
         table.getColumns().add(col("Owner Name",   "ownerName",  160));
         table.getColumns().add(col("Mobile",       "mobile",     130));
@@ -113,7 +166,6 @@ public class PartyMasterListView {
 
         ctxMenu.getItems().addAll(editItem, new SeparatorMenuItem(), deleteItem);
 
-        // Show menu only on rows that have data
         table.setRowFactory(tv -> {
             TableRow<Party> row = new TableRow<>();
             row.setOnContextMenuRequested(e -> {
@@ -127,10 +179,33 @@ public class PartyMasterListView {
         });
 
         VBox.setVgrow(table, Priority.ALWAYS);
-        root.getChildren().addAll(heading, actions, table);
+        root.getChildren().addAll(heading, actions, tagsPane, table);
 
         loadRows();
         return root;
+    }
+
+    /** Build a chip label for a search tag with a remove (×) button. */
+    private HBox buildTagChip(String tag) {
+        Label tagLabel = new Label(tag);
+        Button removeBtn = new Button("×");
+        removeBtn.setStyle(
+                "-fx-background-color: transparent; -fx-text-fill: #666; " +
+                "-fx-padding: 0 2 0 4; -fx-cursor: hand; -fx-font-size: 12px;");
+        removeBtn.setOnAction(e -> {
+            searchTags.remove(tag);
+            tagsPane.getChildren().removeIf(node -> node instanceof HBox chip &&
+                    chip.getChildren().stream()
+                        .anyMatch(c -> c instanceof Label l && l.getText().equals(tag)));
+            triggerSearch();
+        });
+
+        HBox chip = new HBox(4, tagLabel, removeBtn);
+        chip.setAlignment(Pos.CENTER_LEFT);
+        chip.setStyle(
+                "-fx-background-color: #dbe8f8; -fx-background-radius: 12; " +
+                "-fx-padding: 3 8 3 8; -fx-border-radius: 12;");
+        return chip;
     }
 
     private void loadRows() {
@@ -144,15 +219,20 @@ public class PartyMasterListView {
         });
     }
 
-    private void searchRows() {
-        String keyword = searchField.getText();
-        if (keyword == null || keyword.isBlank()) {
+    /** Collect all active search terms (tags + current field text) and run search. */
+    private void triggerSearch() {
+        List<String> allTerms = new ArrayList<>(searchTags);
+        String fieldText = searchField.getText().trim();
+        if (!fieldText.isEmpty()) allTerms.add(fieldText);
+
+        if (allTerms.isEmpty()) {
             loadRows();
             return;
         }
+
         AppExecutor.submit(() -> {
             try {
-                List<Party> data = dao.searchAllColumns(keyword.trim());
+                List<Party> data = dao.searchAllColumns(allTerms);
                 Platform.runLater(() -> rows.setAll(data));
             } catch (Exception ignored) {
                 Platform.runLater(rows::clear);
@@ -162,7 +242,7 @@ public class PartyMasterListView {
 
     private TableColumn<Party, Object> col(String title, String property, double width) {
         TableColumn<Party, Object> column = new TableColumn<>(title);
-        column.setCellValueFactory(new PropertyValueFactory<>(property));
+        column.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>(property));
         column.setPrefWidth(width);
         return column;
     }

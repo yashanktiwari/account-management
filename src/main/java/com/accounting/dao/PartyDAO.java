@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.accounting.util.AppLogger.get;
 
@@ -178,7 +179,7 @@ public class PartyDAO {
     }
 
     public List<Party> getAll() throws Exception {
-        String sql = "SELECT * FROM parties ORDER BY name";
+        String sql = "SELECT * FROM parties ORDER BY id DESC";
         List<Party> parties = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
@@ -238,13 +239,53 @@ public class PartyDAO {
                     IFNULL(CAST(created_at AS CHAR), ''),
                     IFNULL(CAST(updated_at AS CHAR), '')
                 ) LIKE ?
-                ORDER BY name
+                ORDER BY id DESC
                 """;
         List<Party> parties = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             ensurePartyColumns(conn);
             pstmt.setString(1, "%" + keyword + "%");
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) parties.add(mapParty(rs));
+            }
+        }
+        return parties;
+    }
+
+    /** Search across all columns matching ALL keywords (AND logic). */
+    public List<Party> searchAllColumns(List<String> keywords) throws Exception {
+        if (keywords == null || keywords.isEmpty()) return getAll();
+        if (keywords.size() == 1) return searchAllColumns(keywords.get(0));
+
+        String concatExpr = """
+                CONCAT_WS(' ',
+                    IFNULL(CAST(id AS CHAR), ''), IFNULL(name, ''), IFNULL(type, ''),
+                    IFNULL(mailing_name, ''), IFNULL(address, ''), IFNULL(city, ''),
+                    IFNULL(state, ''), IFNULL(pincode, ''), IFNULL(mobile, ''),
+                    IFNULL(email, ''), IFNULL(pan, ''), IFNULL(gstin, ''),
+                    IFNULL(credit_limit, ''), IFNULL(opening_balance, ''),
+                    IFNULL(balance_type, ''), IFNULL(nature_of_payment, ''),
+                    IFNULL(bank_name, ''), IFNULL(bank_account, ''), IFNULL(ifsc_code, ''),
+                    IFNULL(remarks, ''), IFNULL(owner_name, ''), IFNULL(cst_no, ''),
+                    IFNULL(tan_no, ''), IFNULL(tds, ''), IFNULL(aadhar_no, ''),
+                    IFNULL(routes, ''), IFNULL(CAST(created_at AS CHAR), ''),
+                    IFNULL(CAST(updated_at AS CHAR), ''))
+                """;
+
+        String conditions = keywords.stream()
+                .map(k -> concatExpr + " LIKE ?")
+                .collect(Collectors.joining(" AND "));
+
+        String sql = "SELECT * FROM parties WHERE " + conditions + " ORDER BY id DESC";
+
+        List<Party> parties = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            ensurePartyColumns(conn);
+            for (int i = 0; i < keywords.size(); i++) {
+                pstmt.setString(i + 1, "%" + keywords.get(i) + "%");
+            }
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) parties.add(mapParty(rs));
             }
