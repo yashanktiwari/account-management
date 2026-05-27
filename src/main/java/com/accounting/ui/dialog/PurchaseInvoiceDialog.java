@@ -259,6 +259,7 @@ public class PurchaseInvoiceDialog {
         partyCombo = new ComboBox<>();
         partyCombo.setPrefWidth(250);
         partyCombo.setEditable(true);
+        partyCombo.setVisibleRowCount(10); // Show more items in dropdown
         partyCombo.setItems(filteredParties);
         partyCombo.setCellFactory(param -> new ListCell<Party>() {
             @Override
@@ -420,6 +421,15 @@ public class PurchaseInvoiceDialog {
         lineItemTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         lineItemTable.setEditable(true);
 
+        // Ensure table refreshes when items change
+        lineItems.addListener((javafx.collections.ListChangeListener<InvoiceLineItem>) c -> {
+            while (c.next()) {
+                if (c.wasAdded() || c.wasRemoved()) {
+                    lineItemTable.refresh();
+                }
+            }
+        });
+
         // Commit edit on focus lost to prevent data loss
         lineItemTable.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal) {
@@ -530,6 +540,8 @@ public class PurchaseInvoiceDialog {
             InvoiceLineItem item = new InvoiceLineItem();
             item.setDate(java.time.LocalDate.now().toString());
             lineItems.add(item);
+            lineItemTable.refresh(); // Refresh table to show new row
+            lineItemTable.getSelectionModel().select(item); // Select the new row
             updateTotal();
         });
 
