@@ -219,7 +219,8 @@ public class PartyMasterListView {
         
         AppExecutor.submit(() -> {
             try {
-                List<Party> data = new java.util.ArrayList<>();
+                // Use a Set to avoid duplicates
+                Set<Party> dataSet = new java.util.HashSet<>();
                 
                 // Collect all search terms including live search text
                 Set<String> allSearchTerms = new HashSet<>(searchTerms);
@@ -230,13 +231,10 @@ public class PartyMasterListView {
                 // Search for each term and combine results (OR logic)
                 for (String term : allSearchTerms) {
                     List<Party> termResults = dao.searchAllColumns(term.trim());
-                    for (Party p : termResults) {
-                        if (!data.contains(p)) {
-                            data.add(p);
-                        }
-                    }
+                    dataSet.addAll(termResults);
                 }
                 
+                List<Party> data = new java.util.ArrayList<>(dataSet);
                 System.out.println("Search terms: " + allSearchTerms + ", Results found: " + data.size());
                 Platform.runLater(() -> rows.setAll(data));
             } catch (Exception e) {

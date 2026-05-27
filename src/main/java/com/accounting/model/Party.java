@@ -133,4 +133,17 @@ public class Party {
     public String toString() {
         return name != null ? name : "";
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Party party = (Party) o;
+        return id == party.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(id);
+    }
 }
