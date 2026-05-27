@@ -465,45 +465,45 @@ public class PurchaseInvoiceDialog {
 
         // Input fields for new line item
         TextField lrNoField = new TextField();
-        lrNoField.setPrefWidth(80);
         VBox lrNoBox = new VBox(4, new Label("LR No"), lrNoField);
+        HBox.setHgrow(lrNoBox, Priority.ALWAYS);
 
         TextField containerNoField = new TextField();
-        containerNoField.setPrefWidth(100);
         VBox containerBox = new VBox(4, new Label("Container No"), containerNoField);
+        HBox.setHgrow(containerBox, Priority.ALWAYS);
 
         TextField vehicleNoField = new TextField();
-        vehicleNoField.setPrefWidth(100);
         VBox vehicleBox = new VBox(4, new Label("Vehicle No"), vehicleNoField);
+        HBox.setHgrow(vehicleBox, Priority.ALWAYS);
 
         TextField fromField = new TextField();
-        fromField.setPrefWidth(100);
         VBox fromBox = new VBox(4, new Label("From"), fromField);
+        HBox.setHgrow(fromBox, Priority.ALWAYS);
 
         TextField toField = new TextField();
-        toField.setPrefWidth(100);
         VBox toBox = new VBox(4, new Label("To"), toField);
+        HBox.setHgrow(toBox, Priority.ALWAYS);
 
         TextField typeField = new TextField();
-        typeField.setPrefWidth(80);
         VBox typeBox = new VBox(4, new Label("Type"), typeField);
+        HBox.setHgrow(typeBox, Priority.ALWAYS);
 
         TextField freightField = new TextField();
-        freightField.setPrefWidth(100);
         VBox freightBox = new VBox(4, new Label("Basic Freight"), freightField);
+        HBox.setHgrow(freightBox, Priority.ALWAYS);
 
         TextField detentionField = new TextField();
-        detentionField.setPrefWidth(120);
         VBox detentionBox = new VBox(4, new Label("Detention Charge"), detentionField);
+        HBox.setHgrow(detentionBox, Priority.ALWAYS);
 
         Button addRowBtn = new Button("+ Add Row");
-        addRowBtn.setStyle("-fx-padding: 8 16 8 16; -fx-font-size: 12px;");
-        addRowBtn.setPrefHeight(50);
+        addRowBtn.setStyle("-fx-padding: 4 12 4 12; -fx-font-size: 12px;");
+        addRowBtn.setPrefHeight(35);
         VBox.setVgrow(addRowBtn, Priority.ALWAYS);
 
-        HBox inputRow = new HBox(12, lrNoBox, containerBox, vehicleBox, fromBox, toBox, typeBox, freightBox, detentionBox, addRowBtn);
+        HBox inputRow = new HBox(8, lrNoBox, containerBox, vehicleBox, fromBox, toBox, typeBox, freightBox, detentionBox, addRowBtn);
         inputRow.setPadding(new Insets(12));
-        inputRow.setAlignment(Pos.BOTTOM_LEFT);
+        inputRow.setAlignment(Pos.BOTTOM_CENTER);
         inputRow.setStyle("-fx-background-color: #f5f5f5; -fx-border-color: #e2e8f0; -fx-border-radius: 4;");
 
         lineItemTable = new TableView<>(lineItems);
