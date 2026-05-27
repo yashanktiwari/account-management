@@ -20,6 +20,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.*;
+import javafx.scene.input.KeyCode;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -286,7 +287,10 @@ public class PurchaseInvoiceDialog {
             searchTimer.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    Platform.runLater(() -> filterSuppliers(newVal));
+                    Platform.runLater(() -> {
+                        filterSuppliers(newVal);
+                        partyCombo.show(); // Show dropdown when typing
+                    });
                 }
             }, 300);
         });
@@ -416,6 +420,13 @@ public class PurchaseInvoiceDialog {
         lineItemTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         lineItemTable.setEditable(true);
 
+        // Commit edit on focus lost to prevent data loss
+        lineItemTable.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) {
+                lineItemTable.edit(-1, null); // Commit any pending edit
+            }
+        });
+
         // Sr. No. column (auto-filled, read-only)
         TableColumn<InvoiceLineItem, Integer> srNoCol = new TableColumn<>("Sr. No");
         srNoCol.setCellValueFactory(cellData -> new SimpleIntegerProperty(lineItems.indexOf(cellData.getValue()) + 1).asObject());
@@ -488,16 +499,6 @@ public class PurchaseInvoiceDialog {
 
         lineItemTable.getColumns().addAll(srNoCol, dateCol, lrNoCol, containerCol, vehicleCol, fromCol, toCol, typeCol,
                 freightCol, detentionCol, totalCol);
-
-        // Make table editable with single click
-        lineItemTable.setOnMouseClicked(e -> {
-            if (e.getClickCount() == 1) {
-                TablePosition pos = lineItemTable.getFocusModel().getFocusedCell();
-                if (pos != null) {
-                    lineItemTable.edit(pos.getRow(), pos.getTableColumn());
-                }
-            }
-        });
 
         // Right-click context menu for deleting rows
         ContextMenu contextMenu = new ContextMenu();
