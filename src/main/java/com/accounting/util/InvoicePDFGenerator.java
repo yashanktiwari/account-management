@@ -129,8 +129,8 @@ public class InvoicePDFGenerator {
             
             if (headerFile.exists()) {
                 Image headerImage = Image.getInstance(headerFile.getAbsolutePath());
-                // Scale image to fit page width
-                headerImage.scaleToFit(PageSize.A4.getWidth() - 72, 100);
+                // Scale image to fit page width (A4 width is 595, minus margins 36 on each side = 523)
+                headerImage.scaleAbsolute(523, headerImage.getHeight() * 523 / headerImage.getWidth());
                 headerImage.setAlignment(Element.ALIGN_CENTER);
                 document.add(headerImage);
             } else {
@@ -268,9 +268,9 @@ public class InvoicePDFGenerator {
     }
 
     private static void addLineItemsTable(Document document, java.util.List<InvoiceLineItem> lineItems) throws DocumentException {
-        PdfPTable table = new PdfPTable(9);
+        PdfPTable table = new PdfPTable(11);
         table.setWidthPercentage(100);
-        table.setWidths(new float[]{0.5f, 1f, 1f, 1.2f, 1.2f, 1f, 1f, 1f, 1.2f});
+        table.setWidths(new float[]{0.4f, 0.8f, 0.8f, 1.0f, 1.0f, 0.8f, 0.8f, 0.8f, 1.0f, 1.0f, 1.0f});
         table.setSpacingBefore(10);
 
         // Header row
@@ -312,7 +312,7 @@ public class InvoicePDFGenerator {
         }
 
         // Total row
-        PdfPCell totalLabelCell = createCell("", false);
+        PdfPCell totalLabelCell = createCell("Total Amount:", true);
         totalLabelCell.setColspan(10);
         totalLabelCell.setBorder(Rectangle.NO_BORDER);
         table.addCell(totalLabelCell);
@@ -487,8 +487,8 @@ public class InvoicePDFGenerator {
             
             if (footerFile.exists()) {
                 Image footerImage = Image.getInstance(footerFile.getAbsolutePath());
-                // Scale image to fit page width
-                footerImage.scaleToFit(PageSize.A4.getWidth() - 72, 80);
+                // Scale image to fit page width (A4 width is 595, minus margins 36 on each side = 523)
+                footerImage.scaleAbsolute(523, footerImage.getHeight() * 523 / footerImage.getWidth());
                 footerImage.setAlignment(Element.ALIGN_CENTER);
                 document.add(footerImage);
             } else {
@@ -543,18 +543,18 @@ public class InvoicePDFGenerator {
     }
 
     private static void addTableHeader(PdfPTable table, String text) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8)));
+        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7)));
         cell.setBackgroundColor(new Color(220, 220, 220));
         cell.setBorder(Rectangle.BOX);
-        cell.setPadding(3);
+        cell.setPadding(2);
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
         table.addCell(cell);
     }
 
     private static void addTableCell(PdfPTable table, String text) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA, 7)));
+        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA, 6)));
         cell.setBorder(Rectangle.BOX);
-        cell.setPadding(2);
+        cell.setPadding(1);
         table.addCell(cell);
     }
 
