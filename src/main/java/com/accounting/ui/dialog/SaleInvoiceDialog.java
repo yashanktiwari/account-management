@@ -441,45 +441,124 @@ public class SaleInvoiceDialog {
         Label sectionTitle = new Label("Line Items");
         sectionTitle.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
 
+        // Input fields for new line item
+        TextField lrNoField = new TextField();
+        setupUppercaseListener(lrNoField);
+        VBox lrNoBox = new VBox(4, new Label("LR No"), lrNoField);
+        HBox.setHgrow(lrNoBox, Priority.ALWAYS);
+
+        TextField containerNoField = new TextField();
+        setupUppercaseListener(containerNoField);
+        VBox containerBox = new VBox(4, new Label("Container No"), containerNoField);
+        HBox.setHgrow(containerBox, Priority.ALWAYS);
+
+        TextField vehicleNoField = new TextField();
+        setupUppercaseListener(vehicleNoField);
+        VBox vehicleBox = new VBox(4, new Label("Vehicle No"), vehicleNoField);
+        HBox.setHgrow(vehicleBox, Priority.ALWAYS);
+
+        TextField fromField = new TextField();
+        setupUppercaseListener(fromField);
+        VBox fromBox = new VBox(4, new Label("From"), fromField);
+        HBox.setHgrow(fromBox, Priority.ALWAYS);
+
+        TextField toField = new TextField();
+        setupUppercaseListener(toField);
+        VBox toBox = new VBox(4, new Label("To"), toField);
+        HBox.setHgrow(toBox, Priority.ALWAYS);
+
+        TextField typeField = new TextField();
+        setupUppercaseListener(typeField);
+        VBox typeBox = new VBox(4, new Label("Type"), typeField);
+        HBox.setHgrow(typeBox, Priority.ALWAYS);
+
+        TextField freightField = new TextField();
+        freightField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
+                freightField.setText(oldVal);
+            }
+        });
+        VBox freightBox = new VBox(4, new Label("Basic Freight"), freightField);
+        HBox.setHgrow(freightBox, Priority.ALWAYS);
+
+        TextField detentionField = new TextField();
+        detentionField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
+                detentionField.setText(oldVal);
+            }
+        });
+        VBox detentionBox = new VBox(4, new Label("Detention Charge"), detentionField);
+        HBox.setHgrow(detentionBox, Priority.ALWAYS);
+
+        Button addRowBtn = new Button("+ Add Row");
+        addRowBtn.setStyle("-fx-padding: 4 12 4 12; -fx-font-size: 12px;");
+        addRowBtn.setPrefHeight(35);
+        addRowBtn.setMinWidth(90);
+        addRowBtn.setWrapText(false);
+        VBox.setVgrow(addRowBtn, Priority.ALWAYS);
+
+        HBox inputRow = new HBox(8, lrNoBox, containerBox, vehicleBox, fromBox, toBox, typeBox, freightBox, detentionBox, addRowBtn);
+        inputRow.setPadding(new Insets(12));
+        inputRow.setAlignment(Pos.BOTTOM_CENTER);
+        inputRow.setStyle("-fx-background-color: #f5f5f5; -fx-border-color: #e2e8f0; -fx-border-radius: 4;");
+
         lineItemTable = new TableView<>(lineItems);
         lineItemTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
-        lineItemTable.setEditable(true);
+        lineItemTable.setEditable(false);
+
+        // Sr. No. column (auto-filled, read-only)
+        TableColumn<InvoiceLineItem, Integer> srNoCol = new TableColumn<>("Sr. No");
+        srNoCol.setCellValueFactory(cellData -> new SimpleIntegerProperty(lineItems.indexOf(cellData.getValue()) + 1).asObject());
+        srNoCol.setPrefWidth(60);
+        srNoCol.setEditable(false);
+
+        // Date column (auto-filled, read-only)
+        TableColumn<InvoiceLineItem, String> dateCol = new TableColumn<>("Date");
+        dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
+        dateCol.setPrefWidth(100);
+        dateCol.setEditable(false);
 
         TableColumn<InvoiceLineItem, String> lrNoCol = new TableColumn<>("LR No");
         lrNoCol.setCellValueFactory(new PropertyValueFactory<>("lrNo"));
         lrNoCol.setCellFactory(TextFieldTableCell.forTableColumn());
         lrNoCol.setOnEditCommit(e -> e.getRowValue().setLrNo(e.getNewValue()));
         lrNoCol.setPrefWidth(80);
+        lrNoCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> containerCol = new TableColumn<>("Container No");
         containerCol.setCellValueFactory(new PropertyValueFactory<>("containerNo"));
         containerCol.setCellFactory(TextFieldTableCell.forTableColumn());
         containerCol.setOnEditCommit(e -> e.getRowValue().setContainerNo(e.getNewValue()));
         containerCol.setPrefWidth(100);
+        containerCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> vehicleCol = new TableColumn<>("Vehicle No");
         vehicleCol.setCellValueFactory(new PropertyValueFactory<>("vehicleNo"));
         vehicleCol.setCellFactory(TextFieldTableCell.forTableColumn());
         vehicleCol.setOnEditCommit(e -> e.getRowValue().setVehicleNo(e.getNewValue()));
         vehicleCol.setPrefWidth(100);
+        vehicleCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> fromCol = new TableColumn<>("From");
         fromCol.setCellValueFactory(new PropertyValueFactory<>("from"));
         fromCol.setCellFactory(TextFieldTableCell.forTableColumn());
         fromCol.setOnEditCommit(e -> e.getRowValue().setFrom(e.getNewValue()));
         fromCol.setPrefWidth(100);
+        fromCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> toCol = new TableColumn<>("To");
         toCol.setCellValueFactory(new PropertyValueFactory<>("to"));
         toCol.setCellFactory(TextFieldTableCell.forTableColumn());
         toCol.setOnEditCommit(e -> e.getRowValue().setTo(e.getNewValue()));
         toCol.setPrefWidth(100);
+        toCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> typeCol = new TableColumn<>("Type");
         typeCol.setCellValueFactory(new PropertyValueFactory<>("type"));
         typeCol.setCellFactory(TextFieldTableCell.forTableColumn());
         typeCol.setOnEditCommit(e -> e.getRowValue().setType(e.getNewValue()));
         typeCol.setPrefWidth(80);
+        typeCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, Double> freightCol = new TableColumn<>("Basic Freight");
         freightCol.setCellValueFactory(new PropertyValueFactory<>("basicFreight"));
@@ -489,6 +568,7 @@ public class SaleInvoiceDialog {
             updateTotal();
         });
         freightCol.setPrefWidth(100);
+        freightCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, Double> detentionCol = new TableColumn<>("Detention Charge");
         detentionCol.setCellValueFactory(new PropertyValueFactory<>("detentionCharge"));
@@ -498,34 +578,85 @@ public class SaleInvoiceDialog {
             updateTotal();
         });
         detentionCol.setPrefWidth(120);
+        detentionCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, Double> totalCol = new TableColumn<>("Total");
         totalCol.setCellValueFactory(new PropertyValueFactory<>("total"));
         totalCol.setPrefWidth(100);
 
-        TableColumn<InvoiceLineItem, Void> deleteCol = new TableColumn<>("Action");
-        deleteCol.setCellFactory(col -> new TableCell<>() {
-            private final Button deleteBtn = new Button("Delete");
-            {
-                deleteBtn.setStyle("-fx-padding: 4 8 4 8; -fx-font-size: 11px;");
-                deleteBtn.setOnAction(e -> lineItems.remove(getIndex()));
-            }
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : deleteBtn);
+        lineItemTable.getColumns().addAll(srNoCol, dateCol, lrNoCol, containerCol, vehicleCol, fromCol, toCol, typeCol,
+                freightCol, detentionCol, totalCol);
+
+        // Right-click context menu for deleting rows
+        ContextMenu contextMenu = new ContextMenu();
+        MenuItem deleteItem = new MenuItem("Delete Row");
+        deleteItem.setOnAction(e -> {
+            InvoiceLineItem selected = lineItemTable.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                lineItems.remove(selected);
+                updateTotal();
             }
         });
-        deleteCol.setPrefWidth(80);
+        contextMenu.getItems().add(deleteItem);
 
-        lineItemTable.getColumns().addAll(lrNoCol, containerCol, vehicleCol, fromCol, toCol, typeCol,
-                freightCol, detentionCol, totalCol, deleteCol);
+        lineItemTable.setRowFactory(tv -> {
+            TableRow<InvoiceLineItem> row = new TableRow<>();
+            row.setOnContextMenuRequested(e -> {
+                if (!row.isEmpty()) {
+                    lineItemTable.getSelectionModel().select(row.getItem());
+                    contextMenu.show(row, e.getScreenX(), e.getScreenY());
+                }
+                e.consume();
+            });
+            return row;
+        });
 
-        Button addRowBtn = new Button("+ Add Row");
-        addRowBtn.setStyle("-fx-padding: 6 12 6 12; -fx-font-size: 12px;");
-        addRowBtn.setOnAction(e -> lineItems.add(new InvoiceLineItem()));
+        // Set up the Add Row button action
+        addRowBtn.setOnAction(e -> {
+            InvoiceLineItem item = new InvoiceLineItem();
+            item.setDate(java.time.LocalDate.now().toString());
+            item.setLrNo(lrNoField.getText().trim());
+            item.setContainerNo(containerNoField.getText().trim());
+            item.setVehicleNo(vehicleNoField.getText().trim());
+            item.setFrom(fromField.getText().trim());
+            item.setTo(toField.getText().trim());
+            item.setType(typeField.getText().trim());
 
-        VBox section = new VBox(8, sectionTitle, addRowBtn, lineItemTable);
+            // Parse numeric fields (default to 0 if empty or invalid)
+            double freight = 0;
+            double detention = 0;
+            try {
+                if (!freightField.getText().trim().isEmpty()) {
+                    freight = Double.parseDouble(freightField.getText().trim());
+                }
+            } catch (NumberFormatException ex) {
+                // Ignore invalid input, default to 0
+            }
+            try {
+                if (!detentionField.getText().trim().isEmpty()) {
+                    detention = Double.parseDouble(detentionField.getText().trim());
+                }
+            } catch (NumberFormatException ex) {
+                // Ignore invalid input, default to 0
+            }
+            item.setBasicFreight(freight);
+            item.setDetentionCharge(detention);
+
+            lineItems.add(item);
+            updateTotal();
+
+            // Clear input fields
+            lrNoField.clear();
+            containerNoField.clear();
+            vehicleNoField.clear();
+            fromField.clear();
+            toField.clear();
+            typeField.clear();
+            freightField.clear();
+            detentionField.clear();
+        });
+
+        VBox section = new VBox(8, sectionTitle, inputRow, lineItemTable);
         section.setPadding(new Insets(12));
         section.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
         VBox.setVgrow(lineItemTable, Priority.ALWAYS);
