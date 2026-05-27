@@ -30,6 +30,11 @@ public class InvoicePDFGenerator {
             addHeader(document);
             document.add(new Paragraph("\n"));
 
+            // Add horizontal line after header
+            LineSeparator headerLine = new LineSeparator(1, 100, new Color(0, 51, 102), Element.ALIGN_CENTER, -2);
+            document.add(new Chunk(headerLine));
+            document.add(new Paragraph("\n"));
+
             // Add invoice type title
             Paragraph title = new Paragraph("Tax Invoice", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, Color.WHITE));
             title.setAlignment(Element.ALIGN_CENTER);
@@ -79,6 +84,11 @@ public class InvoicePDFGenerator {
 
             // Add header
             addHeader(document);
+            document.add(new Paragraph("\n"));
+
+            // Add horizontal line after header
+            LineSeparator headerLine = new LineSeparator(1, 100, new Color(0, 51, 102), Element.ALIGN_CENTER, -2);
+            document.add(new Chunk(headerLine));
             document.add(new Paragraph("\n"));
 
             // Add invoice type title
@@ -196,75 +206,107 @@ public class InvoicePDFGenerator {
     }
 
     private static void addPurchaseInvoiceDetails(Document document, PurchaseInvoice invoice) throws DocumentException {
-        PdfPTable table = new PdfPTable(4);
+        PdfPTable table = new PdfPTable(2);
         table.setWidthPercentage(100);
-        table.setWidths(new float[]{1.5f, 1.5f, 1.5f, 1.5f});
+        table.setWidths(new float[]{1f, 1f});
         table.setSpacingBefore(10);
 
         // Invoice No and Date
         addDetailCell(table, "Invoice No -", invoice.getInvoiceNo() != null ? invoice.getInvoiceNo() : "", true);
         addDetailCell(table, "Invoice Date -", invoice.getInvoiceDate() != null ? invoice.getInvoiceDate().format(DATE_FORMATTER) : "", true);
 
-        // Billed To section
+        document.add(table);
+
+        // Billed To section - separate table
+        PdfPTable billedToTable = new PdfPTable(1);
+        billedToTable.setWidthPercentage(100);
+        billedToTable.setSpacingBefore(5);
+
         PdfPCell billedToLabel = createCell("........Billed To..........", true);
-        billedToLabel.setColspan(4);
-        table.addCell(billedToLabel);
+        billedToTable.addCell(billedToLabel);
 
         PdfPCell supplierName = createCell("Name - " + (invoice.getPartyName() != null ? invoice.getPartyName() : ""), false);
-        supplierName.setColspan(4);
-        table.addCell(supplierName);
+        billedToTable.addCell(supplierName);
 
         PdfPCell supplierAddress = createCell("Address - " + (invoice.getSupplierAddress() != null ? invoice.getSupplierAddress() : ""), false);
-        supplierAddress.setColspan(4);
-        table.addCell(supplierAddress);
+        billedToTable.addCell(supplierAddress);
 
-        // GSTIN, PAN, State, Contact
-        addDetailCell(table, "GSTIN -", invoice.getSupplierGstNo() != null ? invoice.getSupplierGstNo() : "", false);
-        addDetailCell(table, "PAN No", "", false);
-        addDetailCell(table, "State Code", "27", false);
-        addDetailCell(table, "Contact No -", invoice.getSupplierContactNumber() != null ? invoice.getSupplierContactNumber() : "", false);
+        document.add(billedToTable);
 
-        PdfPCell stateLabel = createCell("State - MAHARASHTRA", false);
-        stateLabel.setColspan(2);
-        table.addCell(stateLabel);
+        // GSTIN, PAN, State Code in one line
+        PdfPTable gstTable = new PdfPTable(3);
+        gstTable.setWidthPercentage(100);
+        gstTable.setWidths(new float[]{2f, 1.5f, 1f});
+        gstTable.setSpacingBefore(5);
 
-        document.add(table);
+        addDetailCell(gstTable, "GSTIN -", invoice.getSupplierGstNo() != null ? invoice.getSupplierGstNo() : "", false);
+        addDetailCell(gstTable, "PAN No", "", false);
+        addDetailCell(gstTable, "State Code", "27", false);
+
+        document.add(gstTable);
+
+        // State and Contact in next line
+        PdfPTable stateContactTable = new PdfPTable(2);
+        stateContactTable.setWidthPercentage(100);
+        stateContactTable.setWidths(new float[]{2f, 2f});
+        stateContactTable.setSpacingBefore(0);
+
+        addDetailCell(stateContactTable, "State -", "MAHARASHTRA", false);
+        addDetailCell(stateContactTable, "Contact No -", invoice.getSupplierContactNumber() != null ? invoice.getSupplierContactNumber() : "", false);
+
+        document.add(stateContactTable);
     }
 
     private static void addSaleInvoiceDetails(Document document, SaleInvoice invoice) throws DocumentException {
-        PdfPTable table = new PdfPTable(4);
+        PdfPTable table = new PdfPTable(2);
         table.setWidthPercentage(100);
-        table.setWidths(new float[]{1.5f, 1.5f, 1.5f, 1.5f});
+        table.setWidths(new float[]{1f, 1f});
         table.setSpacingBefore(10);
 
         // Invoice No and Date
         addDetailCell(table, "Invoice No -", invoice.getInvoiceNo() != null ? invoice.getInvoiceNo() : "", true);
         addDetailCell(table, "Invoice Date -", invoice.getInvoiceDate() != null ? invoice.getInvoiceDate().format(DATE_FORMATTER) : "", true);
 
-        // Billed To section
+        document.add(table);
+
+        // Billed To section - separate table
+        PdfPTable billedToTable = new PdfPTable(1);
+        billedToTable.setWidthPercentage(100);
+        billedToTable.setSpacingBefore(5);
+
         PdfPCell billedToLabel = createCell("........Billed To..........", true);
-        billedToLabel.setColspan(4);
-        table.addCell(billedToLabel);
+        billedToTable.addCell(billedToLabel);
 
         PdfPCell customerName = createCell("Name - " + (invoice.getPartyName() != null ? invoice.getPartyName() : ""), false);
-        customerName.setColspan(4);
-        table.addCell(customerName);
+        billedToTable.addCell(customerName);
 
         PdfPCell customerAddress = createCell("Address - " + (invoice.getRcvrAddress() != null ? invoice.getRcvrAddress() : ""), false);
-        customerAddress.setColspan(4);
-        table.addCell(customerAddress);
+        billedToTable.addCell(customerAddress);
 
-        // GSTIN, PAN, State, Contact
-        addDetailCell(table, "GSTIN -", invoice.getRcvrGstin() != null ? invoice.getRcvrGstin() : "", false);
-        addDetailCell(table, "PAN No", "", false);
-        addDetailCell(table, "State Code", "27", false);
-        addDetailCell(table, "Contact No -", invoice.getRcvrContactNo() != null ? invoice.getRcvrContactNo() : "", false);
+        document.add(billedToTable);
 
-        PdfPCell stateLabel = createCell("State - MAHARASHTRA", false);
-        stateLabel.setColspan(2);
-        table.addCell(stateLabel);
+        // GSTIN, PAN, State Code in one line
+        PdfPTable gstTable = new PdfPTable(3);
+        gstTable.setWidthPercentage(100);
+        gstTable.setWidths(new float[]{2f, 1.5f, 1f});
+        gstTable.setSpacingBefore(5);
 
-        document.add(table);
+        addDetailCell(gstTable, "GSTIN -", invoice.getRcvrGstin() != null ? invoice.getRcvrGstin() : "", false);
+        addDetailCell(gstTable, "PAN No", "", false);
+        addDetailCell(gstTable, "State Code", "27", false);
+
+        document.add(gstTable);
+
+        // State and Contact in next line
+        PdfPTable stateContactTable = new PdfPTable(2);
+        stateContactTable.setWidthPercentage(100);
+        stateContactTable.setWidths(new float[]{2f, 2f});
+        stateContactTable.setSpacingBefore(0);
+
+        addDetailCell(stateContactTable, "State -", "MAHARASHTRA", false);
+        addDetailCell(stateContactTable, "Contact No -", invoice.getRcvrContactNo() != null ? invoice.getRcvrContactNo() : "", false);
+
+        document.add(stateContactTable);
     }
 
     private static void addLineItemsTable(Document document, java.util.List<InvoiceLineItem> lineItems) throws DocumentException {
@@ -302,13 +344,6 @@ public class InvoicePDFGenerator {
             addTableCell(table, String.format("%.2f", item.getDetentionCharge()));
             addTableCell(table, String.format("%.2f", item.getTotal()));
             totalAmount += item.getTotal();
-        }
-
-        // Add empty rows to fill space
-        for (int i = lineItems.size(); i < 5; i++) {
-            for (int j = 0; j < 11; j++) {
-                addTableCell(table, "");
-            }
         }
 
         // Total row
@@ -418,16 +453,71 @@ public class InvoicePDFGenerator {
         othersDetails.addElement(othersTable);
         table.addCell(othersDetails);
 
-        // GST Amount row
+        // GST Amount and Net Amount row
         PdfPCell gstAmountLabel = createCell("GST Amount -", true);
-        gstAmountLabel.setColspan(2);
+        gstAmountLabel.setColspan(1);
         table.addCell(gstAmountLabel);
+        
+        PdfPCell gstAmountCell = createCell(String.format("%.2f", totalGst), true);
+        gstAmountCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        table.addCell(gstAmountCell);
+        
+        PdfPCell netAmountLabel = createCell("Net Amount -", true);
+        netAmountLabel.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        table.addCell(netAmountLabel);
         
         PdfPCell netAmountCell = createCell(String.format("%.2f", netAmount), true);
         netAmountCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
         table.addCell(netAmountCell);
 
         document.add(table);
+
+        // Amount in words
+        Paragraph amountWords = new Paragraph();
+        amountWords.add(new Chunk("Rupees - ", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
+        amountWords.add(new Chunk(convertNumberToWords(netAmount) + " Only", FontFactory.getFont(FontFactory.HELVETICA, 10)));
+        amountWords.setSpacingBefore(10);
+        amountWords.setAlignment(Element.ALIGN_LEFT);
+        document.add(amountWords);
+    }
+
+    private static String convertNumberToWords(double amount) {
+        // Simple implementation for amount in words
+        long rupees = (long) amount;
+        long paise = (long) Math.round((amount - rupees) * 100);
+        
+        String words = convertToWords(rupees);
+        if (paise > 0) {
+            words += " and " + convertToWords(paise) + " Paise";
+        }
+        return words;
+    }
+
+    private static String convertToWords(long number) {
+        if (number == 0) {
+            return "Zero";
+        }
+        
+        String[] units = {"", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"};
+        String[] teens = {"Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"};
+        String[] tens = {"", "Ten", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"};
+        
+        if (number < 10) {
+            return units[(int) number];
+        } else if (number < 20) {
+            return teens[(int) (number - 10)];
+        } else if (number < 100) {
+            return tens[(int) (number / 10)] + ((number % 10 != 0) ? " " + units[(int) (number % 10)] : "");
+        } else if (number < 1000) {
+            return units[(int) (number / 100)] + " Hundred" + ((number % 100 != 0) ? " " + convertToWords(number % 100) : "");
+        } else if (number < 100000) {
+            return convertToWords(number / 1000) + " Thousand" + ((number % 1000 != 0) ? " " + convertToWords(number % 1000) : "");
+        } else if (number < 10000000) {
+            return convertToWords(number / 100000) + " Lakh" + ((number % 100000 != 0) ? " " + convertToWords(number % 100000) : "");
+        } else if (number < 1000000000) {
+            return convertToWords(number / 10000000) + " Crore" + ((number % 10000000 != 0) ? " " + convertToWords(number % 10000000) : "");
+        }
+        return String.valueOf(number);
     }
 
     private static void addRemarks(Document document, String remarks) throws DocumentException {
