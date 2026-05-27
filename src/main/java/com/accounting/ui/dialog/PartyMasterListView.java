@@ -219,29 +219,25 @@ public class PartyMasterListView {
         
         AppExecutor.submit(() -> {
             try {
-                List<Party> data;
+                List<Party> data = new java.util.ArrayList<>();
                 
-                if (!searchTerms.isEmpty()) {
-                    // Start with first search term
-                    String firstTerm = searchTerms.iterator().next();
-                    data = dao.searchAllColumns(firstTerm.trim());
-                    
-                    // Intersect with remaining search terms
-                    for (String term : searchTerms) {
-                        if (!term.equals(firstTerm)) {
-                            data.retainAll(dao.searchAllColumns(term.trim()));
-                        }
-                    }
-                    
-                    // Also intersect with live search text if present
-                    if (!liveSearchText.isEmpty()) {
-                        data.retainAll(dao.searchAllColumns(liveSearchText));
-                    }
-                } else {
-                    // Only live search text
-                    data = dao.searchAllColumns(liveSearchText);
+                // Collect all search terms including live search text
+                Set<String> allSearchTerms = new HashSet<>(searchTerms);
+                if (!liveSearchText.isEmpty()) {
+                    allSearchTerms.add(liveSearchText);
                 }
                 
+                // Search for each term and combine results (OR logic)
+                for (String term : allSearchTerms) {
+                    List<Party> termResults = dao.searchAllColumns(term.trim());
+                    for (Party p : termResults) {
+                        if (!data.contains(p)) {
+                            data.add(p);
+                        }
+                    }
+                }
+                
+                System.out.println("Search terms: " + allSearchTerms + ", Results found: " + data.size());
                 Platform.runLater(() -> rows.setAll(data));
             } catch (Exception e) {
                 e.printStackTrace();
