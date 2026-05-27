@@ -15,13 +15,50 @@ public class SaleInvoiceDAO {
 
     private static final Logger log = get(SaleInvoiceDAO.class);
 
+    private void ensureInvoiceColumns() throws Exception {
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("PRAGMA table_info(sale_invoices)")) {
+            java.util.Set<String> existing = new java.util.HashSet<>();
+            while (rs.next()) {
+                existing.add(rs.getString("name").toLowerCase());
+            }
+
+            try (Statement stmt2 = conn.createStatement()) {
+                if (!existing.contains("credit_debit")) {
+                    stmt2.executeUpdate("ALTER TABLE sale_invoices ADD COLUMN credit_debit VARCHAR(20)");
+                }
+                if (!existing.contains("account_name")) {
+                    stmt2.executeUpdate("ALTER TABLE sale_invoices ADD COLUMN account_name VARCHAR(255)");
+                }
+                if (!existing.contains("paid_by")) {
+                    stmt2.executeUpdate("ALTER TABLE sale_invoices ADD COLUMN paid_by VARCHAR(255)");
+                }
+                if (!existing.contains("payment_mode")) {
+                    stmt2.executeUpdate("ALTER TABLE sale_invoices ADD COLUMN payment_mode VARCHAR(50)");
+                }
+                if (!existing.contains("bank_name")) {
+                    stmt2.executeUpdate("ALTER TABLE sale_invoices ADD COLUMN bank_name VARCHAR(255)");
+                }
+                if (!existing.contains("bank_account")) {
+                    stmt2.executeUpdate("ALTER TABLE sale_invoices ADD COLUMN bank_account VARCHAR(255)");
+                }
+                if (!existing.contains("ifsc_code")) {
+                    stmt2.executeUpdate("ALTER TABLE sale_invoices ADD COLUMN ifsc_code VARCHAR(20)");
+                }
+            }
+        }
+    }
+
     public void save(SaleInvoice invoice) throws Exception {
+        ensureInvoiceColumns();
         String sql = """
                 INSERT INTO sale_invoices (invoice_no, invoice_date, delivery_date, party_id, party_name,
                 voucher_type, gst, taxable_amount, sgst_amount, cgst_amount, igst_amount, total_gst,
-                net_amount, remarks, rcvr_name, rcvr_address, rcvr_contact_no, rcvr_gstin, status,
-                created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                net_amount, remarks, rcvr_name, rcvr_address, rcvr_contact_no, rcvr_gstin,
+                credit_debit, account_name, paid_by, payment_mode, bank_name, bank_account, ifsc_code,
+                status, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -43,7 +80,14 @@ public class SaleInvoiceDAO {
             pstmt.setString(16, invoice.getRcvrAddress());
             pstmt.setString(17, invoice.getRcvrContactNo());
             pstmt.setString(18, invoice.getRcvrGstin());
-            pstmt.setString(19, invoice.getStatus());
+            pstmt.setString(19, invoice.getCreditDebit());
+            pstmt.setString(20, invoice.getAccountName());
+            pstmt.setString(21, invoice.getPaidBy());
+            pstmt.setString(22, invoice.getPaymentMode());
+            pstmt.setString(23, invoice.getBankName());
+            pstmt.setString(24, invoice.getBankAccount());
+            pstmt.setString(25, invoice.getIfscCode());
+            pstmt.setString(26, invoice.getStatus());
 
             pstmt.executeUpdate();
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
@@ -58,11 +102,13 @@ public class SaleInvoiceDAO {
     }
 
     public void update(SaleInvoice invoice) throws Exception {
+        ensureInvoiceColumns();
         String sql = """
                 UPDATE sale_invoices SET invoice_no=?, invoice_date=?, delivery_date=?, party_id=?,
                 party_name=?, voucher_type=?, gst=?, taxable_amount=?, sgst_amount=?, cgst_amount=?,
                 igst_amount=?, total_gst=?, net_amount=?, remarks=?, rcvr_name=?, rcvr_address=?,
-                rcvr_contact_no=?, rcvr_gstin=?, status=?, updated_at=NOW() WHERE id=?
+                rcvr_contact_no=?, rcvr_gstin=?, credit_debit=?, account_name=?, paid_by=?, payment_mode=?,
+                bank_name=?, bank_account=?, ifsc_code=?, status=?, updated_at=NOW() WHERE id=?
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -84,8 +130,15 @@ public class SaleInvoiceDAO {
             pstmt.setString(16, invoice.getRcvrAddress());
             pstmt.setString(17, invoice.getRcvrContactNo());
             pstmt.setString(18, invoice.getRcvrGstin());
-            pstmt.setString(19, invoice.getStatus());
-            pstmt.setInt(20, invoice.getId());
+            pstmt.setString(19, invoice.getCreditDebit());
+            pstmt.setString(20, invoice.getAccountName());
+            pstmt.setString(21, invoice.getPaidBy());
+            pstmt.setString(22, invoice.getPaymentMode());
+            pstmt.setString(23, invoice.getBankName());
+            pstmt.setString(24, invoice.getBankAccount());
+            pstmt.setString(25, invoice.getIfscCode());
+            pstmt.setString(26, invoice.getStatus());
+            pstmt.setInt(27, invoice.getId());
 
             pstmt.executeUpdate();
             deleteLineItems(invoice.getId());
@@ -203,6 +256,13 @@ public class SaleInvoiceDAO {
         inv.setRcvrAddress(rs.getString("rcvr_address"));
         inv.setRcvrContactNo(rs.getString("rcvr_contact_no"));
         inv.setRcvrGstin(rs.getString("rcvr_gstin"));
+        inv.setCreditDebit(rs.getString("credit_debit"));
+        inv.setAccountName(rs.getString("account_name"));
+        inv.setPaidBy(rs.getString("paid_by"));
+        inv.setPaymentMode(rs.getString("payment_mode"));
+        inv.setBankName(rs.getString("bank_name"));
+        inv.setBankAccount(rs.getString("bank_account"));
+        inv.setIfscCode(rs.getString("ifsc_code"));
         inv.setStatus(rs.getString("status"));
         inv.setCreatedAt(rs.getDate("created_at").toLocalDate());
         inv.setUpdatedAt(rs.getDate("updated_at").toLocalDate());

@@ -49,6 +49,13 @@ public class SaleInvoiceDialog {
     private TextField rcvrAddressField;
     private TextField rcvrContactField;
     private TextField rcvrGstinField;
+    private ComboBox<String> creditDebitCombo;
+    private TextField accountNameField;
+    private TextField paidByField;
+    private ComboBox<String> paymentModeCombo;
+    private TextField bankNameField;
+    private TextField bankAccountField;
+    private TextField ifscCodeField;
     private Runnable onClose;
 
     public SaleInvoiceDialog() {
@@ -79,10 +86,11 @@ public class SaleInvoiceDialog {
 
         HBox headerBox = createHeaderSection();
         GridPane detailsGrid = createDetailsGrid();
+        GridPane paymentGrid = createPaymentGrid();
         VBox lineItemsSection = createLineItemsSection();
         HBox footerBox = createFooterSection();
 
-        root.getChildren().addAll(headerBox, detailsGrid, lineItemsSection, footerBox);
+        root.getChildren().addAll(headerBox, detailsGrid, paymentGrid, lineItemsSection, footerBox);
         VBox.setVgrow(lineItemsSection, Priority.ALWAYS);
 
         return root;
@@ -137,35 +145,91 @@ public class SaleInvoiceDialog {
         grid.add(label("Voucher Type"), 2, 1);
         grid.add(voucherTypeCombo, 3, 1);
 
+        creditDebitCombo = new ComboBox<>(FXCollections.observableArrayList("Credit", "Debit"));
+        creditDebitCombo.setValue("Credit");
+        grid.add(label("Credit/Debit"), 4, 1);
+        grid.add(creditDebitCombo, 5, 1);
+
         gstCombo = new ComboBox<>(FXCollections.observableArrayList(
                 "5%", "12%", "18%", "28%"
         ));
         gstCombo.setValue("18%");
-        grid.add(label("GST"), 4, 1);
-        grid.add(gstCombo, 5, 1);
+        grid.add(label("GST"), 0, 2);
+        grid.add(gstCombo, 1, 2);
+
+        // Account Name
+        accountNameField = new TextField();
+        setupUppercaseListener(accountNameField);
+        grid.add(label("Account Name"), 2, 2);
+        grid.add(accountNameField, 3, 2);
 
         // Receiver details
         rcvrNameField = new TextField();
-        grid.add(label("Receiver Name"), 0, 2);
-        grid.add(rcvrNameField, 1, 2);
+        setupUppercaseListener(rcvrNameField);
+        grid.add(label("Receiver Name"), 4, 2);
+        grid.add(rcvrNameField, 5, 2);
 
         rcvrAddressField = new TextField();
-        grid.add(label("Receiver Address"), 2, 2);
-        grid.add(rcvrAddressField, 3, 2);
+        setupUppercaseListener(rcvrAddressField);
+        grid.add(label("Receiver Address"), 0, 3);
+        grid.add(rcvrAddressField, 1, 3);
 
         rcvrContactField = new TextField();
-        grid.add(label("Contact No"), 4, 2);
-        grid.add(rcvrContactField, 5, 2);
+        setupUppercaseListener(rcvrContactField);
+        grid.add(label("Contact No"), 2, 3);
+        grid.add(rcvrContactField, 3, 3);
 
         rcvrGstinField = new TextField();
-        grid.add(label("GSTIN"), 0, 3);
-        grid.add(rcvrGstinField, 1, 3);
+        setupUppercaseListener(rcvrGstinField);
+        grid.add(label("GSTIN"), 4, 3);
+        grid.add(rcvrGstinField, 5, 3);
 
         remarksField = new TextField();
-        grid.add(label("Remarks"), 2, 3);
-        grid.add(remarksField, 3, 3);
+        setupUppercaseListener(remarksField);
+        grid.add(label("Remarks"), 0, 4);
+        grid.add(remarksField, 1, 4, 5, 1);
 
         loadParties();
+        return grid;
+    }
+
+    private GridPane createPaymentGrid() {
+        GridPane grid = new GridPane();
+        grid.setHgap(16);
+        grid.setVgap(12);
+        grid.setPadding(new Insets(12));
+        grid.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
+
+        // Paid by (Person name)
+        paidByField = new TextField();
+        setupUppercaseListener(paidByField);
+        grid.add(label("Paid by"), 0, 0);
+        grid.add(paidByField, 1, 0);
+
+        // Payment Mode
+        paymentModeCombo = new ComboBox<>(FXCollections.observableArrayList("Cash", "Bank Transfer", "UPI", "Cheque"));
+        paymentModeCombo.setValue("Cash");
+        grid.add(label("Mode"), 2, 0);
+        grid.add(paymentModeCombo, 3, 0);
+
+        // Bank Name
+        bankNameField = new TextField();
+        setupUppercaseListener(bankNameField);
+        grid.add(label("Bank Name"), 0, 1);
+        grid.add(bankNameField, 1, 1);
+
+        // Bank Account
+        bankAccountField = new TextField();
+        setupUppercaseListener(bankAccountField);
+        grid.add(label("Bank A/c"), 2, 1);
+        grid.add(bankAccountField, 3, 1);
+
+        // IFSC Code
+        ifscCodeField = new TextField();
+        setupUppercaseListener(ifscCodeField);
+        grid.add(label("IFSC Code"), 0, 2);
+        grid.add(ifscCodeField, 1, 2);
+
         return grid;
     }
 
@@ -338,6 +402,13 @@ public class SaleInvoiceDialog {
         invoice.setRcvrAddress(rcvrAddressField.getText());
         invoice.setRcvrContactNo(rcvrContactField.getText());
         invoice.setRcvrGstin(rcvrGstinField.getText());
+        invoice.setCreditDebit(creditDebitCombo.getValue());
+        invoice.setAccountName(accountNameField.getText());
+        invoice.setPaidBy(paidByField.getText());
+        invoice.setPaymentMode(paymentModeCombo.getValue());
+        invoice.setBankName(bankNameField.getText());
+        invoice.setBankAccount(bankAccountField.getText());
+        invoice.setIfscCode(ifscCodeField.getText());
         invoice.setLineItems(new java.util.ArrayList<>(lineItems));
         invoice.setStatus("SAVED");
 
@@ -367,5 +438,16 @@ public class SaleInvoiceDialog {
         Label lbl = new Label(text);
         lbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #475569;");
         return lbl;
+    }
+
+    private void setupUppercaseListener(TextField textField) {
+        textField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.equals(oldVal)) {
+                // Convert to uppercase, preserving cursor position
+                int caretPosition = textField.getCaretPosition();
+                textField.setText(newVal.toUpperCase());
+                textField.positionCaret(Math.min(caretPosition, textField.getLength()));
+            }
+        });
     }
 }
