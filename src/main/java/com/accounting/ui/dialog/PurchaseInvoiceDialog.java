@@ -467,6 +467,16 @@ public class PurchaseInvoiceDialog {
         lineItemTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         lineItemTable.setEditable(true);
 
+        // Enable single-click editing
+        lineItemTable.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 1) {
+                TablePosition<InvoiceLineItem, ?> pos = lineItemTable.getFocusModel().getFocusedCell();
+                if (pos != null && pos.getColumn() > 1) { // Skip Sr. No. (col 0) and Date (col 1)
+                    lineItemTable.edit(pos.getRow(), pos.getTableColumn());
+                }
+            }
+        });
+
         // Commit edit when table loses focus
         lineItemTable.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal) {
