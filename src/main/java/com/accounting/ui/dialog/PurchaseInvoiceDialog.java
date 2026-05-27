@@ -476,8 +476,10 @@ public class PurchaseInvoiceDialog {
                     if (lineItemTable.getEditingCell() != null) {
                         lineItemTable.edit(-1, null);
                     }
-                    // Then start editing the new cell
-                    lineItemTable.edit(pos.getRow(), pos.getTableColumn());
+                    // Delay the edit start to allow selection to complete
+                    Platform.runLater(() -> {
+                        lineItemTable.edit(pos.getRow(), pos.getTableColumn());
+                    });
                 }
             }
         });
