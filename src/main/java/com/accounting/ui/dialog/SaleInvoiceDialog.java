@@ -2,6 +2,8 @@ package com.accounting.ui.dialog;
 
 import com.accounting.dao.PartyDAO;
 import com.accounting.dao.SaleInvoiceDAO;
+import com.accounting.dao.SettingsDAO;
+import com.accounting.database.DBConnection;
 import com.accounting.model.InvoiceLineItem;
 import com.accounting.model.Party;
 import com.accounting.model.SaleInvoice;
@@ -26,6 +28,9 @@ import javafx.stage.Window;
 import javafx.util.converter.DoubleStringConverter;
 import org.slf4j.Logger;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -62,6 +67,10 @@ public class SaleInvoiceDialog {
         this.invoice = new SaleInvoice();
     }
 
+    public SaleInvoiceDialog(SaleInvoice invoice) {
+        this.invoice = invoice;
+    }
+
     public void show(Window owner, Runnable onClose) {
         this.onClose = onClose;
         stage = new Stage();
@@ -78,6 +87,116 @@ public class SaleInvoiceDialog {
         );
         stage.setScene(scene);
         stage.show();
+
+        // Load invoice data if editing
+        if (invoice.getId() > 0) {
+            loadInvoiceData();
+        } else {
+            // New invoice - auto-generate invoice number
+            generateNextInvoiceNumber();
+        }
+    }
+
+    private void generateNextInvoiceNumber() {
+        AppExecutor.submit(() -> {
+            try {
+                SettingsDAO settingsDAO = new SettingsDAO();
+                String startingNumberStr = settingsDAO.getSetting("global_invoice_starting_number");
+                int startingNumber = startingNumberStr != null ? Integer.parseInt(startingNumberStr) : 1;
+
+                // Get the last invoice number from all invoice/receipt tables
+                int lastNumber = getLastGlobalInvoiceNumber();
+                int nextNumber = Math.max(startingNumber, lastNumber + 1);
+
+                final String invoiceNo = String.valueOf(nextNumber);
+                Platform.runLater(() -> invoiceNoField.setText(invoiceNo));
+            } catch (Exception e) {
+                log.error("Failed to generate invoice number", e);
+                Platform.runLater(() -> invoiceNoField.setText(""));
+            }
+        });
+    }
+
+    private int getLastGlobalInvoiceNumber() throws Exception {
+        int maxNumber = 0;
+
+        // Check purchase invoices
+        String purchaseSql = "SELECT CAST(invoice_no AS INTEGER) as num FROM purchase_invoices WHERE invoice_no GLOB '^[0-9]+$' ORDER BY CAST(invoice_no AS INTEGER) DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(purchaseSql)) {
+            if (rs.next()) {
+                maxNumber = Math.max(maxNumber, rs.getInt("num"));
+            }
+        }
+
+        // Check sale invoices
+        String saleSql = "SELECT CAST(invoice_no AS INTEGER) as num FROM sale_invoices WHERE invoice_no GLOB '^[0-9]+$' ORDER BY CAST(invoice_no AS INTEGER) DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(saleSql)) {
+            if (rs.next()) {
+                maxNumber = Math.max(maxNumber, rs.getInt("num"));
+            }
+        }
+
+        // Check purchase receipts
+        String purchaseReceiptSql = "SELECT CAST(invoice_no AS INTEGER) as num FROM purchase_receipts WHERE invoice_no GLOB '^[0-9]+$' ORDER BY CAST(invoice_no AS INTEGER) DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(purchaseReceiptSql)) {
+            if (rs.next()) {
+                maxNumber = Math.max(maxNumber, rs.getInt("num"));
+            }
+        }
+
+        // Check sale receipts
+        String saleReceiptSql = "SELECT CAST(invoice_no AS INTEGER) as num FROM sale_receipts WHERE invoice_no GLOB '^[0-9]+$' ORDER BY CAST(invoice_no AS INTEGER) DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(saleReceiptSql)) {
+            if (rs.next()) {
+                maxNumber = Math.max(maxNumber, rs.getInt("num"));
+            }
+        }
+
+        return maxNumber;
+    }
+
+    private void loadInvoiceData() {
+        invoiceNoField.setText(invoice.getInvoiceNo());
+        invoiceDatePicker.setValue(invoice.getInvoiceDate());
+        deliveryDatePicker.setValue(invoice.getDeliveryDate());
+        voucherTypeCombo.setValue(invoice.getVoucherType());
+        remarksField.setText(invoice.getRemarks());
+
+        // Credit/Debit
+        creditDebitCombo.setValue(invoice.getCreditDebit() != null ? invoice.getCreditDebit() : "Credit");
+
+        // Account Name
+        accountNameField.setText(invoice.getAccountName());
+
+        // Paid by (Person name)
+        paidByField.setText(invoice.getPaidBy());
+
+        // Payment Mode
+        paymentModeCombo.setValue(invoice.getPaymentMode() != null ? invoice.getPaymentMode() : "Cash");
+
+        // Bank details
+        bankNameField.setText(invoice.getBankName());
+        bankAccountField.setText(invoice.getBankAccount());
+        ifscCodeField.setText(invoice.getIfscCode());
+
+        // Receiver details
+        rcvrNameField.setText(invoice.getRcvrName());
+        rcvrAddressField.setText(invoice.getRcvrAddress());
+        rcvrContactField.setText(invoice.getRcvrContactNo());
+        rcvrGstinField.setText(invoice.getRcvrGstin());
+
+        // Load line items
+        lineItems.setAll(invoice.getLineItems());
+        lineItemTable.setItems(lineItems);
+        updateTotal();
     }
 
     public Parent createContent() {
@@ -392,6 +511,7 @@ public class SaleInvoiceDialog {
         }
 
         invoice.setInvoiceDate(invoiceDatePicker.getValue());
+        invoice.setInvoiceNo(invoiceNoField.getText());
         invoice.setDeliveryDate(deliveryDatePicker.getValue());
         invoice.setPartyId(partyCombo.getValue().getId());
         invoice.setPartyName(partyCombo.getValue().getName());
@@ -418,7 +538,12 @@ public class SaleInvoiceDialog {
 
         AppExecutor.submit(() -> {
             try {
-                new SaleInvoiceDAO().save(invoice);
+                SaleInvoiceDAO dao = new SaleInvoiceDAO();
+                if (invoice.getId() > 0) {
+                    dao.update(invoice);
+                } else {
+                    dao.save(invoice);
+                }
                 Platform.runLater(() -> {
                     NotificationUtil.showSuccess("Success", "Invoice saved successfully");
                     stage.close();

@@ -233,7 +233,7 @@ public class MainApp extends Application {
     }
 
     private void showSaleInvoice() {
-        new SaleInvoiceDialog().show(primaryStage, this::refreshDashboard);
+        showContent(new SaleInvoiceListView().createContent());
     }
 
     private void showPurchaseReceipt() {

@@ -176,8 +176,60 @@ public class SaleInvoiceDAO {
         return null;
     }
 
+    public List<SaleInvoice> searchAllColumns(String keyword) throws Exception {
+        String sql = """
+                SELECT *
+                FROM sale_invoices
+                WHERE CONCAT_WS(' ',
+                    IFNULL(CAST(id AS CHAR), ''),
+                    IFNULL(invoice_no, ''),
+                    IFNULL(CAST(invoice_date AS CHAR), ''),
+                    IFNULL(CAST(delivery_date AS CHAR), ''),
+                    IFNULL(CAST(party_id AS CHAR), ''),
+                    IFNULL(party_name, ''),
+                    IFNULL(voucher_type, ''),
+                    IFNULL(gst, ''),
+                    IFNULL(CAST(taxable_amount AS CHAR), ''),
+                    IFNULL(CAST(sgst_amount AS CHAR), ''),
+                    IFNULL(CAST(cgst_amount AS CHAR), ''),
+                    IFNULL(CAST(igst_amount AS CHAR), ''),
+                    IFNULL(CAST(total_gst AS CHAR), ''),
+                    IFNULL(CAST(net_amount AS CHAR), ''),
+                    IFNULL(remarks, ''),
+                    IFNULL(rcvr_name, ''),
+                    IFNULL(rcvr_address, ''),
+                    IFNULL(rcvr_contact_no, ''),
+                    IFNULL(rcvr_gstin, ''),
+                    IFNULL(credit_debit, ''),
+                    IFNULL(account_name, ''),
+                    IFNULL(paid_by, ''),
+                    IFNULL(payment_mode, ''),
+                    IFNULL(bank_name, ''),
+                    IFNULL(bank_account, ''),
+                    IFNULL(ifsc_code, ''),
+                    IFNULL(status, ''),
+                    IFNULL(CAST(created_at AS CHAR), ''),
+                    IFNULL(CAST(updated_at AS CHAR), '')
+                ) LIKE ?
+                ORDER BY id DESC
+                """;
+        List<SaleInvoice> invoices = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, "%" + keyword + "%");
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    SaleInvoice inv = mapInvoice(rs);
+                    inv.setLineItems(getLineItems(inv.getId()));
+                    invoices.add(inv);
+                }
+            }
+        }
+        return invoices;
+    }
+
     public List<SaleInvoice> getAll() throws Exception {
-        String sql = "SELECT * FROM sale_invoices ORDER BY invoice_date DESC";
+        String sql = "SELECT * FROM sale_invoices ORDER BY id DESC";
         List<SaleInvoice> invoices = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
