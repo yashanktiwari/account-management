@@ -435,12 +435,14 @@ public class PurchaseInvoiceDialog {
 
         // Account Name
         accountNameField = new TextField();
+        setupUppercaseListener(accountNameField);
         grid.add(label("Account Name"), 0, 2);
         grid.add(accountNameField, 1, 2);
 
         // Party (Supplier) with autocomplete TextField
         supplierField = new TextField();
         supplierField.setPrefWidth(250);
+        setupUppercaseListener(supplierField);
         setupSupplierAutocomplete();
         grid.add(label("Supplier"), 2, 2);
         grid.add(supplierField, 3, 2);
@@ -510,21 +512,25 @@ public class PurchaseInvoiceDialog {
 
         // Bank Name
         bankNameField = new TextField();
+        setupUppercaseListener(bankNameField);
         grid.add(label("Bank Name"), 2, 0);
         grid.add(bankNameField, 3, 0);
 
         // Bank Account
         bankAccountField = new TextField();
+        setupUppercaseListener(bankAccountField);
         grid.add(label("Bank A/c"), 0, 1);
         grid.add(bankAccountField, 1, 1);
 
         // IFSC Code
         ifscCodeField = new TextField();
+        setupUppercaseListener(ifscCodeField);
         grid.add(label("IFSC Code"), 2, 1);
         grid.add(ifscCodeField, 3, 1);
 
         // Remarks
         remarksField = new TextField();
+        setupUppercaseListener(remarksField);
         grid.add(label("Remarks"), 0, 2);
         grid.add(remarksField, 1, 2, 3, 1);
 
@@ -541,18 +547,21 @@ public class PurchaseInvoiceDialog {
         // Supplier Address
         supplierAddressField = new TextField();
         supplierAddressField.setPrefWidth(300);
+        setupUppercaseListener(supplierAddressField);
         grid.add(label("Supplier Address"), 0, 0);
         grid.add(supplierAddressField, 1, 0, 3, 1);
 
         // Contact Number
         supplierContactNumberField = new TextField();
         supplierContactNumberField.setPrefWidth(150);
+        setupUppercaseListener(supplierContactNumberField);
         grid.add(label("Contact Number"), 0, 1);
         grid.add(supplierContactNumberField, 1, 1);
 
         // GSTIN No.
         supplierGstNoField = new TextField();
         supplierGstNoField.setPrefWidth(150);
+        setupUppercaseListener(supplierGstNoField);
         grid.add(label("GSTIN No."), 2, 1);
         grid.add(supplierGstNoField, 3, 1);
 
@@ -565,26 +574,32 @@ public class PurchaseInvoiceDialog {
 
         // Input fields for new line item
         TextField lrNoField = new TextField();
+        setupUppercaseListener(lrNoField);
         VBox lrNoBox = new VBox(4, new Label("LR No"), lrNoField);
         HBox.setHgrow(lrNoBox, Priority.ALWAYS);
 
         TextField containerNoField = new TextField();
+        setupUppercaseListener(containerNoField);
         VBox containerBox = new VBox(4, new Label("Container No"), containerNoField);
         HBox.setHgrow(containerBox, Priority.ALWAYS);
 
         TextField vehicleNoField = new TextField();
+        setupUppercaseListener(vehicleNoField);
         VBox vehicleBox = new VBox(4, new Label("Vehicle No"), vehicleNoField);
         HBox.setHgrow(vehicleBox, Priority.ALWAYS);
 
         TextField fromField = new TextField();
+        setupUppercaseListener(fromField);
         VBox fromBox = new VBox(4, new Label("From"), fromField);
         HBox.setHgrow(fromBox, Priority.ALWAYS);
 
         TextField toField = new TextField();
+        setupUppercaseListener(toField);
         VBox toBox = new VBox(4, new Label("To"), toField);
         HBox.setHgrow(toBox, Priority.ALWAYS);
 
         TextField typeField = new TextField();
+        setupUppercaseListener(typeField);
         VBox typeBox = new VBox(4, new Label("Type"), typeField);
         HBox.setHgrow(typeBox, Priority.ALWAYS);
 
@@ -956,5 +971,16 @@ public class PurchaseInvoiceDialog {
         Label lbl = new Label(text);
         lbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #475569;");
         return lbl;
+    }
+
+    private void setupUppercaseListener(TextField textField) {
+        textField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.equals(oldVal)) {
+                // Convert to uppercase, preserving cursor position
+                int caretPosition = textField.getCaretPosition();
+                textField.setText(newVal.toUpperCase());
+                textField.positionCaret(Math.min(caretPosition, textField.getLength()));
+            }
+        });
     }
 }

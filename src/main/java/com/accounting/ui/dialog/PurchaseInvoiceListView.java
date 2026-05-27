@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.prefs.Preferences;
+import java.time.format.DateTimeFormatter;
 
 public class PurchaseInvoiceListView {
 
@@ -37,6 +38,7 @@ public class PurchaseInvoiceListView {
     private Timer debounceTimer;
     private static final int DEBOUNCE_DELAY = 500;
     private static final int MAX_SEARCH_TERMS = 5;
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
     public Parent createContent() {
         VBox root = new VBox(10);
@@ -130,7 +132,27 @@ public class PurchaseInvoiceListView {
         table.getColumns().add(col("Party Name", "partyName", 200));
         table.getColumns().add(col("Voucher Type", "voucherType", 120));
         table.getColumns().add(col("Total Amount", "netAmount", 120));
-        table.getColumns().add(col("Created At", "createdAt", 120));
+
+        // Created At column with custom date formatting
+        TableColumn<PurchaseInvoice, Object> createdAtCol = new TableColumn<>("Created At");
+        createdAtCol.setCellValueFactory(new PropertyValueFactory<>("createdAt"));
+        createdAtCol.setPrefWidth(120);
+        createdAtCol.setCellFactory(column -> new TableCell<PurchaseInvoice, Object>() {
+            @Override
+            protected void updateItem(Object item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else if (item instanceof java.time.LocalDateTime) {
+                    setText(((java.time.LocalDateTime) item).format(DATE_FORMATTER));
+                } else if (item instanceof java.time.LocalDate) {
+                    setText(((java.time.LocalDate) item).format(DATE_FORMATTER));
+                } else {
+                    setText(item.toString());
+                }
+            }
+        });
+        table.getColumns().add(createdAtCol);
 
         table.setItems(rows);
 
