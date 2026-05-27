@@ -3,6 +3,7 @@ package com.accounting.ui.dialog;
 import com.accounting.dao.PartyDAO;
 import com.accounting.dao.PurchaseInvoiceDAO;
 import com.accounting.dao.SettingsDAO;
+import com.accounting.database.DBConnection;
 import com.accounting.model.InvoiceLineItem;
 import com.accounting.model.Party;
 import com.accounting.model.PurchaseInvoice;
@@ -29,6 +30,9 @@ import javafx.util.converter.DoubleStringConverter;
 import org.controlsfx.control.textfield.TextFields;
 import org.slf4j.Logger;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -183,20 +187,11 @@ public class PurchaseInvoiceDialog {
         AppExecutor.submit(() -> {
             try {
                 SettingsDAO settingsDAO = new SettingsDAO();
-                String startingNumberStr = settingsDAO.getSetting("purchase_invoice_starting_number");
+                String startingNumberStr = settingsDAO.getSetting("global_invoice_starting_number");
                 int startingNumber = startingNumberStr != null ? Integer.parseInt(startingNumberStr) : 1;
 
-                // Get the last invoice number from database
-                String lastInvoiceNo = new PurchaseInvoiceDAO().getLastInvoiceNumber();
-                int lastNumber = 0;
-                if (lastInvoiceNo != null && !lastInvoiceNo.isEmpty()) {
-                    try {
-                        lastNumber = Integer.parseInt(lastInvoiceNo);
-                    } catch (NumberFormatException e) {
-                        // If invoice number is not a number, use starting number
-                        lastNumber = startingNumber - 1;
-                    }
-                }
+                // Get the last invoice number from all invoice/receipt tables
+                int lastNumber = getLastGlobalInvoiceNumber();
 
                 // Next invoice number is max of starting number and last number + 1
                 int nextNumber = Math.max(startingNumber, lastNumber + 1);
@@ -211,6 +206,76 @@ public class PurchaseInvoiceDialog {
                 });
             }
         });
+    }
+
+    private int getLastGlobalInvoiceNumber() throws Exception {
+        int maxNumber = 0;
+
+        // Check purchase invoices
+        String purchaseLast = new PurchaseInvoiceDAO().getLastInvoiceNumber();
+        if (purchaseLast != null && !purchaseLast.isEmpty()) {
+            try {
+                maxNumber = Math.max(maxNumber, Integer.parseInt(purchaseLast));
+            } catch (NumberFormatException e) {
+                // Ignore non-numeric invoice numbers
+            }
+        }
+
+        // Check sale invoices (if exists)
+        try {
+            String saleLast = getLastInvoiceNumberFromTable("sale_invoices");
+            if (saleLast != null && !saleLast.isEmpty()) {
+                try {
+                    maxNumber = Math.max(maxNumber, Integer.parseInt(saleLast));
+                } catch (NumberFormatException e) {
+                    // Ignore non-numeric invoice numbers
+                }
+            }
+        } catch (Exception e) {
+            // Table might not exist, ignore
+        }
+
+        // Check purchase receipts (if exists)
+        try {
+            String purchaseReceiptLast = getLastInvoiceNumberFromTable("purchase_receipts");
+            if (purchaseReceiptLast != null && !purchaseReceiptLast.isEmpty()) {
+                try {
+                    maxNumber = Math.max(maxNumber, Integer.parseInt(purchaseReceiptLast));
+                } catch (NumberFormatException e) {
+                    // Ignore non-numeric invoice numbers
+                }
+            }
+        } catch (Exception e) {
+            // Table might not exist, ignore
+        }
+
+        // Check sale receipts (if exists)
+        try {
+            String saleReceiptLast = getLastInvoiceNumberFromTable("sale_receipts");
+            if (saleReceiptLast != null && !saleReceiptLast.isEmpty()) {
+                try {
+                    maxNumber = Math.max(maxNumber, Integer.parseInt(saleReceiptLast));
+                } catch (NumberFormatException e) {
+                    // Ignore non-numeric invoice numbers
+                }
+            }
+        } catch (Exception e) {
+            // Table might not exist, ignore
+        }
+
+        return maxNumber;
+    }
+
+    private String getLastInvoiceNumberFromTable(String tableName) throws Exception {
+        String sql = "SELECT invoice_no FROM " + tableName + " ORDER BY id DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                return rs.getString("invoice_no");
+            }
+        }
+        return null;
     }
 
     // Helper method to trigger auto-fill from party selection
@@ -873,7 +938,7 @@ public class PurchaseInvoiceDialog {
                 // Update the next invoice number in settings
                 try {
                     int currentInvoiceNo = Integer.parseInt(invoice.getInvoiceNo());
-                    new SettingsDAO().saveSetting("purchase_invoice_starting_number", String.valueOf(currentInvoiceNo + 1));
+                    new SettingsDAO().saveSetting("global_invoice_starting_number", String.valueOf(currentInvoiceNo + 1));
                 } catch (Exception e) {
                     log.error("Failed to update invoice number in settings", e);
                 }
@@ -897,7 +962,7 @@ public class PurchaseInvoiceDialog {
         AppExecutor.submit(() -> {
             try {
                 SettingsDAO settingsDAO = new SettingsDAO();
-                String currentStartingNumber = settingsDAO.getSetting("purchase_invoice_starting_number");
+                String currentStartingNumber = settingsDAO.getSetting("global_invoice_starting_number");
                 if (currentStartingNumber == null) {
                     currentStartingNumber = "1";
                 }
@@ -905,9 +970,9 @@ public class PurchaseInvoiceDialog {
                 String finalCurrentStartingNumber = currentStartingNumber;
                 Platform.runLater(() -> {
                     TextInputDialog dialog = new TextInputDialog(finalCurrentStartingNumber);
-                    dialog.setTitle("Invoice Settings");
-                    dialog.setHeaderText("Set Starting Invoice Number");
-                    dialog.setContentText("Enter the starting invoice number:");
+                    dialog.setTitle("Global Invoice Settings");
+                    dialog.setHeaderText("Set Global Starting Invoice Number");
+                    dialog.setContentText("This number will be used for all invoices and receipts:");
 
                     dialog.showAndWait().ifPresent(newNumber -> {
                         try {
@@ -915,9 +980,9 @@ public class PurchaseInvoiceDialog {
                             if (num >= 0) {
                                 AppExecutor.submit(() -> {
                                     try {
-                                        settingsDAO.saveSetting("purchase_invoice_starting_number", String.valueOf(num));
+                                        settingsDAO.saveSetting("global_invoice_starting_number", String.valueOf(num));
                                         Platform.runLater(() -> {
-                                            AlertUtil.showInfo("Success", "Starting invoice number updated to " + num);
+                                            AlertUtil.showInfo("Success", "Global starting invoice number updated to " + num);
                                             // Regenerate invoice number if it's a new invoice
                                             if (invoice.getId() <= 0) {
                                                 generateNextInvoiceNumber();
