@@ -384,6 +384,24 @@ public class PurchaseInvoiceDialog {
                 }
             }
         });
+
+        supplierListView.setOnKeyPressed(event -> {
+            switch (event.getCode()) {
+                case ENTER -> {
+                    Party selected = supplierListView.getSelectionModel().getSelectedItem();
+                    if (selected != null) {
+                        supplierField.setText(selected.getName());
+                        autofillFromParty(selected);
+                        supplierField.requestFocus();
+                    }
+                    supplierPopup.hide();
+                }
+                case ESCAPE -> {
+                    supplierPopup.hide();
+                    supplierField.requestFocus();
+                }
+            }
+        });
     }
 
     private HBox createHeaderSection() {

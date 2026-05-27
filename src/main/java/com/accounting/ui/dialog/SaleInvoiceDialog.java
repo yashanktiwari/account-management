@@ -88,7 +88,7 @@ public class SaleInvoiceDialog {
             stage.setOnHidden(e -> onClose.run());
         }
 
-        Scene scene = new Scene(createContent(), 1200, 750);
+        Scene scene = new Scene(createContent(), 1200, 850);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );
