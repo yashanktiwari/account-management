@@ -259,7 +259,7 @@ public class PurchaseInvoiceDialog {
         partyCombo = new ComboBox<>();
         partyCombo.setPrefWidth(250);
         partyCombo.setEditable(true);
-        partyCombo.setVisibleRowCount(10); // Show more items in dropdown
+        partyCombo.setVisibleRowCount(10); // Max 10 items, but will show fewer if less available
         partyCombo.setItems(filteredParties);
         partyCombo.setCellFactory(param -> new ListCell<Party>() {
             @Override
@@ -276,6 +276,14 @@ public class PurchaseInvoiceDialog {
             @Override
             public Party fromString(String string) {
                 return null;
+            }
+        });
+
+        // Adjust visible row count based on actual number of items
+        partyCombo.showingProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {
+                int itemCount = partyCombo.getItems().size();
+                partyCombo.setVisibleRowCount(Math.min(itemCount, 10));
             }
         });
 
@@ -454,36 +462,42 @@ public class PurchaseInvoiceDialog {
         lrNoCol.setCellFactory(TextFieldTableCell.forTableColumn());
         lrNoCol.setOnEditCommit(e -> e.getRowValue().setLrNo(e.getNewValue()));
         lrNoCol.setPrefWidth(80);
+        lrNoCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> containerCol = new TableColumn<>("Container No");
         containerCol.setCellValueFactory(new PropertyValueFactory<>("containerNo"));
         containerCol.setCellFactory(TextFieldTableCell.forTableColumn());
         containerCol.setOnEditCommit(e -> e.getRowValue().setContainerNo(e.getNewValue()));
         containerCol.setPrefWidth(100);
+        containerCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> vehicleCol = new TableColumn<>("Vehicle No");
         vehicleCol.setCellValueFactory(new PropertyValueFactory<>("vehicleNo"));
         vehicleCol.setCellFactory(TextFieldTableCell.forTableColumn());
         vehicleCol.setOnEditCommit(e -> e.getRowValue().setVehicleNo(e.getNewValue()));
         vehicleCol.setPrefWidth(100);
+        vehicleCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> fromCol = new TableColumn<>("From");
         fromCol.setCellValueFactory(new PropertyValueFactory<>("from"));
         fromCol.setCellFactory(TextFieldTableCell.forTableColumn());
         fromCol.setOnEditCommit(e -> e.getRowValue().setFrom(e.getNewValue()));
         fromCol.setPrefWidth(100);
+        fromCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> toCol = new TableColumn<>("To");
         toCol.setCellValueFactory(new PropertyValueFactory<>("to"));
         toCol.setCellFactory(TextFieldTableCell.forTableColumn());
         toCol.setOnEditCommit(e -> e.getRowValue().setTo(e.getNewValue()));
         toCol.setPrefWidth(100);
+        toCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> typeCol = new TableColumn<>("Type");
         typeCol.setCellValueFactory(new PropertyValueFactory<>("type"));
         typeCol.setCellFactory(TextFieldTableCell.forTableColumn());
         typeCol.setOnEditCommit(e -> e.getRowValue().setType(e.getNewValue()));
         typeCol.setPrefWidth(80);
+        typeCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, Double> freightCol = new TableColumn<>("Basic Freight");
         freightCol.setCellValueFactory(new PropertyValueFactory<>("basicFreight"));
@@ -493,6 +507,7 @@ public class PurchaseInvoiceDialog {
             updateTotal();
         });
         freightCol.setPrefWidth(100);
+        freightCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, Double> detentionCol = new TableColumn<>("Detention Charge");
         detentionCol.setCellValueFactory(new PropertyValueFactory<>("detentionCharge"));
@@ -502,6 +517,7 @@ public class PurchaseInvoiceDialog {
             updateTotal();
         });
         detentionCol.setPrefWidth(120);
+        detentionCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, Double> totalCol = new TableColumn<>("Total");
         totalCol.setCellValueFactory(new PropertyValueFactory<>("total"));
