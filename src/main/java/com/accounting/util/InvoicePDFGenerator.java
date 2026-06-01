@@ -214,105 +214,97 @@ public class InvoicePDFGenerator {
     }
 
     private static void addPurchaseInvoiceDetails(Document document, PurchaseInvoice invoice) throws DocumentException {
-        // Invoice No and Date section with border
-        PdfPTable invoiceTable = new PdfPTable(2);
+        // Invoice No and Date - 4 columns: label | value | label | value
+        PdfPTable invoiceTable = new PdfPTable(4);
         invoiceTable.setWidthPercentage(100);
-        invoiceTable.setWidths(new float[]{1f, 1f});
-        invoiceTable.setSpacingBefore(10);
+        invoiceTable.setWidths(new float[]{1.2f, 0.8f, 1.2f, 0.8f});
+        invoiceTable.setSpacingBefore(5);
 
-        addDetailCell(invoiceTable, "Invoice No -", invoice.getInvoiceNo() != null ? invoice.getInvoiceNo() : "", true);
-        addDetailCell(invoiceTable, "Invoice Date -", invoice.getInvoiceDate() != null ? invoice.getInvoiceDate().format(DATE_FORMATTER) : "", true);
+        invoiceTable.addCell(createCell("Invoice No -", true));
+        invoiceTable.addCell(createCell(invoice.getInvoiceNo() != null ? invoice.getInvoiceNo() : "", true));
+        invoiceTable.addCell(createCell("Invoice Date -", true));
+        invoiceTable.addCell(createCell(invoice.getInvoiceDate() != null ? invoice.getInvoiceDate().format(DATE_FORMATTER) : "", true));
 
         document.add(invoiceTable);
 
-        // Billed To section - separate table with border
+        // Billed To, Name, Address - single column
         PdfPTable billedToTable = new PdfPTable(1);
         billedToTable.setWidthPercentage(100);
-        billedToTable.setSpacingBefore(5);
 
-        PdfPCell billedToLabel = createCell("........Billed To..........", true);
-        billedToTable.addCell(billedToLabel);
-
-        PdfPCell supplierName = createCell("Name - " + (invoice.getPartyName() != null ? invoice.getPartyName() : ""), false);
-        billedToTable.addCell(supplierName);
-
-        PdfPCell supplierAddress = createCell("Address - " + (invoice.getSupplierAddress() != null ? invoice.getSupplierAddress() : ""), false);
-        billedToTable.addCell(supplierAddress);
+        billedToTable.addCell(createCell("........Billed To..........", true));
+        billedToTable.addCell(createCell("Name - " + (invoice.getPartyName() != null ? invoice.getPartyName() : ""), false));
+        billedToTable.addCell(createCell("Address - " + (invoice.getSupplierAddress() != null ? invoice.getSupplierAddress() : ""), false));
 
         document.add(billedToTable);
 
-        // GSTIN, PAN, State Code in one line with border
-        PdfPTable gstTable = new PdfPTable(3);
+        // GSTIN, PAN No, State Code - 5 columns with separate label/value
+        PdfPTable gstTable = new PdfPTable(5);
         gstTable.setWidthPercentage(100);
-        gstTable.setWidths(new float[]{2f, 1.5f, 1f});
-        gstTable.setSpacingBefore(5);
+        gstTable.setWidths(new float[]{2f, 0.7f, 1f, 0.8f, 0.5f});
 
-        addDetailCell(gstTable, "GSTIN -", invoice.getSupplierGstNo() != null ? invoice.getSupplierGstNo() : "", false);
-        addDetailCell(gstTable, "PAN No", "", false);
-        addDetailCell(gstTable, "State Code", "27", false);
+        gstTable.addCell(createCell("GSTIN - " + (invoice.getSupplierGstNo() != null ? invoice.getSupplierGstNo() : ""), false));
+        gstTable.addCell(createCell("PAN No", false));
+        gstTable.addCell(createCell("", false));
+        gstTable.addCell(createCell("State Code", false));
+        gstTable.addCell(createCell("27", false));
 
         document.add(gstTable);
 
-        // State and Contact in next line with border
+        // State and Contact
         PdfPTable stateContactTable = new PdfPTable(2);
         stateContactTable.setWidthPercentage(100);
-        stateContactTable.setWidths(new float[]{2f, 2f});
-        stateContactTable.setSpacingBefore(0);
+        stateContactTable.setWidths(new float[]{1f, 1f});
 
-        addDetailCell(stateContactTable, "State -", "MAHARASHTRA", false);
-        addDetailCell(stateContactTable, "Contact No -", invoice.getSupplierContactNumber() != null ? invoice.getSupplierContactNumber() : "", false);
+        stateContactTable.addCell(createCell("State - MAHARASHTRA", false));
+        stateContactTable.addCell(createCell("Contact No - " + (invoice.getSupplierContactNumber() != null ? invoice.getSupplierContactNumber() : ""), false));
 
         document.add(stateContactTable);
     }
 
     private static void addSaleInvoiceDetails(Document document, SaleInvoice invoice) throws DocumentException {
-        // Invoice No and Date section with border
-        PdfPTable invoiceTable = new PdfPTable(2);
+        // Invoice No and Date - 4 columns: label | value | label | value
+        PdfPTable invoiceTable = new PdfPTable(4);
         invoiceTable.setWidthPercentage(100);
-        invoiceTable.setWidths(new float[]{1f, 1f});
-        invoiceTable.setSpacingBefore(10);
+        invoiceTable.setWidths(new float[]{1.2f, 0.8f, 1.2f, 0.8f});
+        invoiceTable.setSpacingBefore(5);
 
-        addDetailCell(invoiceTable, "Invoice No -", invoice.getInvoiceNo() != null ? invoice.getInvoiceNo() : "", true);
-        addDetailCell(invoiceTable, "Invoice Date -", invoice.getInvoiceDate() != null ? invoice.getInvoiceDate().format(DATE_FORMATTER) : "", true);
+        invoiceTable.addCell(createCell("Invoice No -", true));
+        invoiceTable.addCell(createCell(invoice.getInvoiceNo() != null ? invoice.getInvoiceNo() : "", true));
+        invoiceTable.addCell(createCell("Invoice Date -", true));
+        invoiceTable.addCell(createCell(invoice.getInvoiceDate() != null ? invoice.getInvoiceDate().format(DATE_FORMATTER) : "", true));
 
         document.add(invoiceTable);
 
-        // Billed To section - separate table with border
+        // Billed To, Name, Address - single column
         PdfPTable billedToTable = new PdfPTable(1);
         billedToTable.setWidthPercentage(100);
-        billedToTable.setSpacingBefore(5);
 
-        PdfPCell billedToLabel = createCell("........Billed To..........", true);
-        billedToTable.addCell(billedToLabel);
-
-        PdfPCell customerName = createCell("Name - " + (invoice.getPartyName() != null ? invoice.getPartyName() : ""), false);
-        billedToTable.addCell(customerName);
-
-        PdfPCell customerAddress = createCell("Address - " + (invoice.getRcvrAddress() != null ? invoice.getRcvrAddress() : ""), false);
-        billedToTable.addCell(customerAddress);
+        billedToTable.addCell(createCell("........Billed To..........", true));
+        billedToTable.addCell(createCell("Name - " + (invoice.getPartyName() != null ? invoice.getPartyName() : ""), false));
+        billedToTable.addCell(createCell("Address - " + (invoice.getRcvrAddress() != null ? invoice.getRcvrAddress() : ""), false));
 
         document.add(billedToTable);
 
-        // GSTIN, PAN, State Code in one line with border
-        PdfPTable gstTable = new PdfPTable(3);
+        // GSTIN, PAN No, State Code - 5 columns with separate label/value
+        PdfPTable gstTable = new PdfPTable(5);
         gstTable.setWidthPercentage(100);
-        gstTable.setWidths(new float[]{2f, 1.5f, 1f});
-        gstTable.setSpacingBefore(5);
+        gstTable.setWidths(new float[]{2f, 0.7f, 1f, 0.8f, 0.5f});
 
-        addDetailCell(gstTable, "GSTIN -", invoice.getRcvrGstin() != null ? invoice.getRcvrGstin() : "", false);
-        addDetailCell(gstTable, "PAN No", "", false);
-        addDetailCell(gstTable, "State Code", "27", false);
+        gstTable.addCell(createCell("GSTIN - " + (invoice.getRcvrGstin() != null ? invoice.getRcvrGstin() : ""), false));
+        gstTable.addCell(createCell("PAN No", false));
+        gstTable.addCell(createCell("", false));
+        gstTable.addCell(createCell("State Code", false));
+        gstTable.addCell(createCell("27", false));
 
         document.add(gstTable);
 
-        // State and Contact in next line with border
+        // State and Contact
         PdfPTable stateContactTable = new PdfPTable(2);
         stateContactTable.setWidthPercentage(100);
-        stateContactTable.setWidths(new float[]{2f, 2f});
-        stateContactTable.setSpacingBefore(0);
+        stateContactTable.setWidths(new float[]{1f, 1f});
 
-        addDetailCell(stateContactTable, "State -", "MAHARASHTRA", false);
-        addDetailCell(stateContactTable, "Contact No -", invoice.getRcvrContactNo() != null ? invoice.getRcvrContactNo() : "", false);
+        stateContactTable.addCell(createCell("State - MAHARASHTRA", false));
+        stateContactTable.addCell(createCell("Contact No - " + (invoice.getRcvrContactNo() != null ? invoice.getRcvrContactNo() : ""), false));
 
         document.add(stateContactTable);
     }
@@ -354,15 +346,23 @@ public class InvoicePDFGenerator {
             totalAmount += item.getTotal();
         }
 
+        // Total row at bottom right
+        PdfPCell emptyCell = new PdfPCell(new Phrase("", FontFactory.getFont(FontFactory.HELVETICA, 7)));
+        emptyCell.setColspan(10);
+        emptyCell.setBorder(Rectangle.BOX);
+        emptyCell.setPadding(2);
+        table.addCell(emptyCell);
+
+        PdfPCell totalValueCell = new PdfPCell(new Phrase(String.format("%.2f", totalAmount), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8)));
+        totalValueCell.setBorder(Rectangle.BOX);
+        totalValueCell.setPadding(2);
+        totalValueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        table.addCell(totalValueCell);
+
         document.add(table);
     }
 
     private static void addBankAndGSTDetails(Document document, Object invoice) throws DocumentException {
-        PdfPTable table = new PdfPTable(3);
-        table.setWidthPercentage(100);
-        table.setWidths(new float[]{2, 2, 2});
-        table.setSpacingBefore(10);
-
         double taxableAmount = 0;
         double sgstAmount = 0;
         double cgstAmount = 0;
@@ -388,107 +388,148 @@ public class InvoicePDFGenerator {
             netAmount = si.getNetAmount();
         }
 
-        // Bank Details Column
-        PdfPCell bankHeader = createCell("BANK DETAIL", true);
-        bankHeader.setBackgroundColor(new Color(220, 220, 220));
+        Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9);
+        Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 9);
+
+        // 5-column row-based table: Bank | GST Label | GST Value | Others Label | Others Value
+        PdfPTable table = new PdfPTable(5);
+        table.setWidthPercentage(100);
+        table.setWidths(new float[]{2.2f, 1.2f, 0.6f, 1.8f, 0.6f});
+        table.setSpacingBefore(10);
+
+        // Header row
+        PdfPCell bankHeader = new PdfPCell(new Phrase("BANK DETAIL", headerFont));
+        bankHeader.setBorder(Rectangle.BOX);
+        bankHeader.setPadding(3);
+        bankHeader.setHorizontalAlignment(Element.ALIGN_CENTER);
         table.addCell(bankHeader);
 
-        // GST Details Column
-        PdfPCell gstHeader = createCell("GST DETAIL", true);
-        gstHeader.setBackgroundColor(new Color(220, 220, 220));
+        PdfPCell gstHeader = new PdfPCell(new Phrase("GST DETAIL", headerFont));
+        gstHeader.setColspan(2);
+        gstHeader.setBorder(Rectangle.BOX);
+        gstHeader.setPadding(3);
+        gstHeader.setHorizontalAlignment(Element.ALIGN_CENTER);
         table.addCell(gstHeader);
 
-        // Others Charge Column
-        PdfPCell othersHeader = createCell("Others Charge", true);
-        othersHeader.setBackgroundColor(new Color(220, 220, 220));
+        PdfPCell othersHeader = new PdfPCell(new Phrase("Others Charge", headerFont));
+        othersHeader.setColspan(2);
+        othersHeader.setBorder(Rectangle.BOX);
+        othersHeader.setPadding(3);
+        othersHeader.setHorizontalAlignment(Element.ALIGN_CENTER);
         table.addCell(othersHeader);
 
-        // Bank details
-        PdfPCell bankDetails = new PdfPCell();
-        bankDetails.setBorder(Rectangle.BOX);
-        Paragraph bankPara = new Paragraph();
-        bankPara.add(new Chunk("A/C NAME - SIHAG ENTERPRISE\n", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9)));
-        bankPara.add(new Chunk("Bank Detail - AXIS BANK,\n", FontFactory.getFont(FontFactory.HELVETICA, 9)));
-        bankPara.add(new Chunk("Branch - Mundra\n", FontFactory.getFont(FontFactory.HELVETICA, 9)));
-        bankPara.add(new Chunk("Bank Account - 922020026748406\n", FontFactory.getFont(FontFactory.HELVETICA, 9)));
-        bankPara.add(new Chunk("IFSC Code - UTIB0000460\n", FontFactory.getFont(FontFactory.HELVETICA, 9)));
-        bankDetails.addElement(bankPara);
-        table.addCell(bankDetails);
+        // Row 1
+        addBankGSTRow(table, "A/C NAME - SIHAG ENTERPRISE", true,
+                "Taxable Amount", String.format("%.2f", taxableAmount),
+                "Loading & Unloading Charges", "0.00");
 
-        // GST details
-        PdfPCell gstDetails = new PdfPCell();
-        gstDetails.setBorder(Rectangle.BOX);
-        PdfPTable gstTable = new PdfPTable(2);
-        gstTable.setWidthPercentage(100);
-        
-        addGSTRow(gstTable, "Taxable Amount", String.format("%.2f", taxableAmount));
-        if (sgstAmount > 0) {
-            addGSTRow(gstTable, "SGST 9%", String.format("%.2f", sgstAmount));
-        }
-        if (cgstAmount > 0) {
-            addGSTRow(gstTable, "CGST 9%", String.format("%.2f", cgstAmount));
-        }
-        if (igstAmount > 0) {
-            addGSTRow(gstTable, "IGST 18%", String.format("%.2f", igstAmount));
-        }
-        addGSTRow(gstTable, "Total GST", String.format("%.2f", totalGst));
-        
-        gstDetails.addElement(gstTable);
-        table.addCell(gstDetails);
+        // Row 2
+        addBankGSTRow(table, "Bank Detail - AXIS BANK,", false,
+                "SGST 9%", String.format("%.2f", sgstAmount),
+                "Weigh Bridge Charges", "0.00");
 
-        // Others charge
-        PdfPCell othersDetails = new PdfPCell();
-        othersDetails.setBorder(Rectangle.BOX);
-        PdfPTable othersTable = new PdfPTable(2);
-        othersTable.setWidthPercentage(100);
-        
-        addGSTRow(othersTable, "Loading & Unloading Charges", "0.00");
-        addGSTRow(othersTable, "Weigh Bridge Charges", "0.00");
-        addGSTRow(othersTable, "Taxable Amount", String.format("%.2f", taxableAmount));
-        addGSTRow(othersTable, "GST Amount", String.format("%.2f", totalGst));
-        addGSTRow(othersTable, "Advance Amount", "0.00");
-        
-        othersDetails.addElement(othersTable);
-        table.addCell(othersDetails);
+        // Row 3
+        addBankGSTRow(table, "Branch - Mundra", false,
+                "CGST 9%", String.format("%.2f", cgstAmount),
+                "Taxable Amount", String.format("%.2f", taxableAmount));
+
+        // Row 4
+        addBankGSTRow(table, "Bank Account - 922020026748406", false,
+                "IGST 18%", String.format("%.2f", igstAmount),
+                "GST Amount", String.format("%.2f", totalGst));
+
+        // Row 5
+        addBankGSTRow(table, "IFSC Code - UTIB0000460", false,
+                "Total GST", String.format("%.2f", totalGst),
+                "Advance Amount", "0.00");
 
         document.add(table);
 
-        // GST Amount and Net Amount row - separate table below bank details
-        PdfPTable gstNetTable = new PdfPTable(2);
+        // GST Amount and Net Amount row
+        PdfPTable gstNetTable = new PdfPTable(3);
         gstNetTable.setWidthPercentage(100);
-        gstNetTable.setWidths(new float[]{1f, 1f});
-        gstNetTable.setSpacingBefore(5);
+        gstNetTable.setWidths(new float[]{2f, 1.2f, 1f});
 
-        PdfPCell gstAmountLabel = createCell("GST Amount - " + String.format("%.2f", totalGst), true);
-        gstAmountLabel.setBorder(Rectangle.BOX);
-        gstNetTable.addCell(gstAmountLabel);
+        PdfPCell gstAmountCell = new PdfPCell(new Phrase("GST Amount - " + String.format("%.2f", totalGst), headerFont));
+        gstAmountCell.setBorder(Rectangle.BOX);
+        gstAmountCell.setPadding(3);
+        gstNetTable.addCell(gstAmountCell);
 
-        PdfPCell netAmountCell = createCell("Net Amount - " + String.format("%.2f", netAmount), true);
-        netAmountCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        netAmountCell.setBorder(Rectangle.BOX);
-        gstNetTable.addCell(netAmountCell);
+        PdfPCell netLabel = new PdfPCell(new Phrase("Net Amount", headerFont));
+        netLabel.setBorder(Rectangle.BOX);
+        netLabel.setPadding(3);
+        netLabel.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        gstNetTable.addCell(netLabel);
+
+        PdfPCell netValue = new PdfPCell(new Phrase(String.format("%.2f", netAmount), headerFont));
+        netValue.setBorder(Rectangle.BOX);
+        netValue.setPadding(3);
+        netValue.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        gstNetTable.addCell(netValue);
 
         document.add(gstNetTable);
 
-        // Amount in words
-        Paragraph amountWords = new Paragraph();
-        amountWords.add(new Chunk("Rupees - ", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
-        amountWords.add(new Chunk(convertNumberToWords(netAmount) + " Only", FontFactory.getFont(FontFactory.HELVETICA, 10)));
-        amountWords.setSpacingBefore(10);
-        amountWords.setAlignment(Element.ALIGN_LEFT);
-        document.add(amountWords);
+        // Rupees in words - bordered
+        PdfPTable rupeesTable = new PdfPTable(1);
+        rupeesTable.setWidthPercentage(100);
+        PdfPCell rupeesCell = new PdfPCell();
+        rupeesCell.setBorder(Rectangle.BOX);
+        rupeesCell.setPadding(3);
+        Paragraph rupeesPara = new Paragraph();
+        rupeesPara.add(new Chunk("Rupees - ", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
+        rupeesPara.add(new Chunk(convertNumberToWords(netAmount) + " Only.", FontFactory.getFont(FontFactory.HELVETICA, 10)));
+        rupeesCell.addElement(rupeesPara);
+        rupeesTable.addCell(rupeesCell);
+        document.add(rupeesTable);
 
-        // Remarks section
+        // Remarks - always show with border
         String remarks = "";
         if (invoice instanceof PurchaseInvoice) {
             remarks = ((PurchaseInvoice) invoice).getRemarks();
         } else if (invoice instanceof SaleInvoice) {
             remarks = ((SaleInvoice) invoice).getRemarks();
         }
-        
-        if (remarks != null && !remarks.isEmpty()) {
-            addRemarks(document, remarks);
-        }
+        PdfPTable remarksTable = new PdfPTable(1);
+        remarksTable.setWidthPercentage(100);
+        PdfPCell remarksCell = new PdfPCell(new Phrase("Remarks - " + (remarks != null ? remarks : ""), headerFont));
+        remarksCell.setBorder(Rectangle.BOX);
+        remarksCell.setPadding(3);
+        remarksTable.addCell(remarksCell);
+        document.add(remarksTable);
+    }
+
+    private static void addBankGSTRow(PdfPTable table, String bankText, boolean bankBold,
+                                       String gstLabel, String gstValue,
+                                       String othersLabel, String othersValue) {
+        Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 9);
+        Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9);
+
+        PdfPCell bankCell = new PdfPCell(new Phrase(bankText, bankBold ? boldFont : normalFont));
+        bankCell.setBorder(Rectangle.BOX);
+        bankCell.setPadding(2);
+        table.addCell(bankCell);
+
+        PdfPCell gstLabelCell = new PdfPCell(new Phrase(gstLabel, normalFont));
+        gstLabelCell.setBorder(Rectangle.BOX);
+        gstLabelCell.setPadding(2);
+        table.addCell(gstLabelCell);
+
+        PdfPCell gstValueCell = new PdfPCell(new Phrase(gstValue, normalFont));
+        gstValueCell.setBorder(Rectangle.BOX);
+        gstValueCell.setPadding(2);
+        gstValueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        table.addCell(gstValueCell);
+
+        PdfPCell othersLabelCell = new PdfPCell(new Phrase(othersLabel, normalFont));
+        othersLabelCell.setBorder(Rectangle.BOX);
+        othersLabelCell.setPadding(2);
+        table.addCell(othersLabelCell);
+
+        PdfPCell othersValueCell = new PdfPCell(new Phrase(othersValue, normalFont));
+        othersValueCell.setBorder(Rectangle.BOX);
+        othersValueCell.setPadding(2);
+        othersValueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        table.addCell(othersValueCell);
     }
 
     private static String convertNumberToWords(double amount) {
