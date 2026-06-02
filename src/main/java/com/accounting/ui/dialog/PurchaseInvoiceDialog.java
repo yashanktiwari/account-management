@@ -1,5 +1,6 @@
 package com.accounting.ui.dialog;
 
+import com.accounting.MainApp;
 import com.accounting.dao.PartyDAO;
 import com.accounting.dao.PurchaseInvoiceDAO;
 import com.accounting.dao.SettingsDAO;
@@ -1025,10 +1026,11 @@ public class PurchaseInvoiceDialog {
             // Generate Original PDF
             com.accounting.util.InvoicePDFGenerator.generatePurchaseInvoicePDF(invoice, fileName, "Original");
 
-            // Show print preview dialog with generator for Duplicate copies
+            // Show print preview embedded in app; Close returns to purchase invoice list
+            stage.close();
             new PrintPreviewDialog(fileName, (copyLabel, outputPath) ->
                     com.accounting.util.InvoicePDFGenerator.generatePurchaseInvoicePDF(invoice, outputPath, copyLabel)
-            ).show(stage);
+            ).showInApp(() -> MainApp.showContentInApp(new PurchaseInvoiceListView().createContent()));
         } catch (Exception e) {
             log.error("Failed to generate PDF", e);
             AlertUtil.showError("Error", "Failed to generate PDF: " + e.getMessage());

@@ -37,6 +37,7 @@ public class MainApp extends Application {
     private static final DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
     private static Stage primaryStage;
+    private static MainApp instance;
 
     // Dashboard KPI labels
     private Label totalOutstandingLabel;
@@ -65,6 +66,18 @@ public class MainApp extends Application {
         return primaryStage;
     }
 
+    public static void showContentInApp(Parent content) {
+        if (instance != null) {
+            instance.showContent(content);
+        }
+    }
+
+    public static void showContentNodeInApp(javafx.scene.Node node) {
+        if (instance != null) {
+            instance.contentHost.getChildren().setAll(node);
+        }
+    }
+
     @Override
     public void start(Stage stage) {
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) ->
@@ -74,6 +87,7 @@ public class MainApp extends Application {
         log.info("Max Heap: {} MB", Runtime.getRuntime().maxMemory() / (1024 * 1024));
 
         primaryStage = stage;
+        instance = this;
         NotificationUtil.init(stage);
 
         // Apply AtlantaFX theme

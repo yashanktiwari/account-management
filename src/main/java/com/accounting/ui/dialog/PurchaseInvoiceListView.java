@@ -314,10 +314,10 @@ public class PurchaseInvoiceListView {
             // Generate Original PDF
             com.accounting.util.InvoicePDFGenerator.generatePurchaseInvoicePDF(invoice, fileName, "Original");
 
-            // Show print preview dialog with generator for Duplicate copies
+            // Show print preview embedded in app; Close returns to this list
             new PrintPreviewDialog(fileName, (copyLabel, outputPath) ->
                     com.accounting.util.InvoicePDFGenerator.generatePurchaseInvoicePDF(invoice, outputPath, copyLabel)
-            ).show(MainApp.getPrimaryStage());
+            ).showInApp(() -> MainApp.showContentInApp(createContent()));
         } catch (Exception e) {
             e.printStackTrace();
             AlertUtil.showError("Error", "Failed to generate PDF: " + e.getMessage());

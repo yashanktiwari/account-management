@@ -1,11 +1,12 @@
 package com.accounting.ui.dialog;
 
+import com.accounting.MainApp;
 import com.accounting.util.AlertUtil;
 import com.accounting.util.AppLogger;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
+import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -15,26 +16,29 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.printing.PDFPageable;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.slf4j.Logger;
 
-import java.awt.Desktop;
 import java.awt.image.BufferedImage;
+import java.awt.print.PrinterJob;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiConsumer;
 
 public class PrintPreviewDialog {
 
     private static final Logger log = AppLogger.get(PrintPreviewDialog.class);
-    private Stage stage;
     private final String pdfFilePath;
-    private final BiConsumer<String, String> pdfGenerator; // (copyLabel, outputPath) -> generates PDF
+    private final BiConsumer<String, String> pdfGenerator;
+    private Runnable onClose;
 
     public PrintPreviewDialog(String pdfFilePath) {
         this(pdfFilePath, null);
@@ -46,35 +50,37 @@ public class PrintPreviewDialog {
     }
 
     public void show(Window owner) {
-        stage = new Stage();
-        stage.setTitle("Print Preview");
-        stage.initModality(Modality.APPLICATION_MODAL);
-        if (owner != null) {
-            stage.initOwner(owner);
-        }
+        showInApp(null);
+    }
 
+    public void showInApp(Runnable onCloseCallback) {
+        this.onClose = onCloseCallback;
+        Parent previewPane = createPreviewPane();
+        MainApp.showContentInApp(previewPane);
+    }
+
+    private Parent createPreviewPane() {
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color: #f0f2f5;");
 
         // --- Top bar ---
         HBox topBar = new HBox(15);
         topBar.setAlignment(Pos.CENTER_LEFT);
-        topBar.setPadding(new Insets(12, 20, 12, 20));
+        topBar.setPadding(new Insets(10, 16, 10, 16));
         topBar.setStyle("-fx-background-color: #1e3a5f;");
 
         Label titleLabel = new Label("Print Preview");
         titleLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;");
 
-        // Spacer
-        javafx.scene.layout.Region spacer = new javafx.scene.layout.Region();
-        HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Label copiesLabel = new Label("Number of Copies:");
+        Label copiesLabel = new Label("Copies:");
         copiesLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: white;");
 
         Spinner<Integer> copiesSpinner = new Spinner<>();
         copiesSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 20, 1));
-        copiesSpinner.setPrefWidth(80);
+        copiesSpinner.setPrefWidth(75);
         copiesSpinner.setEditable(true);
         copiesSpinner.setStyle("-fx-font-size: 13px;");
 
@@ -86,7 +92,9 @@ public class PrintPreviewDialog {
         Button closeButton = new Button("Close");
         closeButton.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-size: 13px; " +
                 "-fx-padding: 8 24; -fx-background-radius: 6; -fx-cursor: hand;");
-        closeButton.setOnAction(e -> stage.close());
+        closeButton.setOnAction(e -> {
+            if (onClose != null) onClose.run();
+        });
 
         topBar.getChildren().addAll(titleLabel, spacer, copiesLabel, copiesSpinner, printButton, closeButton);
         root.setTop(topBar);
@@ -95,13 +103,11 @@ public class PrintPreviewDialog {
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
         scrollPane.setStyle("-fx-background: #e5e7eb; -fx-background-color: #e5e7eb;");
-        scrollPane.setPadding(new Insets(10));
 
         VBox pagesContainer = new VBox(15);
         pagesContainer.setAlignment(Pos.TOP_CENTER);
         pagesContainer.setPadding(new Insets(10));
 
-        // Render PDF pages as images
         try {
             File pdfFile = new File(pdfFilePath);
             if (pdfFile.exists()) {
@@ -117,7 +123,6 @@ public class PrintPreviewDialog {
                     imageView.setFitWidth(560);
                     imageView.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 2, 2);");
 
-                    // Page number label
                     Label pageLabel = new Label("Page " + (i + 1) + " of " + pageCount);
                     pageLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
 
@@ -125,7 +130,6 @@ public class PrintPreviewDialog {
                     pageBox.setAlignment(Pos.CENTER);
                     pagesContainer.getChildren().add(pageBox);
                 }
-
                 document.close();
             } else {
                 Label errorLabel = new Label("PDF file not found: " + pdfFilePath);
@@ -146,35 +150,31 @@ public class PrintPreviewDialog {
         // --- Bottom info bar ---
         HBox bottomBar = new HBox(10);
         bottomBar.setAlignment(Pos.CENTER_LEFT);
-        bottomBar.setPadding(new Insets(8, 20, 8, 20));
+        bottomBar.setPadding(new Insets(6, 16, 6, 16));
         bottomBar.setStyle("-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0; -fx-border-width: 1 0 0 0;");
 
-        Label infoLabel = new Label("First copy: Original | Additional copies: Duplicate");
+        Label infoLabel = new Label("Copy 1: Original  |  Copies 2+: Duplicate");
         infoLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
 
-        Label pathLabel = new Label("File: " + pdfFilePath);
+        Region spacer2 = new Region();
+        HBox.setHgrow(spacer2, Priority.ALWAYS);
+
+        Label pathLabel = new Label(pdfFilePath);
         pathLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8;");
         pathLabel.setWrapText(true);
-
-        javafx.scene.layout.Region spacer2 = new javafx.scene.layout.Region();
-        HBox.setHgrow(spacer2, javafx.scene.layout.Priority.ALWAYS);
 
         bottomBar.getChildren().addAll(infoLabel, spacer2, pathLabel);
         root.setBottom(bottomBar);
 
-        Scene scene = new Scene(root, 700, 850);
-        stage.setScene(scene);
-        stage.show();
+        return root;
     }
 
     private void printCopies(int numberOfCopies) {
         try {
-            java.util.List<File> filesToPrint = new java.util.ArrayList<>();
-
-            // First copy is the Original (already generated)
+            // Collect all PDF files: Original + Duplicates
+            List<File> filesToPrint = new ArrayList<>();
             filesToPrint.add(new File(pdfFilePath));
 
-            // Generate Duplicate copies if needed
             if (numberOfCopies > 1 && pdfGenerator != null) {
                 String basePath = pdfFilePath.replace(".pdf", "");
                 for (int i = 2; i <= numberOfCopies; i++) {
@@ -187,29 +187,37 @@ public class PrintPreviewDialog {
                     }
                 }
             } else if (numberOfCopies > 1) {
-                // No generator available, print same file multiple times
                 for (int i = 2; i <= numberOfCopies; i++) {
                     filesToPrint.add(new File(pdfFilePath));
                 }
             }
 
-            // Print all files
-            if (Desktop.isDesktopSupported()) {
-                Desktop desktop = Desktop.getDesktop();
-                for (File file : filesToPrint) {
-                    if (file.exists()) {
-                        if (desktop.isSupported(Desktop.Action.PRINT)) {
-                            desktop.print(file);
-                        } else {
-                            desktop.open(file);
-                        }
+            // Merge all PDFs into one document for a single print job
+            PDDocument mergedDoc = new PDDocument();
+            for (File file : filesToPrint) {
+                if (file.exists()) {
+                    PDDocument doc = Loader.loadPDF(file);
+                    for (int p = 0; p < doc.getNumberOfPages(); p++) {
+                        mergedDoc.addPage(doc.getPage(p));
                     }
+                    // Note: don't close doc yet, pages are referenced
                 }
-                AlertUtil.showInfo("Print", "Sent " + numberOfCopies + " copy(ies) to printer.\n" +
-                        "Copy 1: Original" + (numberOfCopies > 1 ? "\nCopies 2-" + numberOfCopies + ": Duplicate" : ""));
-            } else {
-                AlertUtil.showError("Error", "Desktop operations not supported on this system");
             }
+
+            if (mergedDoc.getNumberOfPages() > 0) {
+                PrinterJob printerJob = PrinterJob.getPrinterJob();
+                printerJob.setPageable(new PDFPageable(mergedDoc));
+                printerJob.setJobName("Invoice - " + numberOfCopies + " copies");
+
+                // Show single native print dialog
+                if (printerJob.printDialog()) {
+                    printerJob.print();
+                    AlertUtil.showInfo("Print", "Sent " + numberOfCopies + " copy(ies) to printer.\n" +
+                            "Copy 1: Original" + (numberOfCopies > 1 ? "\nCopies 2-" + numberOfCopies + ": Duplicate" : ""));
+                }
+            }
+
+            mergedDoc.close();
         } catch (Exception e) {
             log.error("Failed to print", e);
             AlertUtil.showError("Error", "Failed to print: " + e.getMessage());
