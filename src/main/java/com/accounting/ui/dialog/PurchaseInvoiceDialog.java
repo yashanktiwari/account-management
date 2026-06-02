@@ -648,6 +648,15 @@ public class PurchaseInvoiceDialog {
         VBox detentionBox = new VBox(4, new Label("Detention Charge"), detentionField);
         HBox.setHgrow(detentionBox, Priority.ALWAYS);
 
+        TextField otherChargesField = new TextField();
+        otherChargesField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
+                otherChargesField.setText(oldVal);
+            }
+        });
+        VBox otherChargesBox = new VBox(4, new Label("Other Charges"), otherChargesField);
+        HBox.setHgrow(otherChargesBox, Priority.ALWAYS);
+
         Button addRowBtn = new Button("+ Add Row");
         addRowBtn.setStyle("-fx-padding: 4 12 4 12; -fx-font-size: 12px;");
         addRowBtn.setPrefHeight(35);
@@ -655,7 +664,7 @@ public class PurchaseInvoiceDialog {
         addRowBtn.setWrapText(false);
         VBox.setVgrow(addRowBtn, Priority.ALWAYS);
 
-        HBox inputRow = new HBox(8, lrNoBox, containerBox, vehicleBox, fromBox, toBox, typeBox, freightBox, detentionBox, addRowBtn);
+        HBox inputRow = new HBox(8, lrNoBox, containerBox, vehicleBox, fromBox, toBox, typeBox, freightBox, detentionBox, otherChargesBox, addRowBtn);
         inputRow.setPadding(new Insets(12));
         inputRow.setAlignment(Pos.BOTTOM_CENTER);
         inputRow.setStyle("-fx-background-color: #f5f5f5; -fx-border-color: #e2e8f0; -fx-border-radius: 4;");
@@ -738,12 +747,22 @@ public class PurchaseInvoiceDialog {
         detentionCol.setPrefWidth(120);
         detentionCol.setEditable(true);
 
+        TableColumn<InvoiceLineItem, Double> otherChargesCol = new TableColumn<>("Other Charges");
+        otherChargesCol.setCellValueFactory(new PropertyValueFactory<>("otherCharges"));
+        otherChargesCol.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+        otherChargesCol.setOnEditCommit(e -> {
+            e.getRowValue().setOtherCharges(e.getNewValue());
+            updateTotal();
+        });
+        otherChargesCol.setPrefWidth(100);
+        otherChargesCol.setEditable(true);
+
         TableColumn<InvoiceLineItem, Double> totalCol = new TableColumn<>("Total");
         totalCol.setCellValueFactory(new PropertyValueFactory<>("total"));
         totalCol.setPrefWidth(100);
 
         lineItemTable.getColumns().addAll(srNoCol, dateCol, lrNoCol, containerCol, vehicleCol, fromCol, toCol, typeCol,
-                freightCol, detentionCol, totalCol);
+                freightCol, detentionCol, otherChargesCol, totalCol);
 
         // Right-click context menu for deleting rows
         ContextMenu contextMenu = new ContextMenu();
@@ -797,9 +816,18 @@ public class PurchaseInvoiceDialog {
             } catch (NumberFormatException ex) {
                 // Ignore invalid input, default to 0
             }
+            double otherChg = 0;
+            try {
+                if (!otherChargesField.getText().trim().isEmpty()) {
+                    otherChg = Double.parseDouble(otherChargesField.getText().trim());
+                }
+            } catch (NumberFormatException ex) {
+                // Ignore invalid input, default to 0
+            }
             item.setBasicFreight(freight);
             item.setDetentionCharge(detention);
-            item.setTotal(freight + detention);
+            item.setOtherCharges(otherChg);
+            item.setTotal(freight + detention + otherChg);
 
             lineItems.add(item);
 
@@ -812,6 +840,7 @@ public class PurchaseInvoiceDialog {
             typeField.clear();
             freightField.clear();
             detentionField.clear();
+            otherChargesField.clear();
             lrNoField.requestFocus();
 
             updateTotal();
@@ -993,17 +1022,13 @@ public class PurchaseInvoiceDialog {
             String fileName = "invoices/Purchase_Invoice_" + invoice.getInvoiceNo() + "_" + 
                             java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".pdf";
 
-            // Generate PDF
-            com.accounting.util.InvoicePDFGenerator.generatePurchaseInvoicePDF(invoice, fileName);
+            // Generate Original PDF
+            com.accounting.util.InvoicePDFGenerator.generatePurchaseInvoicePDF(invoice, fileName, "Original");
 
-            // Open the PDF
-            java.io.File pdfFile = new java.io.File(fileName);
-            if (pdfFile.exists()) {
-                if (java.awt.Desktop.isDesktopSupported()) {
-                    java.awt.Desktop.getDesktop().open(pdfFile);
-                }
-                AlertUtil.showInfo("Success", "Invoice PDF generated successfully!\nSaved to: " + fileName);
-            }
+            // Show print preview dialog with generator for Duplicate copies
+            new PrintPreviewDialog(fileName, (copyLabel, outputPath) ->
+                    com.accounting.util.InvoicePDFGenerator.generatePurchaseInvoicePDF(invoice, outputPath, copyLabel)
+            ).show(stage);
         } catch (Exception e) {
             log.error("Failed to generate PDF", e);
             AlertUtil.showError("Error", "Failed to generate PDF: " + e.getMessage());

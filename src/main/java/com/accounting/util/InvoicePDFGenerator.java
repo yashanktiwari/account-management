@@ -21,8 +21,13 @@ public class InvoicePDFGenerator {
     private static final String IMAGES_FOLDER = "src/main/resources/images";
 
     public static void generatePurchaseInvoicePDF(PurchaseInvoice invoice, String outputPath) {
+        generatePurchaseInvoicePDF(invoice, outputPath, "Original");
+    }
+
+    public static void generatePurchaseInvoicePDF(PurchaseInvoice invoice, String outputPath, String copyLabel) {
         try {
-            float contentWidth = PageSize.A4.getWidth() - 72; // 523
+            float margin = 18;
+            float contentWidth = PageSize.A4.getWidth() - 2 * margin;
 
             // Load images for page events
             Image headerImage = loadScaledImage("HEADER", contentWidth);
@@ -32,10 +37,10 @@ public class InvoicePDFGenerator {
             float footerHeight = footerImage != null ? footerImage.getScaledHeight() : 0;
 
             // Set margins to reserve space for header/footer images + line + padding
-            float topMargin = headerImage != null ? 36 + headerHeight + 15 : 36;
-            float bottomMargin = footerImage != null ? 20 + footerHeight + 10 : 36;
+            float topMargin = headerImage != null ? margin + headerHeight + 15 : margin;
+            float bottomMargin = footerImage != null ? 10 + footerHeight + 10 : margin;
 
-            Document document = new Document(PageSize.A4, 36, 36, topMargin, bottomMargin);
+            Document document = new Document(PageSize.A4, margin, margin, topMargin, bottomMargin);
             PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(outputPath));
 
             // Register page event for header/footer on every page
@@ -52,7 +57,7 @@ public class InvoicePDFGenerator {
             PdfPTable titleTable = new PdfPTable(1);
             titleTable.setWidthPercentage(100);
 
-            Paragraph origDup = new Paragraph("Original / Duplicate", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10));
+            Paragraph origDup = new Paragraph(copyLabel, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11));
             origDup.setAlignment(Element.ALIGN_RIGHT);
             PdfPCell origDupCell = new PdfPCell(origDup);
             origDupCell.setBorder(Rectangle.NO_BORDER);
@@ -130,7 +135,7 @@ public class InvoicePDFGenerator {
                     // Add title on each page
                     PdfPTable titleTable2 = new PdfPTable(1);
                     titleTable2.setWidthPercentage(100);
-                    Paragraph origDup2 = new Paragraph("Original / Duplicate", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10));
+                    Paragraph origDup2 = new Paragraph(copyLabel, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11));
                     origDup2.setAlignment(Element.ALIGN_RIGHT);
                     PdfPCell origDupCell2 = new PdfPCell(origDup2);
                     origDupCell2.setBorder(Rectangle.NO_BORDER);
@@ -169,8 +174,13 @@ public class InvoicePDFGenerator {
     }
 
     public static void generateSaleInvoicePDF(SaleInvoice invoice, String outputPath) {
+        generateSaleInvoicePDF(invoice, outputPath, "Original");
+    }
+
+    public static void generateSaleInvoicePDF(SaleInvoice invoice, String outputPath, String copyLabel) {
         try {
-            float contentWidth = PageSize.A4.getWidth() - 72; // 523
+            float margin = 18;
+            float contentWidth = PageSize.A4.getWidth() - 2 * margin;
 
             // Load images for page events
             Image headerImage = loadScaledImage("HEADER", contentWidth);
@@ -180,10 +190,10 @@ public class InvoicePDFGenerator {
             float footerHeight = footerImage != null ? footerImage.getScaledHeight() : 0;
 
             // Set margins to reserve space for header/footer images + line + padding
-            float topMargin = headerImage != null ? 36 + headerHeight + 15 : 36;
-            float bottomMargin = footerImage != null ? 20 + footerHeight + 10 : 36;
+            float topMargin = headerImage != null ? margin + headerHeight + 15 : margin;
+            float bottomMargin = footerImage != null ? 10 + footerHeight + 10 : margin;
 
-            Document document = new Document(PageSize.A4, 36, 36, topMargin, bottomMargin);
+            Document document = new Document(PageSize.A4, margin, margin, topMargin, bottomMargin);
             PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(outputPath));
 
             // Register page event for header/footer on every page
@@ -200,7 +210,7 @@ public class InvoicePDFGenerator {
             PdfPTable titleTable = new PdfPTable(1);
             titleTable.setWidthPercentage(100);
 
-            Paragraph origDup = new Paragraph("Original / Duplicate", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10));
+            Paragraph origDup = new Paragraph(copyLabel, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11));
             origDup.setAlignment(Element.ALIGN_RIGHT);
             PdfPCell origDupCell = new PdfPCell(origDup);
             origDupCell.setBorder(Rectangle.NO_BORDER);
@@ -278,7 +288,7 @@ public class InvoicePDFGenerator {
                     // Add title on each page
                     PdfPTable titleTable2 = new PdfPTable(1);
                     titleTable2.setWidthPercentage(100);
-                    Paragraph origDup2 = new Paragraph("Original / Duplicate", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10));
+                    Paragraph origDup2 = new Paragraph(copyLabel, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11));
                     origDup2.setAlignment(Element.ALIGN_RIGHT);
                     PdfPCell origDupCell2 = new PdfPCell(origDup2);
                     origDupCell2.setBorder(Rectangle.NO_BORDER);
@@ -323,8 +333,8 @@ public class InvoicePDFGenerator {
             
             if (headerFile.exists()) {
                 Image headerImage = Image.getInstance(headerFile.getAbsolutePath());
-                // Scale image to fit page width (A4 width is 595, minus margins 36 on each side = 523)
-                headerImage.scaleAbsolute(523, headerImage.getHeight() * 523 / headerImage.getWidth());
+                float cw = PageSize.A4.getWidth() - 36;
+                headerImage.scaleAbsolute(cw, headerImage.getHeight() * cw / headerImage.getWidth());
                 headerImage.setAlignment(Element.ALIGN_CENTER);
                 document.add(headerImage);
             } else {
@@ -504,13 +514,13 @@ public class InvoicePDFGenerator {
     }
 
     private static void addLineItemsTable(Document document, java.util.List<InvoiceLineItem> lineItems) throws DocumentException {
-        PdfPTable table = new PdfPTable(11);
+        PdfPTable table = new PdfPTable(12);
         table.setWidthPercentage(100);
-        table.setWidths(new float[]{0.4f, 0.8f, 0.8f, 1.0f, 1.0f, 0.8f, 0.8f, 0.8f, 1.0f, 1.0f, 1.0f});
-        table.setSpacingBefore(10);
+        table.setWidths(new float[]{0.4f, 0.8f, 0.7f, 1.0f, 1.0f, 0.7f, 0.7f, 0.7f, 0.9f, 0.9f, 0.9f, 0.9f});
+        table.setSpacingBefore(8);
 
         // Header row
-        addTableHeader(table, "Sr. No");
+        addTableHeader(table, "Sr.");
         addTableHeader(table, "Date");
         addTableHeader(table, "LR No");
         addTableHeader(table, "Container No");
@@ -519,38 +529,43 @@ public class InvoicePDFGenerator {
         addTableHeader(table, "To");
         addTableHeader(table, "Type");
         addTableHeader(table, "Basic Freight");
-        addTableHeader(table, "Detention Charge");
+        addTableHeader(table, "Detention");
+        addTableHeader(table, "Other Chg");
         addTableHeader(table, "Total");
 
         // Data rows
         int srNo = 1;
         double totalAmount = 0;
+        double totalOtherCharges = 0;
         for (InvoiceLineItem item : lineItems) {
-            addTableCell(table, String.valueOf(srNo++));
-            addTableCell(table, item.getDate() != null ? item.getDate() : "");
-            addTableCell(table, item.getLrNo() != null ? item.getLrNo() : "");
-            addTableCell(table, item.getContainerNo() != null ? item.getContainerNo() : "");
-            addTableCell(table, item.getVehicleNo() != null ? item.getVehicleNo() : "");
-            addTableCell(table, item.getFrom() != null ? item.getFrom() : "");
-            addTableCell(table, item.getTo() != null ? item.getTo() : "");
-            addTableCell(table, item.getType() != null ? item.getType() : "");
-            addTableCell(table, String.format("%.2f", item.getBasicFreight()));
-            addTableCell(table, String.format("%.2f", item.getDetentionCharge()));
-            addTableCell(table, String.format("%.2f", item.getTotal()));
+            addTableCellCenter(table, String.valueOf(srNo++));
+            addTableCellCenter(table, item.getDate() != null ? item.getDate() : "");
+            addTableCellCenter(table, item.getLrNo() != null ? item.getLrNo() : "");
+            addTableCellCenter(table, item.getContainerNo() != null ? item.getContainerNo() : "");
+            addTableCellCenter(table, item.getVehicleNo() != null ? item.getVehicleNo() : "");
+            addTableCellCenter(table, item.getFrom() != null ? item.getFrom() : "");
+            addTableCellCenter(table, item.getTo() != null ? item.getTo() : "");
+            addTableCellCenter(table, item.getType() != null ? item.getType() : "");
+            addTableCellRight(table, String.format("%.2f", item.getBasicFreight()));
+            addTableCellRight(table, String.format("%.2f", item.getDetentionCharge()));
+            addTableCellRight(table, String.format("%.2f", item.getOtherCharges()));
+            addTableCellRight(table, String.format("%.2f", item.getTotal()));
             totalAmount += item.getTotal();
+            totalOtherCharges += item.getOtherCharges();
         }
 
         // Total row at bottom right
-        PdfPCell emptyCell = new PdfPCell(new Phrase("", FontFactory.getFont(FontFactory.HELVETICA, 7)));
-        emptyCell.setColspan(10);
+        PdfPCell emptyCell = new PdfPCell(new Phrase("", FontFactory.getFont(FontFactory.HELVETICA, 8)));
+        emptyCell.setColspan(11);
         emptyCell.setBorder(Rectangle.BOX);
-        emptyCell.setPadding(2);
+        emptyCell.setPadding(3);
         table.addCell(emptyCell);
 
-        PdfPCell totalValueCell = new PdfPCell(new Phrase(String.format("%.2f", totalAmount), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8)));
+        PdfPCell totalValueCell = new PdfPCell(new Phrase(String.format("%.2f", totalAmount), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9)));
         totalValueCell.setBorder(Rectangle.BOX);
-        totalValueCell.setPadding(2);
+        totalValueCell.setPadding(3);
         totalValueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        totalValueCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(totalValueCell);
 
         document.add(table);
@@ -582,20 +597,33 @@ public class InvoicePDFGenerator {
             netAmount = si.getNetAmount();
         }
 
-        Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9);
-        Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 9);
+        Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
+        Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
+
+        // Calculate total other charges from line items
+        double totalOtherCharges = 0;
+        if (invoice instanceof PurchaseInvoice) {
+            for (InvoiceLineItem item : ((PurchaseInvoice) invoice).getLineItems()) {
+                totalOtherCharges += item.getOtherCharges();
+            }
+        } else if (invoice instanceof SaleInvoice) {
+            for (InvoiceLineItem item : ((SaleInvoice) invoice).getLineItems()) {
+                totalOtherCharges += item.getOtherCharges();
+            }
+        }
 
         // 5-column row-based table: Bank | GST Label | GST Value | Others Label | Others Value
         PdfPTable table = new PdfPTable(5);
         table.setWidthPercentage(100);
         table.setWidths(new float[]{2.2f, 1.2f, 0.6f, 1.8f, 0.6f});
-        table.setSpacingBefore(10);
+        table.setSpacingBefore(8);
 
         // Header row
         PdfPCell bankHeader = new PdfPCell(new Phrase("BANK DETAIL", headerFont));
         bankHeader.setBorder(Rectangle.BOX);
         bankHeader.setPadding(3);
         bankHeader.setHorizontalAlignment(Element.ALIGN_CENTER);
+        bankHeader.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(bankHeader);
 
         PdfPCell gstHeader = new PdfPCell(new Phrase("GST DETAIL", headerFont));
@@ -603,6 +631,7 @@ public class InvoicePDFGenerator {
         gstHeader.setBorder(Rectangle.BOX);
         gstHeader.setPadding(3);
         gstHeader.setHorizontalAlignment(Element.ALIGN_CENTER);
+        gstHeader.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(gstHeader);
 
         PdfPCell othersHeader = new PdfPCell(new Phrase("Others Charge", headerFont));
@@ -610,17 +639,18 @@ public class InvoicePDFGenerator {
         othersHeader.setBorder(Rectangle.BOX);
         othersHeader.setPadding(3);
         othersHeader.setHorizontalAlignment(Element.ALIGN_CENTER);
+        othersHeader.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(othersHeader);
 
         // Row 1
         addBankGSTRow(table, "A/C NAME - SIHAG ENTERPRISE", false,
                 "Taxable Amount", String.format("%.2f", taxableAmount),
-                "Loading & Unloading Charges", "0.00");
+                "Other Charges", String.format("%.2f", totalOtherCharges));
 
         // Row 2
         addBankGSTRow(table, "Bank Detail - AXIS BANK,", false,
                 "SGST 9%", String.format("%.2f", sgstAmount),
-                "Weigh Bridge Charges", "0.00");
+                "Loading & Unloading Charges", "0.00");
 
         // Row 3
         addBankGSTRow(table, "Branch - Mundra", false,
@@ -696,34 +726,40 @@ public class InvoicePDFGenerator {
     private static void addBankGSTRow(PdfPTable table, String bankText, boolean bankBold,
                                        String gstLabel, String gstValue,
                                        String othersLabel, String othersValue) {
-        Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 9);
-        Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9);
+        Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
+        Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
 
         PdfPCell bankCell = new PdfPCell(new Phrase(bankText, bankBold ? boldFont : normalFont));
         bankCell.setBorder(Rectangle.BOX);
-        bankCell.setPadding(2);
+        bankCell.setPadding(3);
+        bankCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(bankCell);
 
         PdfPCell gstLabelCell = new PdfPCell(new Phrase(gstLabel, normalFont));
         gstLabelCell.setBorder(Rectangle.BOX);
-        gstLabelCell.setPadding(2);
+        gstLabelCell.setPadding(3);
+        gstLabelCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(gstLabelCell);
 
         PdfPCell gstValueCell = new PdfPCell(new Phrase(gstValue, normalFont));
         gstValueCell.setBorder(Rectangle.BOX);
-        gstValueCell.setPadding(2);
+        gstValueCell.setPadding(3);
         gstValueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        gstValueCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(gstValueCell);
 
         PdfPCell othersLabelCell = new PdfPCell(new Phrase(othersLabel, normalFont));
         othersLabelCell.setBorder(Rectangle.BOX);
-        othersLabelCell.setPadding(2);
+        othersLabelCell.setPadding(3);
+        othersLabelCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        othersLabelCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(othersLabelCell);
 
         PdfPCell othersValueCell = new PdfPCell(new Phrase(othersValue, normalFont));
         othersValueCell.setBorder(Rectangle.BOX);
-        othersValueCell.setPadding(2);
+        othersValueCell.setPadding(3);
         othersValueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        othersValueCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(othersValueCell);
     }
 
@@ -841,7 +877,8 @@ public class InvoicePDFGenerator {
             if (footerFile.exists()) {
                 Image footerImage = Image.getInstance(footerFile.getAbsolutePath());
                 // Scale image to fit page width (A4 width is 595, minus margins 36 on each side = 523)
-                footerImage.scaleAbsolute(523, footerImage.getHeight() * 523 / footerImage.getWidth());
+                float cw2 = PageSize.A4.getWidth() - 36;
+                footerImage.scaleAbsolute(cw2, footerImage.getHeight() * cw2 / footerImage.getWidth());
                 footerImage.setAlignment(Element.ALIGN_CENTER);
                 document.add(footerImage);
             } else {
@@ -898,19 +935,32 @@ public class InvoicePDFGenerator {
     }
 
     private static void addTableHeader(PdfPTable table, String text) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8)));
+        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9)));
         cell.setBackgroundColor(new Color(220, 220, 220));
         cell.setBorder(Rectangle.BOX);
-        cell.setPadding(2);
+        cell.setPadding(3);
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(cell);
     }
 
-    private static void addTableCell(PdfPTable table, String text) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA, 7)));
+    private static void addTableCellCenter(PdfPTable table, String text) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA, 8)));
         cell.setBorder(Rectangle.BOX);
-        cell.setPadding(2);
-        cell.setNoWrap(false); // Enable text wrapping
+        cell.setPadding(3);
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setNoWrap(false);
+        table.addCell(cell);
+    }
+
+    private static void addTableCellRight(PdfPTable table, String text) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA, 8)));
+        cell.setBorder(Rectangle.BOX);
+        cell.setPadding(3);
+        cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setNoWrap(false);
         table.addCell(cell);
     }
 
@@ -947,7 +997,7 @@ public class InvoicePDFGenerator {
         public void onEndPage(PdfWriter writer, Document document) {
             float pageWidth = document.getPageSize().getWidth();
             float pageHeight = document.getPageSize().getHeight();
-            float margin = 36;
+            float margin = 18;
             float contentWidth = pageWidth - 2 * margin;
             PdfContentByte cb = writer.getDirectContent();
 

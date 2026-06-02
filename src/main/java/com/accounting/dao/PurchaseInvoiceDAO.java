@@ -210,8 +210,8 @@ public class PurchaseInvoiceDAO {
         ensureLineItemColumns();
         String sql = """
                 INSERT INTO invoice_line_items (invoice_id, date, lr_no, container_no, vehicle_no, from_location,
-                to_location, type, basic_freight, detention_charge, total)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                to_location, type, basic_freight, detention_charge, other_charges, total)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -225,7 +225,8 @@ public class PurchaseInvoiceDAO {
             pstmt.setString(8, item.getType());
             pstmt.setDouble(9, item.getBasicFreight());
             pstmt.setDouble(10, item.getDetentionCharge());
-            pstmt.setDouble(11, item.getTotal());
+            pstmt.setDouble(11, item.getOtherCharges());
+            pstmt.setDouble(12, item.getTotal());
             pstmt.executeUpdate();
         }
     }
@@ -243,6 +244,9 @@ public class PurchaseInvoiceDAO {
             try (Statement stmt = conn.createStatement()) {
                 if (!existing.contains("date")) {
                     stmt.executeUpdate("ALTER TABLE invoice_line_items ADD COLUMN date VARCHAR(20)");
+                }
+                if (!existing.contains("other_charges")) {
+                    stmt.executeUpdate("ALTER TABLE invoice_line_items ADD COLUMN other_charges DOUBLE DEFAULT 0");
                 }
             }
         }
@@ -351,6 +355,7 @@ public class PurchaseInvoiceDAO {
         item.setType(rs.getString("type"));
         item.setBasicFreight(rs.getDouble("basic_freight"));
         item.setDetentionCharge(rs.getDouble("detention_charge"));
+        try { item.setOtherCharges(rs.getDouble("other_charges")); } catch (Exception ignored) {}
         item.setTotal(rs.getDouble("total"));
         return item;
     }

@@ -311,11 +311,13 @@ public class PurchaseInvoiceListView {
             String fileName = "invoices/Purchase_Invoice_" + invoice.getInvoiceNo() + "_" + 
                             java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".pdf";
 
-            // Generate PDF
-            com.accounting.util.InvoicePDFGenerator.generatePurchaseInvoicePDF(invoice, fileName);
+            // Generate Original PDF
+            com.accounting.util.InvoicePDFGenerator.generatePurchaseInvoicePDF(invoice, fileName, "Original");
 
-            // Show print preview dialog
-            new PrintPreviewDialog(fileName).show(MainApp.getPrimaryStage());
+            // Show print preview dialog with generator for Duplicate copies
+            new PrintPreviewDialog(fileName, (copyLabel, outputPath) ->
+                    com.accounting.util.InvoicePDFGenerator.generatePurchaseInvoicePDF(invoice, outputPath, copyLabel)
+            ).show(MainApp.getPrimaryStage());
         } catch (Exception e) {
             e.printStackTrace();
             AlertUtil.showError("Error", "Failed to generate PDF: " + e.getMessage());

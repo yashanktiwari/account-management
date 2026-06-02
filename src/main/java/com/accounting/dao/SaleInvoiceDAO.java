@@ -244,10 +244,11 @@ public class SaleInvoiceDAO {
     }
 
     private void saveLineItem(int invoiceId, InvoiceLineItem item) throws Exception {
+        ensureLineItemColumns();
         String sql = """
                 INSERT INTO invoice_line_items (invoice_id, lr_no, container_no, vehicle_no, from_location,
-                to_location, type, basic_freight, detention_charge, total)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                to_location, type, basic_freight, detention_charge, other_charges, total)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -260,8 +261,26 @@ public class SaleInvoiceDAO {
             pstmt.setString(7, item.getType());
             pstmt.setDouble(8, item.getBasicFreight());
             pstmt.setDouble(9, item.getDetentionCharge());
-            pstmt.setDouble(10, item.getTotal());
+            pstmt.setDouble(10, item.getOtherCharges());
+            pstmt.setDouble(11, item.getTotal());
             pstmt.executeUpdate();
+        }
+    }
+
+    private void ensureLineItemColumns() throws Exception {
+        try (Connection conn = DBConnection.getConnection()) {
+            java.sql.DatabaseMetaData meta = conn.getMetaData();
+            java.util.List<String> existing = new java.util.ArrayList<>();
+            try (ResultSet rs = meta.getColumns(conn.getCatalog(), null, "invoice_line_items", null)) {
+                while (rs.next()) {
+                    existing.add(rs.getString("COLUMN_NAME").toLowerCase());
+                }
+            }
+            try (java.sql.Statement stmt = conn.createStatement()) {
+                if (!existing.contains("other_charges")) {
+                    stmt.executeUpdate("ALTER TABLE invoice_line_items ADD COLUMN other_charges DOUBLE DEFAULT 0");
+                }
+            }
         }
     }
 
@@ -333,6 +352,7 @@ public class SaleInvoiceDAO {
         item.setType(rs.getString("type"));
         item.setBasicFreight(rs.getDouble("basic_freight"));
         item.setDetentionCharge(rs.getDouble("detention_charge"));
+        try { item.setOtherCharges(rs.getDouble("other_charges")); } catch (Exception ignored) {}
         item.setTotal(rs.getDouble("total"));
         return item;
     }

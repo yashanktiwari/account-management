@@ -13,12 +13,13 @@ public class InvoiceLineItem {
     private String type;
     private double basicFreight;
     private double detentionCharge;
+    private double otherCharges;
     private double total;
 
     public InvoiceLineItem() {}
 
     public InvoiceLineItem(String lrNo, String containerNo, String vehicleNo, String from, String to,
-                          String type, double basicFreight, double detentionCharge) {
+                          String type, double basicFreight, double detentionCharge, double otherCharges) {
         this.lrNo = lrNo;
         this.containerNo = containerNo;
         this.vehicleNo = vehicleNo;
@@ -27,7 +28,8 @@ public class InvoiceLineItem {
         this.type = type;
         this.basicFreight = basicFreight;
         this.detentionCharge = detentionCharge;
-        this.total = basicFreight + detentionCharge;
+        this.otherCharges = otherCharges;
+        this.total = basicFreight + detentionCharge + otherCharges;
     }
 
     public int getId() { return id; }
@@ -69,10 +71,16 @@ public class InvoiceLineItem {
         recalculateTotal();
     }
 
+    public double getOtherCharges() { return otherCharges; }
+    public void setOtherCharges(double otherCharges) {
+        this.otherCharges = otherCharges;
+        recalculateTotal();
+    }
+
     public double getTotal() { return total; }
     public void setTotal(double total) { this.total = total; }
 
     private void recalculateTotal() {
-        this.total = basicFreight + detentionCharge;
+        this.total = basicFreight + detentionCharge + otherCharges;
     }
 }
