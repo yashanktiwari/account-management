@@ -70,21 +70,94 @@ public class InvoicePDFGenerator {
 
             document.add(titleTable);
 
-            // Add invoice details section
+            // Add invoice details section (only on first page)
             addPurchaseInvoiceDetails(document, invoice);
 
-            // Add line items table
-            addLineItemsTable(document, invoice.getLineItems());
-
-            // Add bank and GST details
-            addBankAndGSTDetails(document, invoice);
-
-            // Add terms and signature
-            addTermsAndSignature(document);
-
-            // If no footer image, add text-based footer as content
-            if (footerImage == null) {
-                addTextBasedFooter(document);
+            // Calculate available space and split line items across pages if needed
+            float pageHeight = PageSize.A4.getHeight();
+            float availableHeight = pageHeight - topMargin - bottomMargin;
+            
+            // Estimate heights for static content
+            float invoiceDetailsHeight = 120; // Approximate height for invoice details
+            float bankGSTHeight = 180; // Bank/GST/Others + GST Amount/Net Amount + Rupees + Remarks
+            float termsSignatureHeight = 120; // Terms and signature section
+            float computerNoteHeight = 25; // Computer generated note
+            float staticFooterHeight = bankGSTHeight + termsSignatureHeight + computerNoteHeight;
+            
+            // Height available for line items on first page
+            float firstPageLineItemHeight = availableHeight - invoiceDetailsHeight - staticFooterHeight - 20; // 20 for spacing
+            
+            // Height available for line items on subsequent pages (no invoice details)
+            float subsequentPageLineItemHeight = availableHeight - staticFooterHeight - 20;
+            
+            // Each line item row is approximately 20 units tall (header is ~15, each row ~15)
+            float lineItemRowHeight = 15;
+            float lineItemHeaderHeight = 15;
+            
+            int maxItemsFirstPage = (int) ((firstPageLineItemHeight - lineItemHeaderHeight) / lineItemRowHeight);
+            int maxItemsSubsequentPage = (int) ((subsequentPageLineItemHeight - lineItemHeaderHeight) / lineItemRowHeight);
+            
+            // Ensure at least 1 item per page
+            maxItemsFirstPage = Math.max(1, maxItemsFirstPage);
+            maxItemsSubsequentPage = Math.max(1, maxItemsSubsequentPage);
+            
+            java.util.List<InvoiceLineItem> allItems = invoice.getLineItems();
+            
+            if (allItems.size() <= maxItemsFirstPage) {
+                // All items fit on first page
+                addLineItemsTable(document, allItems);
+                addBankAndGSTDetails(document, invoice);
+                addTermsAndSignature(document);
+                if (footerImage == null) {
+                    addTextBasedFooter(document);
+                }
+            } else {
+                // Need multiple pages
+                // First page: invoice details + first chunk of items + static footer
+                java.util.List<InvoiceLineItem> firstPageItems = allItems.subList(0, Math.min(maxItemsFirstPage, allItems.size()));
+                addLineItemsTable(document, firstPageItems);
+                addBankAndGSTDetails(document, invoice);
+                addTermsAndSignature(document);
+                if (footerImage == null) {
+                    addTextBasedFooter(document);
+                }
+                
+                // Subsequent pages: remaining items in chunks + static footer
+                int remainingStart = maxItemsFirstPage;
+                while (remainingStart < allItems.size()) {
+                    document.newPage();
+                    
+                    // Add title on each page
+                    PdfPTable titleTable2 = new PdfPTable(1);
+                    titleTable2.setWidthPercentage(100);
+                    Paragraph origDup2 = new Paragraph("Original / Duplicate", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10));
+                    origDup2.setAlignment(Element.ALIGN_RIGHT);
+                    PdfPCell origDupCell2 = new PdfPCell(origDup2);
+                    origDupCell2.setBorder(Rectangle.NO_BORDER);
+                    origDupCell2.setPadding(2);
+                    origDupCell2.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                    titleTable2.addCell(origDupCell2);
+                    Paragraph title2 = new Paragraph("Tax Invoice (Continued)", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, Color.WHITE));
+                    title2.setAlignment(Element.ALIGN_CENTER);
+                    PdfPCell titleCell2 = new PdfPCell(title2);
+                    titleCell2.setBackgroundColor(new Color(0, 51, 102));
+                    titleCell2.setPadding(5);
+                    titleCell2.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    titleTable2.addCell(titleCell2);
+                    document.add(titleTable2);
+                    
+                    int remainingEnd = Math.min(remainingStart + maxItemsSubsequentPage, allItems.size());
+                    java.util.List<InvoiceLineItem> pageItems = allItems.subList(remainingStart, remainingEnd);
+                    addLineItemsTable(document, pageItems);
+                    
+                    addBankAndGSTDetails(document, invoice);
+                    addTermsAndSignature(document);
+                    if (footerImage == null) {
+                        addTextBasedFooter(document);
+                    }
+                    
+                    remainingStart = remainingEnd;
+                }
             }
 
             document.close();
@@ -145,21 +218,94 @@ public class InvoicePDFGenerator {
 
             document.add(titleTable);
 
-            // Add invoice details section
+            // Add invoice details section (only on first page)
             addSaleInvoiceDetails(document, invoice);
 
-            // Add line items table
-            addLineItemsTable(document, invoice.getLineItems());
-
-            // Add bank and GST details
-            addBankAndGSTDetails(document, invoice);
-
-            // Add terms and signature
-            addTermsAndSignature(document);
-
-            // If no footer image, add text-based footer as content
-            if (footerImage == null) {
-                addTextBasedFooter(document);
+            // Calculate available space and split line items across pages if needed
+            float pageHeight = PageSize.A4.getHeight();
+            float availableHeight = pageHeight - topMargin - bottomMargin;
+            
+            // Estimate heights for static content
+            float invoiceDetailsHeight = 120; // Approximate height for invoice details
+            float bankGSTHeight = 180; // Bank/GST/Others + GST Amount/Net Amount + Rupees + Remarks
+            float termsSignatureHeight = 120; // Terms and signature section
+            float computerNoteHeight = 25; // Computer generated note
+            float staticFooterHeight = bankGSTHeight + termsSignatureHeight + computerNoteHeight;
+            
+            // Height available for line items on first page
+            float firstPageLineItemHeight = availableHeight - invoiceDetailsHeight - staticFooterHeight - 20; // 20 for spacing
+            
+            // Height available for line items on subsequent pages (no invoice details)
+            float subsequentPageLineItemHeight = availableHeight - staticFooterHeight - 20;
+            
+            // Each line item row is approximately 20 units tall (header is ~15, each row ~15)
+            float lineItemRowHeight = 15;
+            float lineItemHeaderHeight = 15;
+            
+            int maxItemsFirstPage = (int) ((firstPageLineItemHeight - lineItemHeaderHeight) / lineItemRowHeight);
+            int maxItemsSubsequentPage = (int) ((subsequentPageLineItemHeight - lineItemHeaderHeight) / lineItemRowHeight);
+            
+            // Ensure at least 1 item per page
+            maxItemsFirstPage = Math.max(1, maxItemsFirstPage);
+            maxItemsSubsequentPage = Math.max(1, maxItemsSubsequentPage);
+            
+            java.util.List<InvoiceLineItem> allItems = invoice.getLineItems();
+            
+            if (allItems.size() <= maxItemsFirstPage) {
+                // All items fit on first page
+                addLineItemsTable(document, allItems);
+                addBankAndGSTDetails(document, invoice);
+                addTermsAndSignature(document);
+                if (footerImage == null) {
+                    addTextBasedFooter(document);
+                }
+            } else {
+                // Need multiple pages
+                // First page: invoice details + first chunk of items + static footer
+                java.util.List<InvoiceLineItem> firstPageItems = allItems.subList(0, Math.min(maxItemsFirstPage, allItems.size()));
+                addLineItemsTable(document, firstPageItems);
+                addBankAndGSTDetails(document, invoice);
+                addTermsAndSignature(document);
+                if (footerImage == null) {
+                    addTextBasedFooter(document);
+                }
+                
+                // Subsequent pages: remaining items in chunks + static footer
+                int remainingStart = maxItemsFirstPage;
+                while (remainingStart < allItems.size()) {
+                    document.newPage();
+                    
+                    // Add title on each page
+                    PdfPTable titleTable2 = new PdfPTable(1);
+                    titleTable2.setWidthPercentage(100);
+                    Paragraph origDup2 = new Paragraph("Original / Duplicate", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10));
+                    origDup2.setAlignment(Element.ALIGN_RIGHT);
+                    PdfPCell origDupCell2 = new PdfPCell(origDup2);
+                    origDupCell2.setBorder(Rectangle.NO_BORDER);
+                    origDupCell2.setPadding(2);
+                    origDupCell2.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                    titleTable2.addCell(origDupCell2);
+                    Paragraph title2 = new Paragraph("Tax Invoice (Continued)", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, Color.WHITE));
+                    title2.setAlignment(Element.ALIGN_CENTER);
+                    PdfPCell titleCell2 = new PdfPCell(title2);
+                    titleCell2.setBackgroundColor(new Color(0, 51, 102));
+                    titleCell2.setPadding(5);
+                    titleCell2.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    titleTable2.addCell(titleCell2);
+                    document.add(titleTable2);
+                    
+                    int remainingEnd = Math.min(remainingStart + maxItemsSubsequentPage, allItems.size());
+                    java.util.List<InvoiceLineItem> pageItems = allItems.subList(remainingStart, remainingEnd);
+                    addLineItemsTable(document, pageItems);
+                    
+                    addBankAndGSTDetails(document, invoice);
+                    addTermsAndSignature(document);
+                    if (footerImage == null) {
+                        addTextBasedFooter(document);
+                    }
+                    
+                    remainingStart = remainingEnd;
+                }
             }
 
             document.close();
