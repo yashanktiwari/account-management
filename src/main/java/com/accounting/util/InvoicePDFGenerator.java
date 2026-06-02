@@ -265,9 +265,9 @@ public class InvoicePDFGenerator {
         invoiceTable.setSpacingBefore(5);
 
         invoiceTable.addCell(createCell("Invoice No -", true));
-        invoiceTable.addCell(createCell(invoice.getInvoiceNo() != null ? invoice.getInvoiceNo() : "", true));
+        invoiceTable.addCell(createCell(invoice.getInvoiceNo() != null ? invoice.getInvoiceNo() : "", false));
         invoiceTable.addCell(createCell("Invoice Date -", true));
-        invoiceTable.addCell(createCell(invoice.getInvoiceDate() != null ? invoice.getInvoiceDate().format(DATE_FORMATTER) : "", true));
+        invoiceTable.addCell(createCell(invoice.getInvoiceDate() != null ? invoice.getInvoiceDate().format(DATE_FORMATTER) : "", false));
 
         document.add(invoiceTable);
 
@@ -315,9 +315,9 @@ public class InvoicePDFGenerator {
         invoiceTable.setSpacingBefore(5);
 
         invoiceTable.addCell(createCell("Invoice No -", true));
-        invoiceTable.addCell(createCell(invoice.getInvoiceNo() != null ? invoice.getInvoiceNo() : "", true));
+        invoiceTable.addCell(createCell(invoice.getInvoiceNo() != null ? invoice.getInvoiceNo() : "", false));
         invoiceTable.addCell(createCell("Invoice Date -", true));
-        invoiceTable.addCell(createCell(invoice.getInvoiceDate() != null ? invoice.getInvoiceDate().format(DATE_FORMATTER) : "", true));
+        invoiceTable.addCell(createCell(invoice.getInvoiceDate() != null ? invoice.getInvoiceDate().format(DATE_FORMATTER) : "", false));
 
         document.add(invoiceTable);
 
@@ -467,7 +467,7 @@ public class InvoicePDFGenerator {
         table.addCell(othersHeader);
 
         // Row 1
-        addBankGSTRow(table, "A/C NAME - SIHAG ENTERPRISE", true,
+        addBankGSTRow(table, "A/C NAME - SIHAG ENTERPRISE", false,
                 "Taxable Amount", String.format("%.2f", taxableAmount),
                 "Loading & Unloading Charges", "0.00");
 
@@ -540,7 +540,7 @@ public class InvoicePDFGenerator {
         }
         PdfPTable remarksTable = new PdfPTable(1);
         remarksTable.setWidthPercentage(100);
-        PdfPCell remarksCell = new PdfPCell(new Phrase("Remarks - " + (remarks != null ? remarks : ""), headerFont));
+        PdfPCell remarksCell = new PdfPCell(new Phrase("Remarks - " + (remarks != null ? remarks : ""), normalFont));
         remarksCell.setBorder(Rectangle.BOX);
         remarksCell.setPadding(3);
         remarksTable.addCell(remarksCell);
@@ -652,11 +652,28 @@ public class InvoicePDFGenerator {
         // Signature
         PdfPCell signatureCell = new PdfPCell();
         signatureCell.setBorder(Rectangle.BOX);
+        
+        // Try to load signature image
+        Image signatureImage = loadScaledImage("SIGNATURE", 150); // Max width 150 for signature
+        
         Paragraph signPara = new Paragraph();
-        signPara.add(new Chunk("For SIHAG ENTERPRISE\n\n\n\n", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
-        signPara.add(new Chunk("Authorised Signatory", FontFactory.getFont(FontFactory.HELVETICA, 9)));
-        signPara.setAlignment(Element.ALIGN_CENTER);
-        signatureCell.addElement(signPara);
+        signPara.add(new Chunk("For SIHAG ENTERPRISE\n", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
+        
+        if (signatureImage != null) {
+            signPara.add(new Chunk("\n"));
+            signatureCell.addElement(signPara);
+            signatureImage.setAlignment(Element.ALIGN_CENTER);
+            signatureCell.addElement(signatureImage);
+            Paragraph authPara = new Paragraph("\nAuthorised Signatory", FontFactory.getFont(FontFactory.HELVETICA, 9));
+            authPara.setAlignment(Element.ALIGN_CENTER);
+            signatureCell.addElement(authPara);
+        } else {
+            signPara.add(new Chunk("\n\n\n", FontFactory.getFont(FontFactory.HELVETICA, 10)));
+            signPara.add(new Chunk("Authorised Signatory", FontFactory.getFont(FontFactory.HELVETICA, 9)));
+            signPara.setAlignment(Element.ALIGN_CENTER);
+            signatureCell.addElement(signPara);
+        }
+        
         signatureCell.setMinimumHeight(80);
         table.addCell(signatureCell);
 

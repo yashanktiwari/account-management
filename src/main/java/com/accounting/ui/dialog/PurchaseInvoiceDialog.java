@@ -950,14 +950,19 @@ public class PurchaseInvoiceDialog {
 
         AppExecutor.submit(() -> {
             try {
-                new PurchaseInvoiceDAO().save(invoice);
+                PurchaseInvoiceDAO dao = new PurchaseInvoiceDAO();
+                if (invoice.getId() > 0) {
+                    dao.update(invoice);
+                } else {
+                    dao.save(invoice);
 
-                // Update the next invoice number in settings
-                try {
-                    int currentInvoiceNo = Integer.parseInt(invoice.getInvoiceNo());
-                    new SettingsDAO().saveSetting("global_invoice_starting_number", String.valueOf(currentInvoiceNo + 1));
-                } catch (Exception e) {
-                    log.error("Failed to update invoice number in settings", e);
+                    // Update the next invoice number in settings only for new invoices
+                    try {
+                        int currentInvoiceNo = Integer.parseInt(invoice.getInvoiceNo());
+                        new SettingsDAO().saveSetting("global_invoice_starting_number", String.valueOf(currentInvoiceNo + 1));
+                    } catch (Exception e) {
+                        log.error("Failed to update invoice number in settings", e);
+                    }
                 }
 
                 Platform.runLater(() -> {
