@@ -153,7 +153,7 @@ public class PrintPreviewDialog {
         bottomBar.setPadding(new Insets(6, 16, 6, 16));
         bottomBar.setStyle("-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0; -fx-border-width: 1 0 0 0;");
 
-        Label infoLabel = new Label("Copy 1: Original  |  Copies 2+: Duplicate");
+        Label infoLabel = new Label("Copy 1: Original  |  Copy 2: Duplicate  |  Copies 3+: Triplicate");
         infoLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
 
         Region spacer2 = new Region();
@@ -178,12 +178,13 @@ public class PrintPreviewDialog {
             if (numberOfCopies > 1 && pdfGenerator != null) {
                 String basePath = pdfFilePath.replace(".pdf", "");
                 for (int i = 2; i <= numberOfCopies; i++) {
-                    String duplicatePath = basePath + "_Duplicate_" + i + ".pdf";
+                    String copyLabel = (i == 2) ? "Duplicate" : "Triplicate";
+                    String duplicatePath = basePath + "_" + copyLabel + "_" + i + ".pdf";
                     try {
-                        pdfGenerator.accept("Duplicate", duplicatePath);
+                        pdfGenerator.accept(copyLabel, duplicatePath);
                         filesToPrint.add(new File(duplicatePath));
                     } catch (Exception e) {
-                        log.error("Failed to generate duplicate copy " + i, e);
+                        log.error("Failed to generate " + copyLabel + " copy " + i, e);
                     }
                 }
             } else if (numberOfCopies > 1) {
@@ -212,8 +213,14 @@ public class PrintPreviewDialog {
                 // Show single native print dialog
                 if (printerJob.printDialog()) {
                     printerJob.print();
-                    AlertUtil.showInfo("Print", "Sent " + numberOfCopies + " copy(ies) to printer.\n" +
-                            "Copy 1: Original" + (numberOfCopies > 1 ? "\nCopies 2-" + numberOfCopies + ": Duplicate" : ""));
+                    String copyInfo = "Copy 1: Original";
+                    if (numberOfCopies >= 2) {
+                        copyInfo += "\nCopy 2: Duplicate";
+                    }
+                    if (numberOfCopies >= 3) {
+                        copyInfo += "\nCopies 3-" + numberOfCopies + ": Triplicate";
+                    }
+                    AlertUtil.showInfo("Print", "Sent " + numberOfCopies + " copy(ies) to printer.\n" + copyInfo);
                 }
             }
 

@@ -61,7 +61,7 @@ public class InvoicePDFGenerator {
             origDup.setAlignment(Element.ALIGN_RIGHT);
             PdfPCell origDupCell = new PdfPCell(origDup);
             origDupCell.setBorder(Rectangle.NO_BORDER);
-            origDupCell.setPadding(2);
+            origDupCell.setPadding(8);
             origDupCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
             titleTable.addCell(origDupCell);
 
@@ -214,7 +214,7 @@ public class InvoicePDFGenerator {
             origDup.setAlignment(Element.ALIGN_RIGHT);
             PdfPCell origDupCell = new PdfPCell(origDup);
             origDupCell.setBorder(Rectangle.NO_BORDER);
-            origDupCell.setPadding(2);
+            origDupCell.setPadding(8);
             origDupCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
             titleTable.addCell(origDupCell);
 
@@ -516,7 +516,7 @@ public class InvoicePDFGenerator {
     private static void addLineItemsTable(Document document, java.util.List<InvoiceLineItem> lineItems) throws DocumentException {
         PdfPTable table = new PdfPTable(12);
         table.setWidthPercentage(100);
-        table.setWidths(new float[]{0.4f, 0.8f, 0.7f, 1.0f, 1.0f, 0.7f, 0.7f, 0.7f, 0.9f, 0.9f, 0.9f, 0.9f});
+        table.setWidths(new float[]{0.4f, 0.8f, 0.7f, 1.0f, 1.0f, 1.2f, 1.2f, 0.7f, 0.7f, 0.7f, 0.7f, 0.9f});
         table.setSpacingBefore(8);
 
         // Header row (multi-line where needed so price columns stay narrow)
@@ -529,7 +529,7 @@ public class InvoicePDFGenerator {
         addTableHeader(table, "To");
         addTableHeader(table, "Type");
         addTableHeader(table, "Basic\nFreight");
-        addTableHeader(table, "Detention");
+        addTableHeader(table, "Detention\nCharge");
         addTableHeader(table, "Other\nCharge");
         addTableHeader(table, "Total");
 
@@ -641,7 +641,7 @@ public class InvoicePDFGenerator {
         othersLabelHeader.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(othersLabelHeader);
 
-        PdfPCell othersValueHeader = new PdfPCell(new Phrase(String.format("%.2f", totalOtherCharges), headerFont));
+        PdfPCell othersValueHeader = new PdfPCell(new Phrase(String.format("%.2f", totalOtherCharges), normalFont));
         othersValueHeader.setBorder(Rectangle.BOX);
         othersValueHeader.setPadding(3);
         othersValueHeader.setHorizontalAlignment(Element.ALIGN_RIGHT);
@@ -695,7 +695,7 @@ public class InvoicePDFGenerator {
         PdfPCell netValue = new PdfPCell(new Phrase(String.format("%.2f", netAmount), headerFont));
         netValue.setBorder(Rectangle.BOX);
         netValue.setPadding(3);
-        netValue.setHorizontalAlignment(Element.ALIGN_LEFT);
+        netValue.setHorizontalAlignment(Element.ALIGN_RIGHT);
         gstNetTable.addCell(netValue);
 
         document.add(gstNetTable);
