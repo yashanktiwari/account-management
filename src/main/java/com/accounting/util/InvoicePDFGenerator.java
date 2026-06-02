@@ -22,17 +22,31 @@ public class InvoicePDFGenerator {
 
     public static void generatePurchaseInvoicePDF(PurchaseInvoice invoice, String outputPath) {
         try {
-            Document document = new Document(PageSize.A4, 36, 36, 36, 36);
-            PdfWriter.getInstance(document, new FileOutputStream(outputPath));
+            float contentWidth = PageSize.A4.getWidth() - 72; // 523
+
+            // Load images for page events
+            Image headerImage = loadScaledImage("HEADER", contentWidth);
+            Image footerImage = loadScaledImage("FOOTER", contentWidth);
+
+            float headerHeight = headerImage != null ? headerImage.getScaledHeight() : 0;
+            float footerHeight = footerImage != null ? footerImage.getScaledHeight() : 0;
+
+            // Set margins to reserve space for header/footer images + line + padding
+            float topMargin = headerImage != null ? 36 + headerHeight + 15 : 36;
+            float bottomMargin = footerImage != null ? 20 + footerHeight + 10 : 36;
+
+            Document document = new Document(PageSize.A4, 36, 36, topMargin, bottomMargin);
+            PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(outputPath));
+
+            // Register page event for header/footer on every page
+            writer.setPageEvent(new HeaderFooterEvent(headerImage, footerImage, headerHeight, footerHeight));
+
             document.open();
 
-            // Add header
-            addHeader(document);
-
-            // Add horizontal line after header
-            LineSeparator headerLine = new LineSeparator(1, 100, new Color(0, 51, 102), Element.ALIGN_CENTER, -2);
-            document.add(new Chunk(headerLine));
-            document.add(new Paragraph("\n")); // Add spacing after line
+            // If no header image, add text-based header as content
+            if (headerImage == null) {
+                addTextBasedHeader(document);
+            }
 
             // Add Original/Duplicate and Tax Invoice title
             PdfPTable titleTable = new PdfPTable(1);
@@ -68,9 +82,10 @@ public class InvoicePDFGenerator {
             // Add terms and signature
             addTermsAndSignature(document);
 
-            // Add footer at the bottom
-            document.add(new Paragraph("\n\n")); // Reduced spacing to fit on one page
-            addFooter(document);
+            // If no footer image, add text-based footer as content
+            if (footerImage == null) {
+                addTextBasedFooter(document);
+            }
 
             document.close();
             log.info("Purchase Invoice PDF generated successfully: {}", outputPath);
@@ -82,17 +97,31 @@ public class InvoicePDFGenerator {
 
     public static void generateSaleInvoicePDF(SaleInvoice invoice, String outputPath) {
         try {
-            Document document = new Document(PageSize.A4, 36, 36, 36, 36);
-            PdfWriter.getInstance(document, new FileOutputStream(outputPath));
+            float contentWidth = PageSize.A4.getWidth() - 72; // 523
+
+            // Load images for page events
+            Image headerImage = loadScaledImage("HEADER", contentWidth);
+            Image footerImage = loadScaledImage("FOOTER", contentWidth);
+
+            float headerHeight = headerImage != null ? headerImage.getScaledHeight() : 0;
+            float footerHeight = footerImage != null ? footerImage.getScaledHeight() : 0;
+
+            // Set margins to reserve space for header/footer images + line + padding
+            float topMargin = headerImage != null ? 36 + headerHeight + 15 : 36;
+            float bottomMargin = footerImage != null ? 20 + footerHeight + 10 : 36;
+
+            Document document = new Document(PageSize.A4, 36, 36, topMargin, bottomMargin);
+            PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(outputPath));
+
+            // Register page event for header/footer on every page
+            writer.setPageEvent(new HeaderFooterEvent(headerImage, footerImage, headerHeight, footerHeight));
+
             document.open();
 
-            // Add header
-            addHeader(document);
-
-            // Add horizontal line after header
-            LineSeparator headerLine = new LineSeparator(1, 100, new Color(0, 51, 102), Element.ALIGN_CENTER, -2);
-            document.add(new Chunk(headerLine));
-            document.add(new Paragraph("\n")); // Add spacing after line
+            // If no header image, add text-based header as content
+            if (headerImage == null) {
+                addTextBasedHeader(document);
+            }
 
             // Add Original/Duplicate and Tax Invoice title
             PdfPTable titleTable = new PdfPTable(1);
@@ -128,9 +157,10 @@ public class InvoicePDFGenerator {
             // Add terms and signature
             addTermsAndSignature(document);
 
-            // Add footer at the bottom
-            document.add(new Paragraph("\n\n")); // Reduced spacing to fit on one page
-            addFooter(document);
+            // If no footer image, add text-based footer as content
+            if (footerImage == null) {
+                addTextBasedFooter(document);
+            }
 
             document.close();
             log.info("Sale Invoice PDF generated successfully: {}", outputPath);
@@ -160,6 +190,20 @@ public class InvoicePDFGenerator {
             log.error("Failed to load header image, using text-based header", e);
             addTextBasedHeader(document);
         }
+    }
+
+    private static Image loadScaledImage(String name, float contentWidth) {
+        try {
+            File imageFile = findImageFile(IMAGES_FOLDER, name);
+            if (imageFile.exists()) {
+                Image image = Image.getInstance(imageFile.getAbsolutePath());
+                image.scaleAbsolute(contentWidth, image.getHeight() * contentWidth / image.getWidth());
+                return image;
+            }
+        } catch (Exception e) {
+            log.error("Failed to load image: " + name, e);
+        }
+        return null;
     }
 
     private static File findImageFile(String folder, String name) {
@@ -250,13 +294,15 @@ public class InvoicePDFGenerator {
 
         document.add(gstTable);
 
-        // State and Contact
-        PdfPTable stateContactTable = new PdfPTable(2);
+        // State and Contact - use same 5-col widths as GSTIN row for alignment
+        PdfPTable stateContactTable = new PdfPTable(5);
         stateContactTable.setWidthPercentage(100);
-        stateContactTable.setWidths(new float[]{1f, 1f});
+        stateContactTable.setWidths(new float[]{2f, 0.7f, 1f, 0.8f, 0.5f});
 
         stateContactTable.addCell(createCell("State - MAHARASHTRA", false));
-        stateContactTable.addCell(createCell("Contact No - " + (invoice.getSupplierContactNumber() != null ? invoice.getSupplierContactNumber() : ""), false));
+        PdfPCell contactCell = createCell("Contact No - " + (invoice.getSupplierContactNumber() != null ? invoice.getSupplierContactNumber() : ""), false);
+        contactCell.setColspan(4);
+        stateContactTable.addCell(contactCell);
 
         document.add(stateContactTable);
     }
@@ -298,13 +344,15 @@ public class InvoicePDFGenerator {
 
         document.add(gstTable);
 
-        // State and Contact
-        PdfPTable stateContactTable = new PdfPTable(2);
+        // State and Contact - use same 5-col widths as GSTIN row for alignment
+        PdfPTable stateContactTable = new PdfPTable(5);
         stateContactTable.setWidthPercentage(100);
-        stateContactTable.setWidths(new float[]{1f, 1f});
+        stateContactTable.setWidths(new float[]{2f, 0.7f, 1f, 0.8f, 0.5f});
 
         stateContactTable.addCell(createCell("State - MAHARASHTRA", false));
-        stateContactTable.addCell(createCell("Contact No - " + (invoice.getRcvrContactNo() != null ? invoice.getRcvrContactNo() : ""), false));
+        PdfPCell contactCell = createCell("Contact No - " + (invoice.getRcvrContactNo() != null ? invoice.getRcvrContactNo() : ""), false);
+        contactCell.setColspan(4);
+        stateContactTable.addCell(contactCell);
 
         document.add(stateContactTable);
     }
@@ -445,12 +493,13 @@ public class InvoicePDFGenerator {
 
         document.add(table);
 
-        // GST Amount and Net Amount row
-        PdfPTable gstNetTable = new PdfPTable(3);
+        // GST Amount and Net Amount row - use same 5-col widths as bank table for alignment
+        PdfPTable gstNetTable = new PdfPTable(5);
         gstNetTable.setWidthPercentage(100);
-        gstNetTable.setWidths(new float[]{2f, 1.2f, 1f});
+        gstNetTable.setWidths(new float[]{2.2f, 1.2f, 0.6f, 1.8f, 0.6f});
 
         PdfPCell gstAmountCell = new PdfPCell(new Phrase("GST Amount - " + String.format("%.2f", totalGst), headerFont));
+        gstAmountCell.setColspan(3);
         gstAmountCell.setBorder(Rectangle.BOX);
         gstAmountCell.setPadding(3);
         gstNetTable.addCell(gstAmountCell);
@@ -715,5 +764,53 @@ public class InvoicePDFGenerator {
         valueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
         valueCell.setNoWrap(false); // Enable text wrapping
         table.addCell(valueCell);
+    }
+
+    // Page event handler to draw header and footer images on every page
+    private static class HeaderFooterEvent extends PdfPageEventHelper {
+        private final Image headerImage;
+        private final Image footerImage;
+        private final float headerHeight;
+        private final float footerHeight;
+
+        public HeaderFooterEvent(Image headerImage, Image footerImage, float headerHeight, float footerHeight) {
+            this.headerImage = headerImage;
+            this.footerImage = footerImage;
+            this.headerHeight = headerHeight;
+            this.footerHeight = footerHeight;
+        }
+
+        @Override
+        public void onEndPage(PdfWriter writer, Document document) {
+            float pageWidth = document.getPageSize().getWidth();
+            float pageHeight = document.getPageSize().getHeight();
+            float margin = 36;
+            float contentWidth = pageWidth - 2 * margin;
+            PdfContentByte cb = writer.getDirectContent();
+
+            try {
+                // Draw header image at top of every page
+                if (headerImage != null) {
+                    headerImage.setAbsolutePosition(margin, pageHeight - margin - headerHeight);
+                    cb.addImage(headerImage);
+
+                    // Draw horizontal line below header
+                    float lineY = pageHeight - margin - headerHeight - 5;
+                    cb.setColorStroke(new Color(0, 51, 102));
+                    cb.setLineWidth(1);
+                    cb.moveTo(margin, lineY);
+                    cb.lineTo(pageWidth - margin, lineY);
+                    cb.stroke();
+                }
+
+                // Draw footer image at bottom of every page
+                if (footerImage != null) {
+                    footerImage.setAbsolutePosition(margin, 15);
+                    cb.addImage(footerImage);
+                }
+            } catch (Exception e) {
+                log.error("Failed to draw header/footer on page", e);
+            }
+        }
     }
 }
