@@ -516,7 +516,7 @@ public class InvoicePDFGenerator {
     private static void addLineItemsTable(Document document, java.util.List<InvoiceLineItem> lineItems) throws DocumentException {
         PdfPTable table = new PdfPTable(12);
         table.setWidthPercentage(100);
-        table.setWidths(new float[]{0.4f, 0.85f, 0.75f, 1.15f, 1.15f, 1.35f, 1.35f, 0.75f, 0.55f, 0.55f, 0.55f, 0.6f});
+        table.setWidths(new float[]{0.4f, 0.85f, 0.75f, 1.05f, 1.15f, 1.35f, 1.35f, 0.75f, 0.55f, 0.65f, 0.55f, 0.6f});
         table.setSpacingBefore(6);
 
         // Header row (multi-line where needed so price columns stay narrow)
@@ -546,11 +546,12 @@ public class InvoicePDFGenerator {
             addTableCellCenter(table, item.getFrom() != null ? item.getFrom() : "");
             addTableCellCenter(table, item.getTo() != null ? item.getTo() : "");
             addTableCellCenter(table, item.getType() != null ? item.getType() : "");
+            double lineTotal = item.getBasicFreight() + item.getDetentionCharge() + item.getOtherCharges();
             addTableCellRight(table, String.format("%.2f", item.getBasicFreight()));
             addTableCellRight(table, String.format("%.2f", item.getDetentionCharge()));
             addTableCellRight(table, String.format("%.2f", item.getOtherCharges()));
-            addTableCellRight(table, String.format("%.2f", item.getTotal()));
-            totalAmount += item.getTotal();
+            addTableCellRight(table, String.format("%.2f", lineTotal));
+            totalAmount += lineTotal;
             totalOtherCharges += item.getOtherCharges();
         }
 
@@ -580,6 +581,7 @@ public class InvoicePDFGenerator {
         double igstAmount = 0;
         double totalGst = 0;
         double netAmount = 0;
+        String remarks = "";
 
         if (invoice instanceof PurchaseInvoice) {
             PurchaseInvoice pi = (PurchaseInvoice) invoice;
@@ -589,6 +591,7 @@ public class InvoicePDFGenerator {
             igstAmount = pi.getIgstAmount();
             totalGst = pi.getTotalGst();
             netAmount = pi.getNetAmount();
+            remarks = pi.getRemarks();
         } else if (invoice instanceof SaleInvoice) {
             SaleInvoice si = (SaleInvoice) invoice;
             taxableAmount = si.getTaxableAmount();
@@ -597,22 +600,14 @@ public class InvoicePDFGenerator {
             igstAmount = si.getIgstAmount();
             totalGst = si.getTotalGst();
             netAmount = si.getNetAmount();
+            remarks = si.getRemarks();
         }
+
+        double advanceAmount = parseAdvanceAmount(remarks);
+        double payableAmount = Math.max(0, netAmount - advanceAmount);
 
         Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
         Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
-
-        // Calculate total other charges from line items
-        double totalOtherCharges = 0;
-        if (invoice instanceof PurchaseInvoice) {
-            for (InvoiceLineItem item : ((PurchaseInvoice) invoice).getLineItems()) {
-                totalOtherCharges += item.getOtherCharges();
-            }
-        } else if (invoice instanceof SaleInvoice) {
-            for (InvoiceLineItem item : ((SaleInvoice) invoice).getLineItems()) {
-                totalOtherCharges += item.getOtherCharges();
-            }
-        }
 
         // 5-column row-based table: Bank | GST Label | GST Value | Others Label | Others Value
         PdfPTable table = new PdfPTable(5);
@@ -636,19 +631,13 @@ public class InvoicePDFGenerator {
         gstHeader.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(gstHeader);
 
-        PdfPCell othersLabelHeader = new PdfPCell(new Phrase("Other Charges", headerFont));
-        othersLabelHeader.setBorder(Rectangle.BOX);
-        othersLabelHeader.setPadding(3);
-        othersLabelHeader.setHorizontalAlignment(Element.ALIGN_LEFT);
-        othersLabelHeader.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        table.addCell(othersLabelHeader);
-
-        PdfPCell othersValueHeader = new PdfPCell(new Phrase(String.format("%.2f", totalOtherCharges), normalFont));
-        othersValueHeader.setBorder(Rectangle.BOX);
-        othersValueHeader.setPadding(3);
-        othersValueHeader.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        othersValueHeader.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        table.addCell(othersValueHeader);
+        PdfPCell othersHeader = new PdfPCell(new Phrase("Other Charges", headerFont));
+        othersHeader.setColspan(2);
+        othersHeader.setBorder(Rectangle.BOX);
+        othersHeader.setPadding(3);
+        othersHeader.setHorizontalAlignment(Element.ALIGN_CENTER);
+        othersHeader.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        table.addCell(othersHeader);
 
         // Row 1
         addBankGSTRow(table, "A/C NAME - SIHAG ENTERPRISE", false,
@@ -673,7 +662,7 @@ public class InvoicePDFGenerator {
         // Row 5
         addBankGSTRow(table, "IFSC Code - UTIB0000460", false,
                 "Total GST", String.format("%.2f", totalGst),
-                "Advance Amount", "0.00");
+            "Advance Amount", String.format("%.2f", advanceAmount));
 
         document.add(table);
 
@@ -688,13 +677,13 @@ public class InvoicePDFGenerator {
         gstAmountCell.setPadding(3);
         gstNetTable.addCell(gstAmountCell);
 
-        PdfPCell netLabel = new PdfPCell(new Phrase("Net Amount", headerFont));
+        PdfPCell netLabel = new PdfPCell(new Phrase("Net Amount (-Advance)", headerFont));
         netLabel.setBorder(Rectangle.BOX);
         netLabel.setPadding(3);
         netLabel.setHorizontalAlignment(Element.ALIGN_LEFT);
         gstNetTable.addCell(netLabel);
 
-        PdfPCell netValue = new PdfPCell(new Phrase(String.format("%.2f", netAmount), headerFont));
+        PdfPCell netValue = new PdfPCell(new Phrase(String.format("%.2f", payableAmount), headerFont));
         netValue.setBorder(Rectangle.BOX);
         netValue.setPadding(3);
         netValue.setHorizontalAlignment(Element.ALIGN_RIGHT);
@@ -710,18 +699,12 @@ public class InvoicePDFGenerator {
         rupeesCell.setPadding(3);
         Paragraph rupeesPara = new Paragraph();
         rupeesPara.add(new Chunk("Rupees - ", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
-        rupeesPara.add(new Chunk(convertNumberToWords(netAmount) + " Only.", FontFactory.getFont(FontFactory.HELVETICA, 10)));
+        rupeesPara.add(new Chunk(convertNumberToWords(payableAmount) + " Only.", FontFactory.getFont(FontFactory.HELVETICA, 10)));
         rupeesCell.addElement(rupeesPara);
         rupeesTable.addCell(rupeesCell);
         document.add(rupeesTable);
 
         // Remarks - always show with border
-        String remarks = "";
-        if (invoice instanceof PurchaseInvoice) {
-            remarks = ((PurchaseInvoice) invoice).getRemarks();
-        } else if (invoice instanceof SaleInvoice) {
-            remarks = ((SaleInvoice) invoice).getRemarks();
-        }
         PdfPTable remarksTable = new PdfPTable(1);
         remarksTable.setWidthPercentage(100);
         PdfPCell remarksCell = new PdfPCell(new Phrase("Remarks - " + (remarks != null ? remarks : ""), normalFont));
@@ -990,6 +973,23 @@ public class InvoicePDFGenerator {
             }
         } catch (Exception ignored) {}
         return date;
+    }
+
+    private static double parseAdvanceAmount(String remarks) {
+        if (remarks == null || remarks.isBlank()) {
+            return 0;
+        }
+        java.util.regex.Matcher matcher = java.util.regex.Pattern
+                .compile("(?i)advance\\s*[:=-]?\\s*(\\d+(?:\\.\\d+)?)")
+                .matcher(remarks);
+        if (matcher.find()) {
+            try {
+                return Double.parseDouble(matcher.group(1));
+            } catch (NumberFormatException ignored) {
+                return 0;
+            }
+        }
+        return 0;
     }
 
     private static void addGSTRow(PdfPTable table, String label, String value) {
