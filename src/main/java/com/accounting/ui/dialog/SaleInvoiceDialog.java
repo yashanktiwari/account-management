@@ -626,8 +626,8 @@ public class SaleInvoiceDialog {
 
         // Set up the Add Row button action
         addRowBtn.setOnAction(e -> {
-            if (lineItems.size() >= 8) {
-                AlertUtil.showWarning("Validation", "Maximum 8 line items are allowed per invoice");
+            if (lineItems.size() >= 7) {
+                AlertUtil.showWarning("Validation", "Maximum 7 line items are allowed per invoice");
                 return;
             }
 
@@ -889,8 +889,8 @@ public class SaleInvoiceDialog {
             return;
         }
 
-        if (lineItems.size() > 8) {
-            AlertUtil.showWarning("Validation", "Maximum 8 line items are allowed per invoice");
+        if (lineItems.size() > 7) {
+            AlertUtil.showWarning("Validation", "Maximum 7 line items are allowed per invoice");
             return;
         }
 

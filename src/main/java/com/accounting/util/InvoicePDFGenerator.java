@@ -855,8 +855,9 @@ public class InvoicePDFGenerator {
         }
 
         Paragraph signPara = new Paragraph();
-        signPara.add(new Chunk("For SIHAG ENTERPRISE\n", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
+        signPara.add(new Chunk("For SIHAG ENTERPRISE", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
         signPara.setAlignment(Element.ALIGN_CENTER);
+        signPara.setSpacingAfter(5f);
         signatureCell.addElement(signPara);
 
         if (middleSignImage != null) {
