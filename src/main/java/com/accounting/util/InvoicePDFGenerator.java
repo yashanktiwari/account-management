@@ -517,7 +517,7 @@ public class InvoicePDFGenerator {
         PdfPTable table = new PdfPTable(12);
         table.setWidthPercentage(100);
         table.setWidths(new float[]{0.4f, 0.85f, 0.75f, 1.15f, 1.15f, 1.35f, 1.35f, 0.75f, 0.55f, 0.55f, 0.55f, 0.6f});
-        table.setSpacingBefore(8);
+        table.setSpacingBefore(6);
 
         // Header row (multi-line where needed so price columns stay narrow)
         addTableHeader(table, "Sr.");
@@ -618,7 +618,7 @@ public class InvoicePDFGenerator {
         PdfPTable table = new PdfPTable(5);
         table.setWidthPercentage(100);
         table.setWidths(new float[]{2.2f, 1.2f, 0.6f, 1.8f, 0.6f});
-        table.setSpacingBefore(8);
+        table.setSpacingBefore(6);
 
         // Header row
         PdfPCell bankHeader = new PdfPCell(new Phrase("BANK DETAIL", headerFont));
@@ -813,7 +813,7 @@ public class InvoicePDFGenerator {
     private static void addRemarks(Document document, String remarks) throws DocumentException {
         PdfPTable table = new PdfPTable(1);
         table.setWidthPercentage(100);
-        table.setSpacingBefore(10);
+        table.setSpacingBefore(6);
 
         PdfPCell remarksCell = createCell("Remarks - " + remarks, false);
         table.addCell(remarksCell);
@@ -864,7 +864,7 @@ public class InvoicePDFGenerator {
             signatureCell.addElement(signPara);
         }
         
-        signatureCell.setMinimumHeight(80);
+        signatureCell.setMinimumHeight(72);
         table.addCell(signatureCell);
 
         document.add(table);
@@ -873,7 +873,7 @@ public class InvoicePDFGenerator {
         Paragraph note = new Paragraph("This is a Computer Generated Invoice\nAll Subject To MUNDRA Jurisdiction Only", 
             FontFactory.getFont(FontFactory.HELVETICA, 8));
         note.setAlignment(Element.ALIGN_CENTER);
-        note.setSpacingBefore(5);
+        note.setSpacingBefore(2);
         document.add(note);
     }
 
