@@ -95,9 +95,9 @@ public class InvoicePDFGenerator {
             // Height available for line items on subsequent pages (no invoice details)
             float subsequentPageLineItemHeight = availableHeight - staticFooterHeight - 20;
             
-            // Keep pagination estimate aligned with table cell minimum heights below
-            float lineItemRowHeight = 16;
-            float lineItemHeaderHeight = 16;
+            // Conservative estimate keeps footer/terms from overflowing page
+            float lineItemRowHeight = 17;
+            float lineItemHeaderHeight = 17;
             
             int maxItemsFirstPage = (int) ((firstPageLineItemHeight - lineItemHeaderHeight) / lineItemRowHeight);
             int maxItemsSubsequentPage = (int) ((subsequentPageLineItemHeight - lineItemHeaderHeight) / lineItemRowHeight);
@@ -248,9 +248,9 @@ public class InvoicePDFGenerator {
             // Height available for line items on subsequent pages (no invoice details)
             float subsequentPageLineItemHeight = availableHeight - staticFooterHeight - 20;
             
-            // Keep pagination estimate aligned with table cell minimum heights below
-            float lineItemRowHeight = 16;
-            float lineItemHeaderHeight = 16;
+            // Conservative estimate keeps footer/terms from overflowing page
+            float lineItemRowHeight = 17;
+            float lineItemHeaderHeight = 17;
             
             int maxItemsFirstPage = (int) ((firstPageLineItemHeight - lineItemHeaderHeight) / lineItemRowHeight);
             int maxItemsSubsequentPage = (int) ((subsequentPageLineItemHeight - lineItemHeaderHeight) / lineItemRowHeight);
@@ -555,17 +555,17 @@ public class InvoicePDFGenerator {
         }
 
         // Total row at bottom right
-        PdfPCell emptyCell = new PdfPCell(new Phrase("", FontFactory.getFont(FontFactory.HELVETICA, 7.2f)));
+        PdfPCell emptyCell = new PdfPCell(new Phrase("", FontFactory.getFont(FontFactory.HELVETICA, 7f)));
         emptyCell.setColspan(11);
         emptyCell.setBorder(Rectangle.BOX);
-        emptyCell.setPadding(2.5f);
-        emptyCell.setMinimumHeight(16f);
+        emptyCell.setPadding(2f);
+        emptyCell.setMinimumHeight(15f);
         table.addCell(emptyCell);
 
-        PdfPCell totalValueCell = new PdfPCell(new Phrase(String.format("%.2f", totalAmount), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7.2f)));
+        PdfPCell totalValueCell = new PdfPCell(new Phrase(String.format("%.2f", totalAmount), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7f)));
         totalValueCell.setBorder(Rectangle.BOX);
-        totalValueCell.setPadding(2.5f);
-        totalValueCell.setMinimumHeight(16f);
+        totalValueCell.setPadding(2f);
+        totalValueCell.setMinimumHeight(15f);
         totalValueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
         totalValueCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(totalValueCell);
@@ -943,21 +943,21 @@ public class InvoicePDFGenerator {
     }
 
     private static void addTableHeader(PdfPTable table, String text) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7.2f)));
+        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7f)));
         cell.setBackgroundColor(new Color(220, 220, 220));
         cell.setBorder(Rectangle.BOX);
-        cell.setPadding(2.5f);
-        cell.setMinimumHeight(16f);
+        cell.setPadding(2f);
+        cell.setMinimumHeight(15f);
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(cell);
     }
 
     private static void addTableCellCenter(PdfPTable table, String text) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA, 7.2f)));
+        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA, 7f)));
         cell.setBorder(Rectangle.BOX);
-        cell.setPadding(2.5f);
-        cell.setMinimumHeight(16f);
+        cell.setPadding(2f);
+        cell.setMinimumHeight(15f);
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         cell.setNoWrap(false);
@@ -965,10 +965,10 @@ public class InvoicePDFGenerator {
     }
 
     private static void addTableCellRight(PdfPTable table, String text) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA, 7.2f)));
+        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA, 7f)));
         cell.setBorder(Rectangle.BOX);
-        cell.setPadding(2.5f);
-        cell.setMinimumHeight(16f);
+        cell.setPadding(2f);
+        cell.setMinimumHeight(15f);
         cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         cell.setNoWrap(false);
