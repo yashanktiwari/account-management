@@ -36,8 +36,8 @@ public class InvoicePDFGenerator {
             float headerHeight = headerImage != null ? headerImage.getScaledHeight() : 0;
             float footerHeight = footerImage != null ? footerImage.getScaledHeight() : 0;
 
-            // Set margins to reserve space for header/footer images + line + padding
-            float topMargin = headerImage != null ? margin + headerHeight + 8 : margin;
+            // Tighter top spacing to free room for one more data row
+            float topMargin = headerImage != null ? margin + headerHeight + 4 : margin;
             float bottomMargin = footerImage != null ? 5 + footerHeight + 5 : margin;
 
             Document document = new Document(PageSize.A4, margin, margin, topMargin, bottomMargin);
@@ -61,7 +61,7 @@ public class InvoicePDFGenerator {
             origDup.setAlignment(Element.ALIGN_RIGHT);
             PdfPCell origDupCell = new PdfPCell(origDup);
             origDupCell.setBorder(Rectangle.NO_BORDER);
-            origDupCell.setPadding(8);
+            origDupCell.setPadding(4);
             origDupCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
             titleTable.addCell(origDupCell);
 
@@ -102,9 +102,9 @@ public class InvoicePDFGenerator {
             int maxItemsFirstPage = (int) ((firstPageLineItemHeight - lineItemHeaderHeight) / lineItemRowHeight);
             int maxItemsSubsequentPage = (int) ((subsequentPageLineItemHeight - lineItemHeaderHeight) / lineItemRowHeight);
             
-            // Ensure at least 1 item per page
-            maxItemsFirstPage = Math.max(1, maxItemsFirstPage);
-            maxItemsSubsequentPage = Math.max(1, maxItemsSubsequentPage);
+            // Keep at least 8 rows per page as requested
+            maxItemsFirstPage = Math.max(8, maxItemsFirstPage);
+            maxItemsSubsequentPage = Math.max(8, maxItemsSubsequentPage);
             
             java.util.List<InvoiceLineItem> allItems = invoice.getLineItems();
             
@@ -189,8 +189,8 @@ public class InvoicePDFGenerator {
             float headerHeight = headerImage != null ? headerImage.getScaledHeight() : 0;
             float footerHeight = footerImage != null ? footerImage.getScaledHeight() : 0;
 
-            // Set margins to reserve space for header/footer images + line + padding
-            float topMargin = headerImage != null ? margin + headerHeight + 8 : margin;
+            // Tighter top spacing to free room for one more data row
+            float topMargin = headerImage != null ? margin + headerHeight + 4 : margin;
             float bottomMargin = footerImage != null ? 5 + footerHeight + 5 : margin;
 
             Document document = new Document(PageSize.A4, margin, margin, topMargin, bottomMargin);
@@ -214,7 +214,7 @@ public class InvoicePDFGenerator {
             origDup.setAlignment(Element.ALIGN_RIGHT);
             PdfPCell origDupCell = new PdfPCell(origDup);
             origDupCell.setBorder(Rectangle.NO_BORDER);
-            origDupCell.setPadding(8);
+            origDupCell.setPadding(4);
             origDupCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
             titleTable.addCell(origDupCell);
 
@@ -255,9 +255,9 @@ public class InvoicePDFGenerator {
             int maxItemsFirstPage = (int) ((firstPageLineItemHeight - lineItemHeaderHeight) / lineItemRowHeight);
             int maxItemsSubsequentPage = (int) ((subsequentPageLineItemHeight - lineItemHeaderHeight) / lineItemRowHeight);
             
-            // Ensure at least 1 item per page
-            maxItemsFirstPage = Math.max(1, maxItemsFirstPage);
-            maxItemsSubsequentPage = Math.max(1, maxItemsSubsequentPage);
+            // Keep at least 8 rows per page as requested
+            maxItemsFirstPage = Math.max(8, maxItemsFirstPage);
+            maxItemsSubsequentPage = Math.max(8, maxItemsSubsequentPage);
             
             java.util.List<InvoiceLineItem> allItems = invoice.getLineItems();
             
@@ -1032,11 +1032,11 @@ public class InvoicePDFGenerator {
             try {
                 // Draw header image at top of every page
                 if (headerImage != null) {
-                    headerImage.setAbsolutePosition(margin, pageHeight - margin - headerHeight + 5);
+                    headerImage.setAbsolutePosition(margin, pageHeight - margin - headerHeight + 8);
                     cb.addImage(headerImage);
 
                     // Draw horizontal line below header
-                    float lineY = pageHeight - margin - headerHeight + 2;
+                    float lineY = pageHeight - margin - headerHeight + 5;
                     cb.setColorStroke(new Color(0, 51, 102));
                     cb.setLineWidth(1);
                     cb.moveTo(margin, lineY);
