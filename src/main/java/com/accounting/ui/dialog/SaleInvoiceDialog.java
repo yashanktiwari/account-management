@@ -626,6 +626,11 @@ public class SaleInvoiceDialog {
 
         // Set up the Add Row button action
         addRowBtn.setOnAction(e -> {
+            if (lineItems.size() >= 8) {
+                AlertUtil.showWarning("Validation", "Maximum 8 line items are allowed per invoice");
+                return;
+            }
+
             InvoiceLineItem item = new InvoiceLineItem();
             item.setDate(java.time.LocalDate.now().toString());
             item.setLrNo(lrNoField.getText().trim());
@@ -881,6 +886,11 @@ public class SaleInvoiceDialog {
 
         if (lineItems.isEmpty()) {
             AlertUtil.showWarning("Validation", "Please add at least one line item");
+            return;
+        }
+
+        if (lineItems.size() > 8) {
+            AlertUtil.showWarning("Validation", "Maximum 8 line items are allowed per invoice");
             return;
         }
 

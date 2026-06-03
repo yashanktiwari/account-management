@@ -813,6 +813,7 @@ public class InvoicePDFGenerator {
         // Terms and Condition
         PdfPCell termsCell = new PdfPCell();
         termsCell.setBorder(Rectangle.BOX);
+        termsCell.setPadding(1.5f);
         Paragraph termsPara = new Paragraph();
         termsPara.add(new Chunk("Terms and Condition\n", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
         termsPara.add(new Chunk("1. Subject to Mundra jurisdiction\n", FontFactory.getFont(FontFactory.HELVETICA, 8)));
@@ -826,25 +827,27 @@ public class InvoicePDFGenerator {
         PdfPCell signatureCell = new PdfPCell();
         signatureCell.setBorder(Rectangle.BOX);
         
-        // Try to load signature image
-        Image signatureImage = loadScaledImage("SIGNATURE", 150); // Max width 150 for signature
-        
+        // Optional image between company line and Authorised Signatory
+        Image middleSignImage = loadScaledImage("AUTH_SIGN", 150);
+        if (middleSignImage == null) {
+            middleSignImage = loadScaledImage("SIGNATURE", 150);
+        }
+
         Paragraph signPara = new Paragraph();
         signPara.add(new Chunk("For SIHAG ENTERPRISE\n", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
-        
-        if (signatureImage != null) {
-            signPara.add(new Chunk("\n"));
-            signatureCell.addElement(signPara);
-            signatureImage.setAlignment(Element.ALIGN_CENTER);
-            signatureCell.addElement(signatureImage);
+        signPara.setAlignment(Element.ALIGN_CENTER);
+        signatureCell.addElement(signPara);
+
+        if (middleSignImage != null) {
+            middleSignImage.setAlignment(Element.ALIGN_CENTER);
+            signatureCell.addElement(middleSignImage);
             Paragraph authPara = new Paragraph("\nAuthorised Signatory", FontFactory.getFont(FontFactory.HELVETICA, 9));
             authPara.setAlignment(Element.ALIGN_CENTER);
             signatureCell.addElement(authPara);
         } else {
-            signPara.add(new Chunk("\n\n\n", FontFactory.getFont(FontFactory.HELVETICA, 10)));
-            signPara.add(new Chunk("Authorised Signatory", FontFactory.getFont(FontFactory.HELVETICA, 9)));
-            signPara.setAlignment(Element.ALIGN_CENTER);
-            signatureCell.addElement(signPara);
+            Paragraph authPara = new Paragraph("\n\n\nAuthorised Signatory", FontFactory.getFont(FontFactory.HELVETICA, 9));
+            authPara.setAlignment(Element.ALIGN_CENTER);
+            signatureCell.addElement(authPara);
         }
         
         signatureCell.setMinimumHeight(72);
