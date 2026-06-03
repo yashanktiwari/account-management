@@ -374,6 +374,24 @@ public class InvoicePDFGenerator {
         return new File(folder + "/" + name + ".png"); // Return default path even if doesn't exist
     }
 
+    /** Load an image and scale it to fit within maxWidth x maxHeight, preserving aspect ratio. */
+    private static Image loadImageFitToBox(String name, float maxWidth, float maxHeight) {
+        try {
+            File imageFile = findImageFile(IMAGES_FOLDER, name);
+            if (imageFile.exists()) {
+                Image image = Image.getInstance(imageFile.getAbsolutePath());
+                float w = image.getWidth();
+                float h = image.getHeight();
+                float scale = Math.min(maxWidth / w, maxHeight / h);
+                image.scaleAbsolute(w * scale, h * scale);
+                return image;
+            }
+        } catch (Exception e) {
+            log.error("Failed to load image: " + name, e);
+        }
+        return null;
+    }
+
     private static void addTextBasedHeader(Document document) throws DocumentException {
         PdfPTable headerTable = new PdfPTable(3);
         headerTable.setWidthPercentage(100);
@@ -813,7 +831,7 @@ public class InvoicePDFGenerator {
         // Terms and Condition
         PdfPCell termsCell = new PdfPCell();
         termsCell.setBorder(Rectangle.BOX);
-        termsCell.setPadding(1.5f);
+        termsCell.setPadding(0.5f);
         Paragraph termsPara = new Paragraph();
         termsPara.add(new Chunk("Terms and Condition\n", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
         termsPara.add(new Chunk("1. Subject to Mundra jurisdiction\n", FontFactory.getFont(FontFactory.HELVETICA, 8)));
@@ -828,9 +846,12 @@ public class InvoicePDFGenerator {
         signatureCell.setBorder(Rectangle.BOX);
         
         // Optional image between company line and Authorised Signatory
-        Image middleSignImage = loadScaledImage("AUTH_SIGN", 150);
+        // Signature column is ~2/5 of content width (~559 pt * 2/5 = ~223 pt), minus cell padding
+        float sigCellWidth = (PageSize.A4.getWidth() - 36f) * 2f / 5f - 8f;
+        float sigCellHeight = 72f - 20f; // leave ~10pt for text above + below
+        Image middleSignImage = loadImageFitToBox("AUTH_SIGN", sigCellWidth, sigCellHeight);
         if (middleSignImage == null) {
-            middleSignImage = loadScaledImage("SIGNATURE", 150);
+            middleSignImage = loadImageFitToBox("SIGNATURE", sigCellWidth, sigCellHeight);
         }
 
         Paragraph signPara = new Paragraph();
@@ -839,9 +860,9 @@ public class InvoicePDFGenerator {
         signatureCell.addElement(signPara);
 
         if (middleSignImage != null) {
-            middleSignImage.setAlignment(Element.ALIGN_CENTER);
+            middleSignImage.setAlignment(Image.MIDDLE);
             signatureCell.addElement(middleSignImage);
-            Paragraph authPara = new Paragraph("\nAuthorised Signatory", FontFactory.getFont(FontFactory.HELVETICA, 9));
+            Paragraph authPara = new Paragraph("Authorised Signatory", FontFactory.getFont(FontFactory.HELVETICA, 9));
             authPara.setAlignment(Element.ALIGN_CENTER);
             signatureCell.addElement(authPara);
         } else {
