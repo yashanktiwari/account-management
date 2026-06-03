@@ -516,7 +516,7 @@ public class InvoicePDFGenerator {
     private static void addLineItemsTable(Document document, java.util.List<InvoiceLineItem> lineItems) throws DocumentException {
         PdfPTable table = new PdfPTable(12);
         table.setWidthPercentage(100);
-        table.setWidths(new float[]{0.4f, 0.85f, 0.75f, 1.05f, 1.15f, 1.35f, 1.35f, 0.75f, 0.55f, 0.65f, 0.55f, 0.6f});
+        table.setWidths(new float[]{0.4f, 0.82f, 0.72f, 1.0f, 1.1f, 1.28f, 1.28f, 0.7f, 0.68f, 0.78f, 0.68f, 0.76f});
         table.setSpacingBefore(6);
 
         // Header row (multi-line where needed so price columns stay narrow)
@@ -677,7 +677,7 @@ public class InvoicePDFGenerator {
         gstAmountCell.setPadding(3);
         gstNetTable.addCell(gstAmountCell);
 
-        PdfPCell netLabel = new PdfPCell(new Phrase("Net Amount (-Advance)", headerFont));
+        PdfPCell netLabel = new PdfPCell(new Phrase("Net Amount", headerFont));
         netLabel.setBorder(Rectangle.BOX);
         netLabel.setPadding(3);
         netLabel.setHorizontalAlignment(Element.ALIGN_LEFT);
