@@ -32,6 +32,8 @@ public class SaleInvoice {
     private String bankName;
     private String bankAccount;
     private String ifscCode;
+    private double loadingUnloadingCharges;
+    private double weighBridgeCharges;
     private String status; // DRAFT, SAVED, PRINTED
     private LocalDate createdAt;
     private LocalDate updatedAt;
@@ -116,6 +118,12 @@ public class SaleInvoice {
 
     public String getIfscCode() { return ifscCode; }
     public void setIfscCode(String ifscCode) { this.ifscCode = ifscCode; }
+
+    public double getLoadingUnloadingCharges() { return loadingUnloadingCharges; }
+    public void setLoadingUnloadingCharges(double loadingUnloadingCharges) { this.loadingUnloadingCharges = loadingUnloadingCharges; }
+
+    public double getWeighBridgeCharges() { return weighBridgeCharges; }
+    public void setWeighBridgeCharges(double weighBridgeCharges) { this.weighBridgeCharges = weighBridgeCharges; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

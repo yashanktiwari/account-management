@@ -70,6 +70,8 @@ public class SaleInvoiceDialog {
     private TextField bankNameField;
     private TextField bankAccountField;
     private TextField ifscCodeField;
+    private TextField loadingUnloadingChargesField;
+    private TextField weighBridgeChargesField;
     private Runnable onClose;
 
     public SaleInvoiceDialog() {
@@ -90,7 +92,7 @@ public class SaleInvoiceDialog {
             stage.setOnHidden(e -> onClose.run());
         }
 
-        Scene scene = new Scene(createContent(), 1200, 850);
+        Scene scene = new Scene(createContent(), 1320, 860);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );
@@ -194,6 +196,8 @@ public class SaleInvoiceDialog {
         bankNameField.setText(invoice.getBankName());
         bankAccountField.setText(invoice.getBankAccount());
         ifscCodeField.setText(invoice.getIfscCode());
+        loadingUnloadingChargesField.setText(String.format("%.2f", invoice.getLoadingUnloadingCharges()));
+        weighBridgeChargesField.setText(String.format("%.2f", invoice.getWeighBridgeCharges()));
 
         // Receiver details
         rcvrAddressField.setText(invoice.getRcvrAddress());
@@ -394,6 +398,26 @@ public class SaleInvoiceDialog {
         grid.add(label("IFSC Code"), 0, 2);
         grid.add(ifscCodeField, 1, 2);
 
+        // Loading & Unloading Charges
+        loadingUnloadingChargesField = new TextField("0");
+        loadingUnloadingChargesField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
+                loadingUnloadingChargesField.setText(oldVal);
+            }
+        });
+        grid.add(label("Loading/Unloading"), 2, 3);
+        grid.add(loadingUnloadingChargesField, 3, 3);
+
+        // Weigh Bridge Charges
+        weighBridgeChargesField = new TextField("0");
+        weighBridgeChargesField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
+                weighBridgeChargesField.setText(oldVal);
+            }
+        });
+        grid.add(label("Weigh Bridge"), 0, 3);
+        grid.add(weighBridgeChargesField, 1, 3);
+
         // Remarks
         remarksField = new TextField();
         setupUppercaseListener(remarksField);
@@ -440,6 +464,10 @@ public class SaleInvoiceDialog {
         setupUppercaseListener(lrNoField);
         VBox lrNoBox = new VBox(4, new Label("LR No"), lrNoField);
         HBox.setHgrow(lrNoBox, Priority.ALWAYS);
+
+        DatePicker rowDatePicker = new DatePicker();
+        VBox dateBox = new VBox(4, new Label("Date"), rowDatePicker);
+        HBox.setHgrow(dateBox, Priority.ALWAYS);
 
         TextField containerNoField = new TextField();
         setupUppercaseListener(containerNoField);
@@ -500,7 +528,7 @@ public class SaleInvoiceDialog {
         addRowBtn.setWrapText(false);
         VBox.setVgrow(addRowBtn, Priority.ALWAYS);
 
-        HBox inputRow = new HBox(8, lrNoBox, containerBox, vehicleBox, fromBox, toBox, typeBox, freightBox, detentionBox, otherChargesBox, addRowBtn);
+        HBox inputRow = new HBox(8, dateBox, lrNoBox, containerBox, vehicleBox, fromBox, toBox, typeBox, freightBox, detentionBox, otherChargesBox, addRowBtn);
         inputRow.setPadding(new Insets(12));
         inputRow.setAlignment(Pos.BOTTOM_CENTER);
         inputRow.setStyle("-fx-background-color: #f5f5f5; -fx-border-color: #e2e8f0; -fx-border-radius: 4;");
@@ -631,8 +659,13 @@ public class SaleInvoiceDialog {
                 return;
             }
 
+            if (rowDatePicker.getValue() == null) {
+                AlertUtil.showWarning("Validation", "Please select line item date");
+                return;
+            }
+
             InvoiceLineItem item = new InvoiceLineItem();
-            item.setDate(java.time.LocalDate.now().toString());
+            item.setDate(rowDatePicker.getValue().toString());
             item.setLrNo(lrNoField.getText().trim());
             item.setContainerNo(containerNoField.getText().trim());
             item.setVehicleNo(vehicleNoField.getText().trim());
@@ -682,6 +715,7 @@ public class SaleInvoiceDialog {
             freightField.clear();
             detentionField.clear();
             otherChargesField.clear();
+            rowDatePicker.setValue(null);
         });
 
         VBox section = new VBox(8, sectionTitle, inputRow, lineItemTable);
@@ -889,12 +923,18 @@ public class SaleInvoiceDialog {
             return;
         }
 
+        if (invoiceDatePicker.getValue() == null) {
+            AlertUtil.showWarning("Validation", "Please select invoice date");
+            return;
+        }
+
         if (lineItems.size() > 7) {
             AlertUtil.showWarning("Validation", "Maximum 7 line items are allowed per invoice");
             return;
         }
 
         invoice.setInvoiceDate(invoiceDatePicker.getValue());
+        invoice.setDeliveryDate(invoiceDatePicker.getValue());
         invoice.setInvoiceNo(invoiceNoField.getText());
         invoice.setPartyId(selectedParty.getId());
         invoice.setPartyName(selectedParty.getName());
@@ -910,6 +950,16 @@ public class SaleInvoiceDialog {
         invoice.setBankName(bankNameField.getText());
         invoice.setBankAccount(bankAccountField.getText());
         invoice.setIfscCode(ifscCodeField.getText());
+        try {
+            invoice.setLoadingUnloadingCharges(loadingUnloadingChargesField.getText().trim().isEmpty() ? 0 : Double.parseDouble(loadingUnloadingChargesField.getText().trim()));
+        } catch (NumberFormatException ex) {
+            invoice.setLoadingUnloadingCharges(0);
+        }
+        try {
+            invoice.setWeighBridgeCharges(weighBridgeChargesField.getText().trim().isEmpty() ? 0 : Double.parseDouble(weighBridgeChargesField.getText().trim()));
+        } catch (NumberFormatException ex) {
+            invoice.setWeighBridgeCharges(0);
+        }
         invoice.setLineItems(new java.util.ArrayList<>(lineItems));
         invoice.setStatus("SAVED");
 

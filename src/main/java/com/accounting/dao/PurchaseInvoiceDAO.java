@@ -21,8 +21,8 @@ public class PurchaseInvoiceDAO {
                 INSERT INTO purchase_invoices (invoice_no, invoice_date, party_id, party_name, voucher_type,
                 gst, taxable_amount, sgst_amount, cgst_amount, igst_amount, total_gst, net_amount, remarks,
                 bank_name, bank_account, ifsc_code, credit_debit, account_name, paid_by, payment_mode, supplier_address,
-                supplier_contact_number, supplier_gst_no, status, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                supplier_contact_number, supplier_gst_no, loading_unloading_charges, weigh_bridge_charges, status, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -49,7 +49,9 @@ public class PurchaseInvoiceDAO {
             pstmt.setString(21, invoice.getSupplierAddress());
             pstmt.setString(22, invoice.getSupplierContactNumber());
             pstmt.setString(23, invoice.getSupplierGstNo());
-            pstmt.setString(24, invoice.getStatus());
+            pstmt.setDouble(24, invoice.getLoadingUnloadingCharges());
+            pstmt.setDouble(25, invoice.getWeighBridgeCharges());
+            pstmt.setString(26, invoice.getStatus());
 
             pstmt.executeUpdate();
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
@@ -70,7 +72,7 @@ public class PurchaseInvoiceDAO {
                 voucher_type=?, gst=?, taxable_amount=?, sgst_amount=?, cgst_amount=?, igst_amount=?,
                 total_gst=?, net_amount=?, remarks=?, bank_name=?, bank_account=?, ifsc_code=?,
                 credit_debit=?, account_name=?, paid_by=?, payment_mode=?, supplier_address=?, supplier_contact_number=?,
-                supplier_gst_no=?, status=?, updated_at=NOW() WHERE id=?
+                supplier_gst_no=?, loading_unloading_charges=?, weigh_bridge_charges=?, status=?, updated_at=NOW() WHERE id=?
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -97,8 +99,10 @@ public class PurchaseInvoiceDAO {
             pstmt.setString(21, invoice.getSupplierAddress());
             pstmt.setString(22, invoice.getSupplierContactNumber());
             pstmt.setString(23, invoice.getSupplierGstNo());
-            pstmt.setString(24, invoice.getStatus());
-            pstmt.setInt(25, invoice.getId());
+            pstmt.setDouble(24, invoice.getLoadingUnloadingCharges());
+            pstmt.setDouble(25, invoice.getWeighBridgeCharges());
+            pstmt.setString(26, invoice.getStatus());
+            pstmt.setInt(27, invoice.getId());
 
             pstmt.executeUpdate();
             deleteLineItems(invoice.getId());
@@ -284,6 +288,12 @@ public class PurchaseInvoiceDAO {
                 if (!existing.contains("supplier_gst_no")) {
                     stmt.executeUpdate("ALTER TABLE purchase_invoices ADD COLUMN supplier_gst_no VARCHAR(20)");
                 }
+                if (!existing.contains("loading_unloading_charges")) {
+                    stmt.executeUpdate("ALTER TABLE purchase_invoices ADD COLUMN loading_unloading_charges DOUBLE DEFAULT 0");
+                }
+                if (!existing.contains("weigh_bridge_charges")) {
+                    stmt.executeUpdate("ALTER TABLE purchase_invoices ADD COLUMN weigh_bridge_charges DOUBLE DEFAULT 0");
+                }
             }
         }
     }
@@ -336,6 +346,8 @@ public class PurchaseInvoiceDAO {
         inv.setSupplierAddress(rs.getString("supplier_address"));
         inv.setSupplierContactNumber(rs.getString("supplier_contact_number"));
         inv.setSupplierGstNo(rs.getString("supplier_gst_no"));
+        try { inv.setLoadingUnloadingCharges(rs.getDouble("loading_unloading_charges")); } catch (Exception ignored) {}
+        try { inv.setWeighBridgeCharges(rs.getDouble("weigh_bridge_charges")); } catch (Exception ignored) {}
         inv.setStatus(rs.getString("status"));
         inv.setCreatedAt(rs.getDate("created_at").toLocalDate());
         inv.setUpdatedAt(rs.getDate("updated_at").toLocalDate());

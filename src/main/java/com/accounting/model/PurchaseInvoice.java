@@ -30,6 +30,8 @@ public class PurchaseInvoice {
     private String supplierAddress;
     private String supplierContactNumber;
     private String supplierGstNo;
+    private double loadingUnloadingCharges;
+    private double weighBridgeCharges;
     private String status; // DRAFT, SAVED, PRINTED
     private LocalDate createdAt;
     private LocalDate updatedAt;
@@ -108,6 +110,12 @@ public class PurchaseInvoice {
 
     public String getSupplierGstNo() { return supplierGstNo; }
     public void setSupplierGstNo(String supplierGstNo) { this.supplierGstNo = supplierGstNo; }
+
+    public double getLoadingUnloadingCharges() { return loadingUnloadingCharges; }
+    public void setLoadingUnloadingCharges(double loadingUnloadingCharges) { this.loadingUnloadingCharges = loadingUnloadingCharges; }
+
+    public double getWeighBridgeCharges() { return weighBridgeCharges; }
+    public void setWeighBridgeCharges(double weighBridgeCharges) { this.weighBridgeCharges = weighBridgeCharges; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

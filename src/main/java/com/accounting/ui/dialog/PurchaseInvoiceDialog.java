@@ -64,6 +64,8 @@ public class PurchaseInvoiceDialog {
     private TextField bankNameField;
     private TextField bankAccountField;
     private TextField ifscCodeField;
+    private TextField loadingUnloadingChargesField;
+    private TextField weighBridgeChargesField;
     private TextField supplierAddressField;
     private TextField supplierContactNumberField;
     private TextField supplierGstNoField;
@@ -91,7 +93,7 @@ public class PurchaseInvoiceDialog {
             stage.setOnHidden(e -> onClose.run());
         }
 
-        Scene scene = new Scene(createContent(), 1200, 850);
+        Scene scene = new Scene(createContent(), 1320, 860);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );
@@ -161,6 +163,8 @@ public class PurchaseInvoiceDialog {
             bankNameField.setText(invoice.getBankName());
             bankAccountField.setText(invoice.getBankAccount());
             ifscCodeField.setText(invoice.getIfscCode());
+            loadingUnloadingChargesField.setText(String.format("%.2f", invoice.getLoadingUnloadingCharges()));
+            weighBridgeChargesField.setText(String.format("%.2f", invoice.getWeighBridgeCharges()));
 
             // Supplier details
             supplierField.setText(invoice.getPartyName()); // Load supplier name
@@ -556,6 +560,26 @@ public class PurchaseInvoiceDialog {
         grid.add(label("IFSC Code"), 0, 2);
         grid.add(ifscCodeField, 1, 2);
 
+        // Loading & Unloading Charges
+        loadingUnloadingChargesField = new TextField("0");
+        loadingUnloadingChargesField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
+                loadingUnloadingChargesField.setText(oldVal);
+            }
+        });
+        grid.add(label("Loading/Unloading"), 2, 3);
+        grid.add(loadingUnloadingChargesField, 3, 3);
+
+        // Weigh Bridge Charges
+        weighBridgeChargesField = new TextField("0");
+        weighBridgeChargesField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
+                weighBridgeChargesField.setText(oldVal);
+            }
+        });
+        grid.add(label("Weigh Bridge"), 0, 3);
+        grid.add(weighBridgeChargesField, 1, 3);
+
         // Remarks
         remarksField = new TextField();
         setupUppercaseListener(remarksField);
@@ -605,6 +629,10 @@ public class PurchaseInvoiceDialog {
         setupUppercaseListener(lrNoField);
         VBox lrNoBox = new VBox(4, new Label("LR No"), lrNoField);
         HBox.setHgrow(lrNoBox, Priority.ALWAYS);
+
+        DatePicker rowDatePicker = new DatePicker();
+        VBox dateBox = new VBox(4, new Label("Date"), rowDatePicker);
+        HBox.setHgrow(dateBox, Priority.ALWAYS);
 
         TextField containerNoField = new TextField();
         setupUppercaseListener(containerNoField);
@@ -665,7 +693,7 @@ public class PurchaseInvoiceDialog {
         addRowBtn.setWrapText(false);
         VBox.setVgrow(addRowBtn, Priority.ALWAYS);
 
-        HBox inputRow = new HBox(8, lrNoBox, containerBox, vehicleBox, fromBox, toBox, typeBox, freightBox, detentionBox, otherChargesBox, addRowBtn);
+        HBox inputRow = new HBox(8, dateBox, lrNoBox, containerBox, vehicleBox, fromBox, toBox, typeBox, freightBox, detentionBox, otherChargesBox, addRowBtn);
         inputRow.setPadding(new Insets(12));
         inputRow.setAlignment(Pos.BOTTOM_CENTER);
         inputRow.setStyle("-fx-background-color: #f5f5f5; -fx-border-color: #e2e8f0; -fx-border-radius: 4;");
@@ -796,8 +824,13 @@ public class PurchaseInvoiceDialog {
                 return;
             }
 
+            if (rowDatePicker.getValue() == null) {
+                AlertUtil.showWarning("Validation", "Please select line item date");
+                return;
+            }
+
             InvoiceLineItem item = new InvoiceLineItem();
-            item.setDate(java.time.LocalDate.now().toString());
+            item.setDate(rowDatePicker.getValue().toString());
             item.setLrNo(lrNoField.getText().trim());
             item.setContainerNo(containerNoField.getText().trim());
             item.setVehicleNo(vehicleNoField.getText().trim());
@@ -847,6 +880,7 @@ public class PurchaseInvoiceDialog {
             freightField.clear();
             detentionField.clear();
             otherChargesField.clear();
+            rowDatePicker.setValue(null);
             lrNoField.requestFocus();
 
             updateTotal();
@@ -972,6 +1006,16 @@ public class PurchaseInvoiceDialog {
         invoice.setSupplierAddress(supplierAddressField.getText());
         invoice.setSupplierContactNumber(supplierContactNumberField.getText());
         invoice.setSupplierGstNo(supplierGstNoField.getText());
+        try {
+            invoice.setLoadingUnloadingCharges(loadingUnloadingChargesField.getText().trim().isEmpty() ? 0 : Double.parseDouble(loadingUnloadingChargesField.getText().trim()));
+        } catch (NumberFormatException ex) {
+            invoice.setLoadingUnloadingCharges(0);
+        }
+        try {
+            invoice.setWeighBridgeCharges(weighBridgeChargesField.getText().trim().isEmpty() ? 0 : Double.parseDouble(weighBridgeChargesField.getText().trim()));
+        } catch (NumberFormatException ex) {
+            invoice.setWeighBridgeCharges(0);
+        }
 
         double total = lineItems.stream().mapToDouble(InvoiceLineItem::getTotal).sum();
         invoice.setTaxableAmount(total);

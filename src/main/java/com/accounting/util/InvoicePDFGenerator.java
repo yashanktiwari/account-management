@@ -599,6 +599,8 @@ public class InvoicePDFGenerator {
         double igstAmount = 0;
         double totalGst = 0;
         double netAmount = 0;
+        double loadingUnloadingCharges = 0;
+        double weighBridgeCharges = 0;
         String remarks = "";
 
         if (invoice instanceof PurchaseInvoice) {
@@ -609,6 +611,8 @@ public class InvoicePDFGenerator {
             igstAmount = pi.getIgstAmount();
             totalGst = pi.getTotalGst();
             netAmount = pi.getNetAmount();
+            loadingUnloadingCharges = pi.getLoadingUnloadingCharges();
+            weighBridgeCharges = pi.getWeighBridgeCharges();
             remarks = pi.getRemarks();
         } else if (invoice instanceof SaleInvoice) {
             SaleInvoice si = (SaleInvoice) invoice;
@@ -618,6 +622,8 @@ public class InvoicePDFGenerator {
             igstAmount = si.getIgstAmount();
             totalGst = si.getTotalGst();
             netAmount = si.getNetAmount();
+            loadingUnloadingCharges = si.getLoadingUnloadingCharges();
+            weighBridgeCharges = si.getWeighBridgeCharges();
             remarks = si.getRemarks();
         }
 
@@ -660,12 +666,12 @@ public class InvoicePDFGenerator {
         // Row 1
         addBankGSTRow(table, "A/C NAME - SIHAG ENTERPRISE", false,
                 "Taxable Amount", String.format("%.2f", taxableAmount),
-                "Loading & Unloading Charges", "0.00");
+            "Loading & Unloading Charges", String.format("%.2f", loadingUnloadingCharges));
 
         // Row 2
         addBankGSTRow(table, "Bank Detail - AXIS BANK,", false,
                 "SGST 9%", String.format("%.2f", sgstAmount),
-                "Weigh Bridge Charges", "0.00");
+            "Weigh Bridge Charges", String.format("%.2f", weighBridgeCharges));
 
         // Row 3
         addBankGSTRow(table, "Branch - Mundra", false,

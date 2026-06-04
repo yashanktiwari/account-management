@@ -47,6 +47,12 @@ public class SaleInvoiceDAO {
                 if (!existing.contains("ifsc_code")) {
                     stmt2.executeUpdate("ALTER TABLE sale_invoices ADD COLUMN ifsc_code VARCHAR(20)");
                 }
+                if (!existing.contains("loading_unloading_charges")) {
+                    stmt2.executeUpdate("ALTER TABLE sale_invoices ADD COLUMN loading_unloading_charges DOUBLE DEFAULT 0");
+                }
+                if (!existing.contains("weigh_bridge_charges")) {
+                    stmt2.executeUpdate("ALTER TABLE sale_invoices ADD COLUMN weigh_bridge_charges DOUBLE DEFAULT 0");
+                }
             }
         }
     }
@@ -58,14 +64,14 @@ public class SaleInvoiceDAO {
                 voucher_type, gst, taxable_amount, sgst_amount, cgst_amount, igst_amount, total_gst,
                 net_amount, remarks, rcvr_name, rcvr_address, rcvr_contact_no, rcvr_gstin,
                 credit_debit, account_name, paid_by, payment_mode, bank_name, bank_account, ifsc_code,
-                status, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                loading_unloading_charges, weigh_bridge_charges, status, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, invoice.getInvoiceNo());
             pstmt.setDate(2, java.sql.Date.valueOf(invoice.getInvoiceDate()));
-            pstmt.setDate(3, java.sql.Date.valueOf(invoice.getDeliveryDate()));
+            pstmt.setDate(3, invoice.getDeliveryDate() != null ? java.sql.Date.valueOf(invoice.getDeliveryDate()) : null);
             pstmt.setInt(4, invoice.getPartyId());
             pstmt.setString(5, invoice.getPartyName());
             pstmt.setString(6, invoice.getVoucherType());
@@ -88,7 +94,9 @@ public class SaleInvoiceDAO {
             pstmt.setString(23, invoice.getBankName());
             pstmt.setString(24, invoice.getBankAccount());
             pstmt.setString(25, invoice.getIfscCode());
-            pstmt.setString(26, invoice.getStatus());
+            pstmt.setDouble(26, invoice.getLoadingUnloadingCharges());
+            pstmt.setDouble(27, invoice.getWeighBridgeCharges());
+            pstmt.setString(28, invoice.getStatus());
 
             pstmt.executeUpdate();
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
@@ -109,13 +117,13 @@ public class SaleInvoiceDAO {
                 party_name=?, voucher_type=?, gst=?, taxable_amount=?, sgst_amount=?, cgst_amount=?,
                 igst_amount=?, total_gst=?, net_amount=?, remarks=?, rcvr_name=?, rcvr_address=?,
                 rcvr_contact_no=?, rcvr_gstin=?, credit_debit=?, account_name=?, paid_by=?, payment_mode=?,
-                bank_name=?, bank_account=?, ifsc_code=?, status=?, updated_at=NOW() WHERE id=?
+                bank_name=?, bank_account=?, ifsc_code=?, loading_unloading_charges=?, weigh_bridge_charges=?, status=?, updated_at=NOW() WHERE id=?
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, invoice.getInvoiceNo());
             pstmt.setDate(2, java.sql.Date.valueOf(invoice.getInvoiceDate()));
-            pstmt.setDate(3, java.sql.Date.valueOf(invoice.getDeliveryDate()));
+            pstmt.setDate(3, invoice.getDeliveryDate() != null ? java.sql.Date.valueOf(invoice.getDeliveryDate()) : null);
             pstmt.setInt(4, invoice.getPartyId());
             pstmt.setString(5, invoice.getPartyName());
             pstmt.setString(6, invoice.getVoucherType());
@@ -138,8 +146,10 @@ public class SaleInvoiceDAO {
             pstmt.setString(23, invoice.getBankName());
             pstmt.setString(24, invoice.getBankAccount());
             pstmt.setString(25, invoice.getIfscCode());
-            pstmt.setString(26, invoice.getStatus());
-            pstmt.setInt(27, invoice.getId());
+            pstmt.setDouble(26, invoice.getLoadingUnloadingCharges());
+            pstmt.setDouble(27, invoice.getWeighBridgeCharges());
+            pstmt.setString(28, invoice.getStatus());
+            pstmt.setInt(29, invoice.getId());
 
             pstmt.executeUpdate();
             deleteLineItems(invoice.getId());
@@ -247,23 +257,24 @@ public class SaleInvoiceDAO {
     private void saveLineItem(int invoiceId, InvoiceLineItem item) throws Exception {
         ensureLineItemColumns();
         String sql = """
-                INSERT INTO invoice_line_items (invoice_id, lr_no, container_no, vehicle_no, from_location,
+                INSERT INTO invoice_line_items (invoice_id, date, lr_no, container_no, vehicle_no, from_location,
                 to_location, type, basic_freight, detention_charge, other_charges, total)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, invoiceId);
-            pstmt.setString(2, item.getLrNo());
-            pstmt.setString(3, item.getContainerNo());
-            pstmt.setString(4, item.getVehicleNo());
-            pstmt.setString(5, item.getFrom());
-            pstmt.setString(6, item.getTo());
-            pstmt.setString(7, item.getType());
-            pstmt.setDouble(8, item.getBasicFreight());
-            pstmt.setDouble(9, item.getDetentionCharge());
-            pstmt.setDouble(10, item.getOtherCharges());
-            pstmt.setDouble(11, item.getTotal());
+            pstmt.setString(2, item.getDate());
+            pstmt.setString(3, item.getLrNo());
+            pstmt.setString(4, item.getContainerNo());
+            pstmt.setString(5, item.getVehicleNo());
+            pstmt.setString(6, item.getFrom());
+            pstmt.setString(7, item.getTo());
+            pstmt.setString(8, item.getType());
+            pstmt.setDouble(9, item.getBasicFreight());
+            pstmt.setDouble(10, item.getDetentionCharge());
+            pstmt.setDouble(11, item.getOtherCharges());
+            pstmt.setDouble(12, item.getTotal());
             pstmt.executeUpdate();
         }
     }
@@ -278,6 +289,9 @@ public class SaleInvoiceDAO {
                 }
             }
             try (java.sql.Statement stmt = conn.createStatement()) {
+                if (!existing.contains("date")) {
+                    stmt.executeUpdate("ALTER TABLE invoice_line_items ADD COLUMN date VARCHAR(20)");
+                }
                 if (!existing.contains("other_charges")) {
                     stmt.executeUpdate("ALTER TABLE invoice_line_items ADD COLUMN other_charges DOUBLE DEFAULT 0");
                 }
@@ -312,7 +326,8 @@ public class SaleInvoiceDAO {
         inv.setId(rs.getInt("id"));
         inv.setInvoiceNo(rs.getString("invoice_no"));
         inv.setInvoiceDate(rs.getDate("invoice_date").toLocalDate());
-        inv.setDeliveryDate(rs.getDate("delivery_date").toLocalDate());
+        Date deliveryDate = rs.getDate("delivery_date");
+        inv.setDeliveryDate(deliveryDate != null ? deliveryDate.toLocalDate() : null);
         inv.setPartyId(rs.getInt("party_id"));
         inv.setPartyName(rs.getString("party_name"));
         inv.setVoucherType(rs.getString("voucher_type"));
@@ -335,6 +350,8 @@ public class SaleInvoiceDAO {
         inv.setBankName(rs.getString("bank_name"));
         inv.setBankAccount(rs.getString("bank_account"));
         inv.setIfscCode(rs.getString("ifsc_code"));
+        try { inv.setLoadingUnloadingCharges(rs.getDouble("loading_unloading_charges")); } catch (Exception ignored) {}
+        try { inv.setWeighBridgeCharges(rs.getDouble("weigh_bridge_charges")); } catch (Exception ignored) {}
         inv.setStatus(rs.getString("status"));
         inv.setCreatedAt(rs.getDate("created_at").toLocalDate());
         inv.setUpdatedAt(rs.getDate("updated_at").toLocalDate());
@@ -345,6 +362,7 @@ public class SaleInvoiceDAO {
         InvoiceLineItem item = new InvoiceLineItem();
         item.setId(rs.getInt("id"));
         item.setInvoiceId(rs.getInt("invoice_id"));
+        try { item.setDate(rs.getString("date")); } catch (Exception ignored) {}
         item.setLrNo(rs.getString("lr_no"));
         item.setContainerNo(rs.getString("container_no"));
         item.setVehicleNo(rs.getString("vehicle_no"));
