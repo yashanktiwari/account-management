@@ -766,14 +766,14 @@ public class PurchaseInvoiceDialog {
         freightCol.setPrefWidth(100);
         freightCol.setEditable(true);
 
-        TableColumn<InvoiceLineItem, Double> detentionCol = new TableColumn<>("Detention Charge");
+        TableColumn<InvoiceLineItem, Double> detentionCol = new TableColumn<>("Detention\nCharge");
         detentionCol.setCellValueFactory(new PropertyValueFactory<>("detentionCharge"));
         detentionCol.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
         detentionCol.setOnEditCommit(e -> {
             e.getRowValue().setDetentionCharge(e.getNewValue());
             updateTotal();
         });
-        detentionCol.setPrefWidth(120);
+        detentionCol.setPrefWidth(140);
         detentionCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, Double> otherChargesCol = new TableColumn<>("Other Charges");
