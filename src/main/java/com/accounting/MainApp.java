@@ -62,6 +62,7 @@ public class MainApp extends Application {
     private Button purchaseReceiptBtn;
     private Button saleReceiptBtn;
     private Button loadingSlipBtn;
+    private Button lorryReceiptBtn;
 
     public static Stage getPrimaryStage() {
         return primaryStage;
@@ -188,6 +189,7 @@ public class MainApp extends Application {
         slipsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
 
         loadingSlipBtn = sidebarButton("Loading Slips", this::showLoadingSlips);
+        lorryReceiptBtn = sidebarButton("Lorry Receipt (LR)", this::showLorryReceipts);
 
         Label settingsTitle = new Label("Settings");
         settingsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
@@ -201,7 +203,7 @@ public class MainApp extends Application {
             mastersTitle, partyBtn,
                 invoicesTitle, purchaseInvoiceBtn, saleInvoiceBtn,
                 receiptsTitle, purchaseReceiptBtn, saleReceiptBtn,
-                slipsTitle, loadingSlipBtn,
+                slipsTitle, loadingSlipBtn, lorryReceiptBtn,
                 settingsTitle, dbBtn, companyBtn, invoiceBtn
         );
 
@@ -267,6 +269,10 @@ public class MainApp extends Application {
 
     private void showLoadingSlips() {
         showContent(new LoadingSlipListView().createContent());
+    }
+
+    private void showLorryReceipts() {
+        showContent(new LorryReceiptListView().createContent());
     }
 
     private VBox buildDashboard() {
@@ -560,8 +566,14 @@ public class MainApp extends Application {
                     currentSlipNumber = "1";
                 }
 
+                String currentLrNumber = settingsDAO.getSetting("lr_starting_number");
+                if (currentLrNumber == null) {
+                    currentLrNumber = "1";
+                }
+
                 String finalCurrentStartingNumber = currentStartingNumber;
                 String finalCurrentSlipNumber = currentSlipNumber;
+                String finalCurrentLrNumber = currentLrNumber;
                 Platform.runLater(() -> {
                     Dialog<ButtonType> dialog = new Dialog<>();
                     dialog.setTitle("Invoice & Slip Settings");
@@ -572,6 +584,9 @@ public class MainApp extends Application {
 
                     TextField slipStartingNumberField = new TextField(finalCurrentSlipNumber);
                     slipStartingNumberField.setPrefWidth(200);
+
+                    TextField lrStartingNumberField = new TextField(finalCurrentLrNumber);
+                    lrStartingNumberField.setPrefWidth(200);
 
                     GridPane grid = new GridPane();
                     grid.setHgap(10);
@@ -587,6 +602,11 @@ public class MainApp extends Application {
                     grid.add(new Label("This number will be used for loading slips."), 0, 3);
                     GridPane.setColumnSpan(grid.getChildren().get(5), 2);
 
+                    grid.add(new Label("LR Starting Number:"), 0, 4);
+                    grid.add(lrStartingNumberField, 1, 4);
+                    grid.add(new Label("This number will be used for lorry receipts."), 0, 5);
+                    GridPane.setColumnSpan(grid.getChildren().get(8), 2);
+
                     dialog.getDialogPane().setContent(grid);
                     dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
@@ -595,13 +615,15 @@ public class MainApp extends Application {
                             try {
                                 int num = Integer.parseInt(startingNumberField.getText().trim());
                                 int slipNum = Integer.parseInt(slipStartingNumberField.getText().trim());
-                                if (num >= 0 && slipNum >= 0) {
+                                int lrNum = Integer.parseInt(lrStartingNumberField.getText().trim());
+                                if (num >= 0 && slipNum >= 0 && lrNum >= 0) {
                                     AppExecutor.submit(() -> {
                                         try {
                                             settingsDAO.saveSetting("global_invoice_starting_number", String.valueOf(num));
                                             settingsDAO.saveSetting("loading_slip_starting_number", String.valueOf(slipNum));
+                                            settingsDAO.saveSetting("lr_starting_number", String.valueOf(lrNum));
                                             Platform.runLater(() -> {
-                                                AlertUtil.showInfo("Success", "Settings updated.\nInvoice starting number: " + num + "\nLoading slip starting number: " + slipNum);
+                                                AlertUtil.showInfo("Success", "Settings updated.\nInvoice: " + num + "  |  Loading Slip: " + slipNum + "  |  LR: " + lrNum);
                                             });
                                         } catch (Exception e) {
                                             log.error("Failed to save setting", e);

@@ -297,6 +297,55 @@ public class DBConnection {
                 ) ENGINE=InnoDB
             """);
 
+            stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS lorry_receipts (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    lr_no VARCHAR(50) NOT NULL UNIQUE,
+                    lr_date DATE NOT NULL,
+                    vehicle_no VARCHAR(50),
+                    from_location VARCHAR(255),
+                    to_location VARCHAR(255),
+                    e_way_bill_no VARCHAR(100),
+                    consignor_name VARCHAR(255),
+                    consignor_gstin VARCHAR(20),
+                    consignee_name VARCHAR(255),
+                    consignee_gstin VARCHAR(20),
+                    no_of_packages VARCHAR(50),
+                    method_of_packing VARCHAR(100),
+                    description TEXT,
+                    weight_actual VARCHAR(50),
+                    weight_charged VARCHAR(50),
+                    rate VARCHAR(50),
+                    freight_to_pay DECIMAL(15,2) DEFAULT 0,
+                    freight_paid DECIMAL(15,2) DEFAULT 0,
+                    freight DECIMAL(15,2) DEFAULT 0,
+                    advance DECIMAL(15,2) DEFAULT 0,
+                    balance DECIMAL(15,2) DEFAULT 0,
+                    aoc DECIMAL(15,2) DEFAULT 0,
+                    st_charge DECIMAL(15,2) DEFAULT 0,
+                    total DECIMAL(15,2) DEFAULT 0,
+                    st_no VARCHAR(50),
+                    sh_no VARCHAR(50),
+                    gross_weight VARCHAR(50),
+                    tare_weight VARCHAR(50),
+                    net_weight VARCHAR(50),
+                    value_rs VARCHAR(50),
+                    to_pay_rs DECIMAL(15,2) DEFAULT 0,
+                    adv_paid_rs DECIMAL(15,2) DEFAULT 0,
+                    inv_no VARCHAR(50),
+                    inv_date DATE,
+                    insurance_company VARCHAR(255),
+                    policy_no VARCHAR(100),
+                    policy_date DATE,
+                    insurance_amount VARCHAR(50),
+                    insurance_date DATE,
+                    risk_type VARCHAR(50),
+                    status VARCHAR(20) DEFAULT 'SAVED',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB
+            """);
+
             log.info("[DB] All tables initialized successfully.");
 
         } catch (SQLException e) {
