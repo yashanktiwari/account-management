@@ -561,7 +561,8 @@ public class PurchaseInvoiceDialog {
         grid.add(ifscCodeField, 1, 2);
 
         // Loading & Unloading Charges
-        loadingUnloadingChargesField = new TextField("0");
+        loadingUnloadingChargesField = new TextField();
+        loadingUnloadingChargesField.setPromptText("0");
         loadingUnloadingChargesField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
                 loadingUnloadingChargesField.setText(oldVal);
@@ -572,7 +573,8 @@ public class PurchaseInvoiceDialog {
         grid.add(loadingUnloadingChargesField, 3, 3);
 
         // Weigh Bridge Charges
-        weighBridgeChargesField = new TextField("0");
+        weighBridgeChargesField = new TextField();
+        weighBridgeChargesField.setPromptText("0");
         weighBridgeChargesField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
                 weighBridgeChargesField.setText(oldVal);

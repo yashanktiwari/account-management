@@ -131,43 +131,22 @@ public class SaleInvoiceDialog {
     private int getLastGlobalInvoiceNumber() throws Exception {
         int maxNumber = 0;
 
-        // Check purchase invoices
-        String purchaseSql = "SELECT CAST(invoice_no AS INTEGER) as num FROM purchase_invoices WHERE invoice_no GLOB '^[0-9]+$' ORDER BY CAST(invoice_no AS INTEGER) DESC LIMIT 1";
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(purchaseSql)) {
-            if (rs.next()) {
-                maxNumber = Math.max(maxNumber, rs.getInt("num"));
-            }
-        }
-
-        // Check sale invoices
-        String saleSql = "SELECT CAST(invoice_no AS INTEGER) as num FROM sale_invoices WHERE invoice_no GLOB '^[0-9]+$' ORDER BY CAST(invoice_no AS INTEGER) DESC LIMIT 1";
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(saleSql)) {
-            if (rs.next()) {
-                maxNumber = Math.max(maxNumber, rs.getInt("num"));
-            }
-        }
-
-        // Check purchase receipts
-        String purchaseReceiptSql = "SELECT CAST(invoice_no AS INTEGER) as num FROM purchase_receipts WHERE invoice_no GLOB '^[0-9]+$' ORDER BY CAST(invoice_no AS INTEGER) DESC LIMIT 1";
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(purchaseReceiptSql)) {
-            if (rs.next()) {
-                maxNumber = Math.max(maxNumber, rs.getInt("num"));
-            }
-        }
-
-        // Check sale receipts
-        String saleReceiptSql = "SELECT CAST(invoice_no AS INTEGER) as num FROM sale_receipts WHERE invoice_no GLOB '^[0-9]+$' ORDER BY CAST(invoice_no AS INTEGER) DESC LIMIT 1";
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(saleReceiptSql)) {
-            if (rs.next()) {
-                maxNumber = Math.max(maxNumber, rs.getInt("num"));
+        String[] tables = {"purchase_invoices", "sale_invoices", "purchase_receipts", "sale_receipts"};
+        for (String table : tables) {
+            try {
+                String sql = "SELECT invoice_no FROM " + table + " ORDER BY id DESC LIMIT 1";
+                try (Connection conn = DBConnection.getConnection();
+                     Statement stmt = conn.createStatement();
+                     ResultSet rs = stmt.executeQuery(sql)) {
+                    if (rs.next()) {
+                        String val = rs.getString("invoice_no");
+                        if (val != null && val.matches("^[0-9]+$")) {
+                            maxNumber = Math.max(maxNumber, Integer.parseInt(val));
+                        }
+                    }
+                }
+            } catch (Exception ignored) {
+                // table may not exist
             }
         }
 
@@ -399,7 +378,8 @@ public class SaleInvoiceDialog {
         grid.add(ifscCodeField, 1, 2);
 
         // Loading & Unloading Charges
-        loadingUnloadingChargesField = new TextField("0");
+        loadingUnloadingChargesField = new TextField();
+        loadingUnloadingChargesField.setPromptText("0");
         loadingUnloadingChargesField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
                 loadingUnloadingChargesField.setText(oldVal);
@@ -410,7 +390,8 @@ public class SaleInvoiceDialog {
         grid.add(loadingUnloadingChargesField, 3, 3);
 
         // Weigh Bridge Charges
-        weighBridgeChargesField = new TextField("0");
+        weighBridgeChargesField = new TextField();
+        weighBridgeChargesField.setPromptText("0");
         weighBridgeChargesField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
                 weighBridgeChargesField.setText(oldVal);
@@ -703,6 +684,7 @@ public class SaleInvoiceDialog {
             item.setBasicFreight(freight);
             item.setDetentionCharge(detention);
             item.setOtherCharges(otherChg);
+            item.setTotal(freight + detention + otherChg);
 
             lineItems.add(item);
             updateTotal();
