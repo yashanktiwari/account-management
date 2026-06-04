@@ -566,8 +566,9 @@ public class PurchaseInvoiceDialog {
             if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
                 loadingUnloadingChargesField.setText(oldVal);
             }
+            updateTotal();
         });
-        grid.add(label("Loading/Unloading"), 2, 3);
+        grid.add(label("Loading/Unloading Charges"), 2, 3);
         grid.add(loadingUnloadingChargesField, 3, 3);
 
         // Weigh Bridge Charges
@@ -576,8 +577,9 @@ public class PurchaseInvoiceDialog {
             if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
                 weighBridgeChargesField.setText(oldVal);
             }
+            updateTotal();
         });
-        grid.add(label("Weigh Bridge"), 0, 3);
+        grid.add(label("Weigh Bridge Charges"), 0, 3);
         grid.add(weighBridgeChargesField, 1, 3);
 
         // Remarks
@@ -946,7 +948,18 @@ public class PurchaseInvoiceDialog {
     }
 
     private void updateTotal() {
-        double taxable = lineItems.stream().mapToDouble(InvoiceLineItem::getTotal).sum();
+        double lineItemsTotal = lineItems.stream().mapToDouble(InvoiceLineItem::getTotal).sum();
+        double loadingCharges = 0;
+        double weighBridgeCharges = 0;
+        try {
+            loadingCharges = loadingUnloadingChargesField != null && !loadingUnloadingChargesField.getText().trim().isEmpty()
+                    ? Double.parseDouble(loadingUnloadingChargesField.getText().trim()) : 0;
+        } catch (NumberFormatException ignored) {}
+        try {
+            weighBridgeCharges = weighBridgeChargesField != null && !weighBridgeChargesField.getText().trim().isEmpty()
+                    ? Double.parseDouble(weighBridgeChargesField.getText().trim()) : 0;
+        } catch (NumberFormatException ignored) {}
+        double taxable = lineItemsTotal + loadingCharges + weighBridgeCharges;
         
         // Calculate GST based on checkbox states
         double sgst = sgstCheckBox.isSelected() ? taxable * 0.09 : 0;
@@ -1017,7 +1030,8 @@ public class PurchaseInvoiceDialog {
             invoice.setWeighBridgeCharges(0);
         }
 
-        double total = lineItems.stream().mapToDouble(InvoiceLineItem::getTotal).sum();
+        double total = lineItems.stream().mapToDouble(InvoiceLineItem::getTotal).sum()
+            + invoice.getLoadingUnloadingCharges() + invoice.getWeighBridgeCharges();
         invoice.setTaxableAmount(total);
 
         // Calculate GST amounts based on checkbox states
