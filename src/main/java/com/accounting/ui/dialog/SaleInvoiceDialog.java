@@ -72,6 +72,7 @@ public class SaleInvoiceDialog {
     private TextField ifscCodeField;
     private TextField loadingUnloadingChargesField;
     private TextField weighBridgeChargesField;
+    private boolean loadingData = false;
     private Runnable onClose;
 
     public SaleInvoiceDialog() {
@@ -101,7 +102,9 @@ public class SaleInvoiceDialog {
 
         // Load invoice data if editing
         if (invoice.getId() > 0) {
+            loadingData = true;
             loadInvoiceData();
+            loadingData = false;
         } else {
             // New invoice - auto-generate invoice number
             generateNextInvoiceNumber();
@@ -790,6 +793,7 @@ public class SaleInvoiceDialog {
         customerPopup.getContent().add(customerListView);
 
         partyField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (loadingData) return;
             if (newVal == null || newVal.isBlank()) {
                 customerPopup.hide();
                 return;
