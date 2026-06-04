@@ -16,12 +16,13 @@ public class SaleInvoiceDAO {
     private static final Logger log = get(SaleInvoiceDAO.class);
 
     private void ensureInvoiceColumns() throws Exception {
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("PRAGMA table_info(sale_invoices)")) {
-            java.util.Set<String> existing = new java.util.HashSet<>();
+        try (Connection conn = DBConnection.getConnection()) {
+            DatabaseMetaData meta = conn.getMetaData();
+            List<String> existing = new ArrayList<>();
+            try (ResultSet rs = meta.getColumns(conn.getCatalog(), null, "sale_invoices", null)) {
             while (rs.next()) {
-                existing.add(rs.getString("name").toLowerCase());
+                    existing.add(rs.getString("COLUMN_NAME").toLowerCase());
+                }
             }
 
             try (Statement stmt2 = conn.createStatement()) {
