@@ -61,6 +61,7 @@ public class MainApp extends Application {
     private Button saleInvoiceBtn;
     private Button purchaseReceiptBtn;
     private Button saleReceiptBtn;
+    private Button loadingSlipBtn;
 
     public static Stage getPrimaryStage() {
         return primaryStage;
@@ -183,6 +184,11 @@ public class MainApp extends Application {
         purchaseReceiptBtn = sidebarButton("Purchase Receipt", this::showPurchaseReceipt);
         saleReceiptBtn = sidebarButton("Sale Receipt", this::showSaleReceipt);
 
+        Label slipsTitle = new Label("Slips");
+        slipsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
+
+        loadingSlipBtn = sidebarButton("Loading Slips", this::showLoadingSlips);
+
         Label settingsTitle = new Label("Settings");
         settingsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
 
@@ -195,6 +201,7 @@ public class MainApp extends Application {
             mastersTitle, partyBtn,
                 invoicesTitle, purchaseInvoiceBtn, saleInvoiceBtn,
                 receiptsTitle, purchaseReceiptBtn, saleReceiptBtn,
+                slipsTitle, loadingSlipBtn,
                 settingsTitle, dbBtn, companyBtn, invoiceBtn
         );
 
@@ -256,6 +263,10 @@ public class MainApp extends Application {
 
     private void showSaleReceipt() {
         new SaleReceiptDialog().show(primaryStage, this::refreshDashboard);
+    }
+
+    private void showLoadingSlips() {
+        showContent(new LoadingSlipListView().createContent());
     }
 
     private VBox buildDashboard() {
@@ -544,14 +555,23 @@ public class MainApp extends Application {
                     currentStartingNumber = "1";
                 }
 
+                String currentSlipNumber = settingsDAO.getSetting("loading_slip_starting_number");
+                if (currentSlipNumber == null) {
+                    currentSlipNumber = "1";
+                }
+
                 String finalCurrentStartingNumber = currentStartingNumber;
+                String finalCurrentSlipNumber = currentSlipNumber;
                 Platform.runLater(() -> {
                     Dialog<ButtonType> dialog = new Dialog<>();
-                    dialog.setTitle("Invoice Settings");
+                    dialog.setTitle("Invoice & Slip Settings");
                     dialog.initOwner(primaryStage);
 
                     TextField startingNumberField = new TextField(finalCurrentStartingNumber);
                     startingNumberField.setPrefWidth(200);
+
+                    TextField slipStartingNumberField = new TextField(finalCurrentSlipNumber);
+                    slipStartingNumberField.setPrefWidth(200);
 
                     GridPane grid = new GridPane();
                     grid.setHgap(10);
@@ -559,8 +579,13 @@ public class MainApp extends Application {
                     grid.setPadding(new Insets(15));
                     grid.add(new Label("Global Starting Invoice Number:"), 0, 0);
                     grid.add(startingNumberField, 1, 0);
-                    grid.add(new Label("This number will be used for all invoices and receipts:"), 0, 1);
+                    grid.add(new Label("This number will be used for all invoices and receipts."), 0, 1);
                     GridPane.setColumnSpan(grid.getChildren().get(2), 2);
+
+                    grid.add(new Label("Loading Slip Starting Number:"), 0, 2);
+                    grid.add(slipStartingNumberField, 1, 2);
+                    grid.add(new Label("This number will be used for loading slips."), 0, 3);
+                    GridPane.setColumnSpan(grid.getChildren().get(5), 2);
 
                     dialog.getDialogPane().setContent(grid);
                     dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
@@ -569,12 +594,14 @@ public class MainApp extends Application {
                         if (btn == ButtonType.OK) {
                             try {
                                 int num = Integer.parseInt(startingNumberField.getText().trim());
-                                if (num >= 0) {
+                                int slipNum = Integer.parseInt(slipStartingNumberField.getText().trim());
+                                if (num >= 0 && slipNum >= 0) {
                                     AppExecutor.submit(() -> {
                                         try {
                                             settingsDAO.saveSetting("global_invoice_starting_number", String.valueOf(num));
+                                            settingsDAO.saveSetting("loading_slip_starting_number", String.valueOf(slipNum));
                                             Platform.runLater(() -> {
-                                                AlertUtil.showInfo("Success", "Global starting invoice number updated to " + num);
+                                                AlertUtil.showInfo("Success", "Settings updated.\nInvoice starting number: " + num + "\nLoading slip starting number: " + slipNum);
                                             });
                                         } catch (Exception e) {
                                             log.error("Failed to save setting", e);
@@ -582,10 +609,10 @@ public class MainApp extends Application {
                                         }
                                     });
                                 } else {
-                                    AlertUtil.showWarning("Validation", "Please enter a non-negative number");
+                                    AlertUtil.showWarning("Validation", "Please enter non-negative numbers");
                                 }
                             } catch (NumberFormatException e) {
-                                AlertUtil.showWarning("Validation", "Please enter a valid number");
+                                AlertUtil.showWarning("Validation", "Please enter valid numbers");
                             }
                         }
                     });

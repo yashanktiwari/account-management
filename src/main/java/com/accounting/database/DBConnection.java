@@ -273,6 +273,30 @@ public class DBConnection {
                 )
             """);
 
+            stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS loading_slips (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    slip_no VARCHAR(50) NOT NULL UNIQUE,
+                    slip_date DATE NOT NULL,
+                    party_name VARCHAR(255),
+                    vehicle_no VARCHAR(50),
+                    gr_no VARCHAR(50),
+                    station VARCHAR(255),
+                    to_location VARCHAR(255),
+                    weight VARCHAR(50),
+                    rate VARCHAR(50),
+                    freight_amount DECIMAL(15,2) DEFAULT 0,
+                    advance_amount DECIMAL(15,2) DEFAULT 0,
+                    balance_amount DECIMAL(15,2) DEFAULT 0,
+                    bank_name VARCHAR(255),
+                    account_no VARCHAR(100),
+                    ifsc_code VARCHAR(20),
+                    status VARCHAR(20) DEFAULT 'SAVED',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB
+            """);
+
             log.info("[DB] All tables initialized successfully.");
 
         } catch (SQLException e) {
