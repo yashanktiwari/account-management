@@ -707,7 +707,7 @@ public class PurchaseInvoiceDialog {
         // Sr. No. column (auto-filled, read-only)
         TableColumn<InvoiceLineItem, Integer> srNoCol = new TableColumn<>("Sr. No");
         srNoCol.setCellValueFactory(cellData -> new SimpleIntegerProperty(lineItems.indexOf(cellData.getValue()) + 1).asObject());
-        srNoCol.setPrefWidth(60);
+        srNoCol.setPrefWidth(45);
         srNoCol.setEditable(false);
 
         // Date column (auto-filled, read-only)
@@ -720,7 +720,7 @@ public class PurchaseInvoiceDialog {
         lrNoCol.setCellValueFactory(new PropertyValueFactory<>("lrNo"));
         lrNoCol.setCellFactory(TextFieldTableCell.forTableColumn());
         lrNoCol.setOnEditCommit(e -> e.getRowValue().setLrNo(e.getNewValue()));
-        lrNoCol.setPrefWidth(80);
+        lrNoCol.setPrefWidth(70);
         lrNoCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> containerCol = new TableColumn<>("Container No");
@@ -755,7 +755,7 @@ public class PurchaseInvoiceDialog {
         typeCol.setCellValueFactory(new PropertyValueFactory<>("type"));
         typeCol.setCellFactory(TextFieldTableCell.forTableColumn());
         typeCol.setOnEditCommit(e -> e.getRowValue().setType(e.getNewValue()));
-        typeCol.setPrefWidth(80);
+        typeCol.setPrefWidth(70);
         typeCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, Double> freightCol = new TableColumn<>("Basic Freight");
@@ -765,32 +765,32 @@ public class PurchaseInvoiceDialog {
             e.getRowValue().setBasicFreight(e.getNewValue());
             updateTotal();
         });
-        freightCol.setPrefWidth(100);
+        freightCol.setPrefWidth(115);
         freightCol.setEditable(true);
 
-        TableColumn<InvoiceLineItem, Double> detentionCol = new TableColumn<>("Detention\nCharge");
+        TableColumn<InvoiceLineItem, Double> detentionCol = new TableColumn<>("Detention Charge");
         detentionCol.setCellValueFactory(new PropertyValueFactory<>("detentionCharge"));
         detentionCol.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
         detentionCol.setOnEditCommit(e -> {
             e.getRowValue().setDetentionCharge(e.getNewValue());
             updateTotal();
         });
-        detentionCol.setPrefWidth(140);
+        detentionCol.setPrefWidth(130);
         detentionCol.setEditable(true);
 
-        TableColumn<InvoiceLineItem, Double> otherChargesCol = new TableColumn<>("Other Charges");
+        TableColumn<InvoiceLineItem, Double> otherChargesCol = new TableColumn<>("Other Charge");
         otherChargesCol.setCellValueFactory(new PropertyValueFactory<>("otherCharges"));
         otherChargesCol.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
         otherChargesCol.setOnEditCommit(e -> {
             e.getRowValue().setOtherCharges(e.getNewValue());
             updateTotal();
         });
-        otherChargesCol.setPrefWidth(100);
+        otherChargesCol.setPrefWidth(120);
         otherChargesCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, Double> totalCol = new TableColumn<>("Total");
         totalCol.setCellValueFactory(new PropertyValueFactory<>("total"));
-        totalCol.setPrefWidth(100);
+        totalCol.setPrefWidth(80);
 
         lineItemTable.getColumns().addAll(srNoCol, dateCol, lrNoCol, containerCol, vehicleCol, fromCol, toCol, typeCol,
                 freightCol, detentionCol, otherChargesCol, totalCol);
