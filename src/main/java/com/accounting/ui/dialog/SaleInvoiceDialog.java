@@ -104,7 +104,7 @@ public class SaleInvoiceDialog {
         if (invoice.getId() > 0) {
             loadingData = true;
             loadInvoiceData();
-            loadingData = false;
+            // loadingData will be set to false after loadParties completes
         } else {
             // New invoice - auto-generate invoice number
             generateNextInvoiceNumber();
@@ -755,12 +755,16 @@ public class SaleInvoiceDialog {
                                 break;
                             }
                         }
+                        loadingData = false;
                     }
                     // No default selection for new invoices
                 });
             } catch (Exception e) {
                 log.error("Failed to load customers", e);
-                Platform.runLater(() -> AlertUtil.showError("Error", "Failed to load customers"));
+                Platform.runLater(() -> {
+                    AlertUtil.showError("Error", "Failed to load customers");
+                    loadingData = false;
+                });
             }
         });
     }
