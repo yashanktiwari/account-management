@@ -257,7 +257,7 @@ public class SaleInvoiceDAO {
     private void saveLineItem(int invoiceId, InvoiceLineItem item) throws Exception {
         ensureLineItemColumns();
         String sql = """
-                INSERT INTO invoice_line_items (invoice_id, date, lr_no, container_no, vehicle_no, from_location,
+                INSERT INTO sale_invoice_line_items (invoice_id, date, lr_no, container_no, vehicle_no, from_location,
                 to_location, type, basic_freight, detention_charge, other_charges, total)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
@@ -280,27 +280,33 @@ public class SaleInvoiceDAO {
     }
 
     private void ensureLineItemColumns() throws Exception {
-        try (Connection conn = DBConnection.getConnection()) {
-            java.sql.DatabaseMetaData meta = conn.getMetaData();
-            java.util.List<String> existing = new java.util.ArrayList<>();
-            try (ResultSet rs = meta.getColumns(conn.getCatalog(), null, "invoice_line_items", null)) {
-                while (rs.next()) {
-                    existing.add(rs.getString("COLUMN_NAME").toLowerCase());
-                }
-            }
-            try (java.sql.Statement stmt = conn.createStatement()) {
-                if (!existing.contains("date")) {
-                    stmt.executeUpdate("ALTER TABLE invoice_line_items ADD COLUMN date VARCHAR(20)");
-                }
-                if (!existing.contains("other_charges")) {
-                    stmt.executeUpdate("ALTER TABLE invoice_line_items ADD COLUMN other_charges DOUBLE DEFAULT 0");
-                }
-            }
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS sale_invoice_line_items (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    invoice_id INT NOT NULL,
+                    date VARCHAR(20),
+                    lr_no VARCHAR(100),
+                    container_no VARCHAR(100),
+                    vehicle_no VARCHAR(100),
+                    from_location VARCHAR(255),
+                    to_location VARCHAR(255),
+                    type VARCHAR(100),
+                    basic_freight DOUBLE DEFAULT 0,
+                    detention_charge DOUBLE DEFAULT 0,
+                    other_charges DOUBLE DEFAULT 0,
+                    total DOUBLE DEFAULT 0,
+                    CONSTRAINT fk_sale_invoice_line_items FOREIGN KEY (invoice_id)
+                        REFERENCES sale_invoices(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB
+                """);
         }
     }
 
     private List<InvoiceLineItem> getLineItems(int invoiceId) throws Exception {
-        String sql = "SELECT * FROM invoice_line_items WHERE invoice_id=? ORDER BY id";
+        ensureLineItemColumns();
+        String sql = "SELECT * FROM sale_invoice_line_items WHERE invoice_id=? ORDER BY id";
         List<InvoiceLineItem> items = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -313,7 +319,7 @@ public class SaleInvoiceDAO {
     }
 
     private void deleteLineItems(int invoiceId) throws Exception {
-        String sql = "DELETE FROM invoice_line_items WHERE invoice_id=?";
+        String sql = "DELETE FROM sale_invoice_line_items WHERE invoice_id=?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, invoiceId);
