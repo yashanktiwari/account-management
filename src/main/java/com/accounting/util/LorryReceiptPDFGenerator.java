@@ -314,15 +314,13 @@ public class LorryReceiptPDFGenerator {
 
         outerCell.addElement(conTable);
 
-        // ── 3b. Main table: left (packages/desc/weights) + right (freight amounts) ──
-        PdfPTable mainTable = new PdfPTable(2);
+        // ── 3b. Main table: packages/desc/weights (full width) ──
+        PdfPTable mainTable = new PdfPTable(1);
         mainTable.setWidthPercentage(100);
-        mainTable.setWidths(new float[]{3.2f, 1.8f});
 
-        // ─── LEFT SIDE ───
-        PdfPCell leftCell = new PdfPCell();
-        leftCell.setBorder(Rectangle.BOX);
-        leftCell.setPadding(0);
+        PdfPCell mainCell = new PdfPCell();
+        mainCell.setBorder(Rectangle.BOX);
+        mainCell.setPadding(0);
 
         // Package header table (8 columns, 2-row header)
         PdfPTable pkgTable = new PdfPTable(8);
@@ -379,7 +377,7 @@ public class LorryReceiptPDFGenerator {
             }
         }
 
-        leftCell.addElement(pkgTable);
+        mainCell.addElement(pkgTable);
 
         // S.T. No / S.H. No / Value / G.Wt / T.Wt / N.Wt sub-table
         PdfPTable stTable = new PdfPTable(6);
@@ -415,28 +413,8 @@ public class LorryReceiptPDFGenerator {
         addBorderedCell(stTable, "N. Wt.", F_BOLD_8, Element.ALIGN_LEFT);
         addBorderedCell(stTable, s(lr.getNetWeight()), F_NORM_9, Element.ALIGN_LEFT);
 
-        leftCell.addElement(stTable);
-        mainTable.addCell(leftCell);
-
-        // ─── RIGHT SIDE: Freight amounts ───
-        PdfPCell rightCell = new PdfPCell();
-        rightCell.setBorder(Rectangle.BOX);
-        rightCell.setPadding(0);
-
-        PdfPTable amtTable = new PdfPTable(2);
-        amtTable.setWidthPercentage(100);
-        amtTable.setWidths(new float[]{1.2f, 1f});
-
-        // Amount rows
-        addAmountRow(amtTable, "Freight", lr.getFreight());
-        addAmountRow(amtTable, "Advance", lr.getAdvance());
-        addAmountRow(amtTable, "Balance", lr.getBalance());
-        addAmountRow(amtTable, "A.O.C.", lr.getAoc());
-        addAmountRow(amtTable, "S.T. Charge", lr.getStCharge());
-        addAmountRow(amtTable, "Total", lr.getTotal());
-
-        rightCell.addElement(amtTable);
-        mainTable.addCell(rightCell);
+        mainCell.addElement(stTable);
+        mainTable.addCell(mainCell);
 
         outerCell.addElement(mainTable);
 
