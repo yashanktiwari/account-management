@@ -215,29 +215,21 @@ public class LorryReceiptPDFGenerator {
         policyRow.setWidthPercentage(100);
         policyRow.setWidths(new float[]{1.5f, 1f});
 
-        Paragraph policyLabel = new Paragraph("Policy No. ", F_NORM_6);
-        PdfPCell policyLabelCell = new PdfPCell(policyLabel);
-        policyLabelCell.setBorder(Rectangle.NO_BORDER);
-        policyLabelCell.setPadding(1);
-        policyRow.addCell(policyLabelCell);
+        Paragraph policyPara = new Paragraph();
+        policyPara.add(new Chunk("Policy No. ", F_NORM_6));
+        policyPara.add(new Chunk(s(lr.getPolicyNo()).isEmpty() ? "__________________" : s(lr.getPolicyNo()), F_NORM_7));
+        PdfPCell policyCell = new PdfPCell(policyPara);
+        policyCell.setBorder(Rectangle.NO_BORDER);
+        policyCell.setPadding(1);
+        policyRow.addCell(policyCell);
 
-        Paragraph policyValue = new Paragraph(s(lr.getPolicyNo()).isEmpty() ? "__________________" : s(lr.getPolicyNo()), F_NORM_7);
-        PdfPCell policyValueCell = new PdfPCell(policyValue);
-        policyValueCell.setBorder(Rectangle.NO_BORDER);
-        policyValueCell.setPadding(1);
-        policyRow.addCell(policyValueCell);
-
-        Paragraph dateLabel = new Paragraph("Date: ", F_NORM_6);
-        PdfPCell dateLabelCell = new PdfPCell(dateLabel);
-        dateLabelCell.setBorder(Rectangle.NO_BORDER);
-        dateLabelCell.setPadding(1);
-        policyRow.addCell(dateLabelCell);
-
-        Paragraph dateValue = new Paragraph(lr.getPolicyDate() != null ? lr.getPolicyDate().format(DATE_FORMATTER) : "____________", F_NORM_7);
-        PdfPCell dateValueCell = new PdfPCell(dateValue);
-        dateValueCell.setBorder(Rectangle.NO_BORDER);
-        dateValueCell.setPadding(1);
-        policyRow.addCell(dateValueCell);
+        Paragraph datePara = new Paragraph();
+        datePara.add(new Chunk("Date: ", F_NORM_6));
+        datePara.add(new Chunk(lr.getPolicyDate() != null ? lr.getPolicyDate().format(DATE_FORMATTER) : "____________", F_NORM_7));
+        PdfPCell dateCell = new PdfPCell(datePara);
+        dateCell.setBorder(Rectangle.NO_BORDER);
+        dateCell.setPadding(1);
+        policyRow.addCell(dateCell);
 
         PdfPCell policyWrap = new PdfPCell(policyRow);
         policyWrap.setBorder(Rectangle.NO_BORDER);
@@ -249,29 +241,21 @@ public class LorryReceiptPDFGenerator {
         amountRow.setWidthPercentage(100);
         amountRow.setWidths(new float[]{1.5f, 1f});
 
-        Paragraph amountLabel = new Paragraph("Amount: ", F_NORM_6);
-        PdfPCell amountLabelCell = new PdfPCell(amountLabel);
-        amountLabelCell.setBorder(Rectangle.NO_BORDER);
-        amountLabelCell.setPadding(1);
-        amountRow.addCell(amountLabelCell);
+        Paragraph amountPara = new Paragraph();
+        amountPara.add(new Chunk("Amount: ", F_NORM_6));
+        amountPara.add(new Chunk(s(lr.getInsuranceAmount()).isEmpty() ? "___________________" : s(lr.getInsuranceAmount()), F_NORM_7));
+        PdfPCell amountCell = new PdfPCell(amountPara);
+        amountCell.setBorder(Rectangle.NO_BORDER);
+        amountCell.setPadding(1);
+        amountRow.addCell(amountCell);
 
-        Paragraph amountValue = new Paragraph(s(lr.getInsuranceAmount()).isEmpty() ? "___________________" : s(lr.getInsuranceAmount()), F_NORM_7);
-        PdfPCell amountValueCell = new PdfPCell(amountValue);
-        amountValueCell.setBorder(Rectangle.NO_BORDER);
-        amountValueCell.setPadding(1);
-        amountRow.addCell(amountValueCell);
-
-        Paragraph dateLabel2 = new Paragraph("Date: ", F_NORM_6);
-        PdfPCell dateLabel2Cell = new PdfPCell(dateLabel2);
-        dateLabel2Cell.setBorder(Rectangle.NO_BORDER);
-        dateLabel2Cell.setPadding(1);
-        amountRow.addCell(dateLabel2Cell);
-
-        Paragraph dateValue2 = new Paragraph(lr.getInsuranceDate() != null ? lr.getInsuranceDate().format(DATE_FORMATTER) : "____________", F_NORM_7);
-        PdfPCell dateValue2Cell = new PdfPCell(dateValue2);
-        dateValue2Cell.setBorder(Rectangle.NO_BORDER);
-        dateValue2Cell.setPadding(1);
-        amountRow.addCell(dateValue2Cell);
+        Paragraph datePara2 = new Paragraph();
+        datePara2.add(new Chunk("Date: ", F_NORM_6));
+        datePara2.add(new Chunk(lr.getInsuranceDate() != null ? lr.getInsuranceDate().format(DATE_FORMATTER) : "____________", F_NORM_7));
+        PdfPCell dateCell2 = new PdfPCell(datePara2);
+        dateCell2.setBorder(Rectangle.NO_BORDER);
+        dateCell2.setPadding(1);
+        amountRow.addCell(dateCell2);
 
         PdfPCell amountWrap = new PdfPCell(amountRow);
         amountWrap.setBorder(Rectangle.NO_BORDER);
