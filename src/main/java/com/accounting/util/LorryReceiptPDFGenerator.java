@@ -119,28 +119,13 @@ public class LorryReceiptPDFGenerator {
         ccTitleCell.setHorizontalAlignment(Element.ALIGN_CENTER);
         ccInner.addCell(ccTitleCell);
 
-        // LR field rows
-        PdfPTable lrFields = new PdfPTable(2);
-        lrFields.setWidthPercentage(100);
-        lrFields.setWidths(new float[]{1.2f, 1.8f});
-
-        addLabelValueRow(lrFields, "LR No.", s(lr.getLrNo()), F_RED_BOLD_14);
-        addLabelValueRow(lrFields, "LR Date", lr.getLrDate() != null ? lr.getLrDate().format(DATE_FORMATTER) : "", F_NORM_10);
-        addLabelValueRow(lrFields, "Vehicle No.", s(lr.getVehicleNo()), F_BOLD_10);
-        addLabelValueRow(lrFields, "From", s(lr.getFromLocation()), F_BOLD_10);
-        addLabelValueRow(lrFields, "To", s(lr.getToLocation()), F_BOLD_10);
-        addLabelValueRow(lrFields, "E-Way Bill No.", s(lr.getEWayBillNo()), F_NORM_10);
-
-        PdfPCell lrFieldsWrap = new PdfPCell(lrFields);
-        lrFieldsWrap.setBorder(Rectangle.NO_BORDER);
-        lrFieldsWrap.setPadding(0);
-        ccInner.addCell(lrFieldsWrap);
-
-        // Add spacer to push content and fill space
-        PdfPCell spacerCell = new PdfPCell(new Paragraph(" ", F_NORM_8));
-        spacerCell.setBorder(Rectangle.NO_BORDER);
-        spacerCell.setPadding(80);
-        ccInner.addCell(spacerCell);
+        // LR field rows - individual label-value with full underline
+        addLabelValueFullLine(ccInner, "LR No.", s(lr.getLrNo()), F_RED_BOLD_14);
+        addLabelValueFullLine(ccInner, "LR Date", lr.getLrDate() != null ? lr.getLrDate().format(DATE_FORMATTER) : "", F_NORM_10);
+        addLabelValueFullLine(ccInner, "Vehicle No.", s(lr.getVehicleNo()), F_BOLD_10);
+        addLabelValueFullLine(ccInner, "From", s(lr.getFromLocation()), F_BOLD_10);
+        addLabelValueFullLine(ccInner, "To", s(lr.getToLocation()), F_BOLD_10);
+        addLabelValueFullLine(ccInner, "E-Way Bill No.", s(lr.getEWayBillNo()), F_NORM_10);
 
         ccCell.addElement(ccInner);
         topGrid.addCell(ccCell);
@@ -494,6 +479,28 @@ public class LorryReceiptPDFGenerator {
         vc.setPadding(3);
         vc.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(vc);
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  Helper: Label + Value with full underline (single column)
+    // ══════════════════════════════════════════════════════════
+    private static void addLabelValueFullLine(PdfPTable table, String label, String value, Font valueFont) {
+        PdfPTable rowTable = new PdfPTable(1);
+        rowTable.setWidthPercentage(100);
+
+        Paragraph p = new Paragraph();
+        p.add(new Chunk(label + " ", F_NORM_10));
+        p.add(new Chunk(value.isEmpty() ? "____________________" : value, valueFont));
+        PdfPCell cell = new PdfPCell(p);
+        cell.setBorder(Rectangle.BOTTOM);
+        cell.setBorderWidthBottom(0.5f);
+        cell.setPadding(4);
+        rowTable.addCell(cell);
+
+        PdfPCell wrap = new PdfPCell(rowTable);
+        wrap.setBorder(Rectangle.NO_BORDER);
+        wrap.setPadding(0);
+        table.addCell(wrap);
     }
 
     private static void addHeaderCellRowspan(PdfPTable table, String text, int rowspan) {
