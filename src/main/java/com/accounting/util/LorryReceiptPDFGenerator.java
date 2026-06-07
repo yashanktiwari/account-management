@@ -364,9 +364,9 @@ public class LorryReceiptPDFGenerator {
         addDataCell(pkgTable, s(lr.getDescription()), 30);
         addDataCell(pkgTable, s(lr.getWeightActual()), 30);
         addDataCell(pkgTable, s(lr.getWeightCharged()), 30);
-        addDataCell(pkgTable, s(lr.getRate()), 30);
-        addDataCell(pkgTable, lr.getFreightToPay() > 0 ? String.format("%.2f", lr.getFreightToPay()) : "", 30);
-        addDataCell(pkgTable, lr.getFreightPaid() > 0 ? String.format("%.2f", lr.getFreightPaid()) : "", 30);
+        addDataCell(pkgTable, s(lr.getRate()), 30, Element.ALIGN_RIGHT);
+        addDataCell(pkgTable, lr.getFreightToPay() > 0 ? String.format("%.2f", lr.getFreightToPay()) : "", 30, Element.ALIGN_RIGHT);
+        addDataCell(pkgTable, lr.getFreightPaid() > 0 ? String.format("%.2f", lr.getFreightPaid()) : "", 30, Element.ALIGN_RIGHT);
 
         // Empty spacer rows (2 rows to give height, like the physical form)
         for (int r = 0; r < 2; r++) {
@@ -426,16 +426,6 @@ public class LorryReceiptPDFGenerator {
         PdfPTable amtTable = new PdfPTable(2);
         amtTable.setWidthPercentage(100);
         amtTable.setWidths(new float[]{1.2f, 1f});
-
-        // Empty spacer rows to match left table header height
-        for (int i = 0; i < 4; i++) {
-            PdfPCell ec = new PdfPCell(new Phrase(" ", F_NORM_8));
-            ec.setBorder(Rectangle.BOX);
-            ec.setMinimumHeight(16);
-            ec.setPadding(2);
-            ec.setColspan(2);
-            amtTable.addCell(ec);
-        }
 
         // Amount rows
         addAmountRow(amtTable, "Freight", lr.getFreight());
@@ -610,11 +600,15 @@ public class LorryReceiptPDFGenerator {
     }
 
     private static void addDataCell(PdfPTable table, String text, float minHeight) {
+        addDataCell(table, text, minHeight, Element.ALIGN_CENTER);
+    }
+
+    private static void addDataCell(PdfPTable table, String text, float minHeight, int alignment) {
         PdfPCell cell = new PdfPCell(new Phrase(text, F_NORM_9));
         cell.setBorder(Rectangle.BOX);
         cell.setPadding(3);
         cell.setMinimumHeight(minHeight);
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setHorizontalAlignment(alignment);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(cell);
     }
