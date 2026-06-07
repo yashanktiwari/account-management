@@ -69,17 +69,32 @@ public class ReportDAO {
         double runningBalance = 0.0;
 
         // Calculate opening balance (transactions before from date)
-        String openingSql = """
-            SELECT 
-                COALESCE(SUM(CASE WHEN type = 'DEBIT' THEN amount ELSE 0 END), 0) -
-                COALESCE(SUM(CASE WHEN type = 'CREDIT' THEN amount ELSE 0 END), 0) as balance
-            FROM (
-                SELECT 'DEBIT' as type, net_amount as amount, invoice_date as date FROM sale_invoices
-                UNION ALL
-                SELECT 'CREDIT' as type, amount as amount, payment_date as date FROM payments
-            ) combined
-            WHERE date < ?
-            """ + (party != null ? " AND party_name = ?" : "");
+        String openingSql;
+        if (party != null) {
+            openingSql = """
+                SELECT
+                    COALESCE(SUM(CASE WHEN type = 'DEBIT' THEN amount ELSE 0 END), 0) -
+                    COALESCE(SUM(CASE WHEN type = 'CREDIT' THEN amount ELSE 0 END), 0) as balance
+                FROM (
+                    SELECT 'DEBIT' as type, net_amount as amount, invoice_date as date, account_name as party_name FROM sale_invoices
+                    UNION ALL
+                    SELECT 'CREDIT' as type, amount as amount, payment_date as date, account_name as party_name FROM payments
+                ) combined
+                WHERE date < ? AND party_name = ?
+                """;
+        } else {
+            openingSql = """
+                SELECT
+                    COALESCE(SUM(CASE WHEN type = 'DEBIT' THEN amount ELSE 0 END), 0) -
+                    COALESCE(SUM(CASE WHEN type = 'CREDIT' THEN amount ELSE 0 END), 0) as balance
+                FROM (
+                    SELECT 'DEBIT' as type, net_amount as amount, invoice_date as date, account_name as party_name FROM sale_invoices
+                    UNION ALL
+                    SELECT 'CREDIT' as type, amount as amount, payment_date as date, account_name as party_name FROM payments
+                ) combined
+                WHERE date < ?
+                """;
+        }
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(openingSql)) {
@@ -97,35 +112,58 @@ public class ReportDAO {
         runningBalance = openingBalance;
 
         // Get transactions in date range
-        String sql = """
-            SELECT date, party_name, type, reference, 
-                   CASE WHEN type = 'DEBIT' THEN amount ELSE 0 END as debit,
-                   CASE WHEN type = 'CREDIT' THEN amount ELSE 0 END as credit
-            FROM (
-                SELECT invoice_date as date, account_name as party_name, 'Invoice' as type, 
-                       invoice_no as reference, net_amount as amount
-                FROM sale_invoices
-                WHERE invoice_date BETWEEN ? AND ?
-                """ + (party != null ? " AND account_name = ?" : "") + """
+        String sql;
+        if (party != null) {
+            sql = """
+                SELECT date, party_name, type, reference,
+                       CASE WHEN type = 'DEBIT' THEN amount ELSE 0 END as debit,
+                       CASE WHEN type = 'CREDIT' THEN amount ELSE 0 END as credit
+                FROM (
+                    SELECT invoice_date as date, account_name as party_name, 'Invoice' as type,
+                           invoice_no as reference, net_amount as amount
+                    FROM sale_invoices
+                    WHERE invoice_date BETWEEN ? AND ? AND account_name = ?
 
-                UNION ALL
+                    UNION ALL
 
-                SELECT payment_date as date, account_name as party_name, 'Receipt' as type,
-                       CONCAT('PAY-', id) as reference, amount as amount
-                FROM payments
-                WHERE payment_date BETWEEN ? AND ?
-                """ + (party != null ? " AND account_name = ?" : "") + """
-            ) combined
-            ORDER BY date
-            """;
+                    SELECT payment_date as date, account_name as party_name, 'Receipt' as type,
+                           CONCAT('PAY-', id) as reference, amount as amount
+                    FROM payments
+                    WHERE payment_date BETWEEN ? AND ? AND account_name = ?
+                ) combined
+                ORDER BY date
+                """;
+        } else {
+            sql = """
+                SELECT date, party_name, type, reference,
+                       CASE WHEN type = 'DEBIT' THEN amount ELSE 0 END as debit,
+                       CASE WHEN type = 'CREDIT' THEN amount ELSE 0 END as credit
+                FROM (
+                    SELECT invoice_date as date, account_name as party_name, 'Invoice' as type,
+                           invoice_no as reference, net_amount as amount
+                    FROM sale_invoices
+                    WHERE invoice_date BETWEEN ? AND ?
+
+                    UNION ALL
+
+                    SELECT payment_date as date, account_name as party_name, 'Receipt' as type,
+                           CONCAT('PAY-', id) as reference, amount as amount
+                    FROM payments
+                    WHERE payment_date BETWEEN ? AND ?
+                ) combined
+                ORDER BY date
+                """;
+        }
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             int paramIndex = 1;
             pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
+            pstmt.setDate(paramIndex++, Date.valueOf(toDate));
             if (party != null) {
                 pstmt.setString(paramIndex++, party);
             }
+            pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
             pstmt.setDate(paramIndex++, Date.valueOf(toDate));
             if (party != null) {
                 pstmt.setString(paramIndex++, party);
@@ -157,31 +195,50 @@ public class ReportDAO {
         List<ReportRow> rows = new ArrayList<>();
         double totalAmount = 0.0;
 
-        String sql = """
-            SELECT slip_date as date, vehicle_no, 'Loading Slip' as type,
-                   CONCAT('LS-', slip_no) as reference, freight_amount as amount
-            FROM loading_slips
-            WHERE slip_date BETWEEN ? AND ?
-            """ + (vehicle != null ? " AND vehicle_no = ?" : "") + """
+        String sql;
+        if (vehicle != null) {
+            sql = """
+                SELECT slip_date as date, vehicle_no, 'Loading Slip' as type,
+                       CONCAT('LS-', slip_no) as reference, freight_amount as amount
+                FROM loading_slips
+                WHERE slip_date BETWEEN ? AND ? AND vehicle_no = ?
 
-            UNION ALL
+                UNION ALL
 
-            SELECT lr_date as date, vehicle_no, 'Lorry Receipt' as type,
-                   CONCAT('LR-', lr_no) as reference, freight as amount
-            FROM lorry_receipts
-            WHERE lr_date BETWEEN ? AND ?
-            """ + (vehicle != null ? " AND vehicle_no = ?" : "") + """
+                SELECT lr_date as date, vehicle_no, 'Lorry Receipt' as type,
+                       CONCAT('LR-', lr_no) as reference, freight as amount
+                FROM lorry_receipts
+                WHERE lr_date BETWEEN ? AND ? AND vehicle_no = ?
 
-            ORDER BY date
-            """;
+                ORDER BY date
+                """;
+        } else {
+            sql = """
+                SELECT slip_date as date, vehicle_no, 'Loading Slip' as type,
+                       CONCAT('LS-', slip_no) as reference, freight_amount as amount
+                FROM loading_slips
+                WHERE slip_date BETWEEN ? AND ?
+
+                UNION ALL
+
+                SELECT lr_date as date, vehicle_no, 'Lorry Receipt' as type,
+                       CONCAT('LR-', lr_no) as reference, freight as amount
+                FROM lorry_receipts
+                WHERE lr_date BETWEEN ? AND ?
+
+                ORDER BY date
+                """;
+        }
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             int paramIndex = 1;
             pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
+            pstmt.setDate(paramIndex++, Date.valueOf(toDate));
             if (vehicle != null) {
                 pstmt.setString(paramIndex++, vehicle);
             }
+            pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
             pstmt.setDate(paramIndex++, Date.valueOf(toDate));
             if (vehicle != null) {
                 pstmt.setString(paramIndex++, vehicle);
@@ -210,31 +267,50 @@ public class ReportDAO {
         List<ReportRow> rows = new ArrayList<>();
         double totalGST = 0.0;
 
-        String sql = """
-            SELECT invoice_date as date, account_name as party_name, 'Sale Invoice' as type,
-                   gstin, taxable_amount, total_gst
-            FROM sale_invoices
-            WHERE invoice_date BETWEEN ? AND ?
-            """ + (party != null ? " AND account_name = ?" : "") + """
+        String sql;
+        if (party != null) {
+            sql = """
+                SELECT invoice_date as date, account_name as party_name, 'Sale Invoice' as type,
+                       gstin, taxable_amount, total_gst
+                FROM sale_invoices
+                WHERE invoice_date BETWEEN ? AND ? AND account_name = ?
 
-            UNION ALL
+                UNION ALL
 
-            SELECT invoice_date as date, account_name as party_name, 'Purchase Invoice' as type,
-                   gstin, taxable_amount, total_gst
-            FROM purchase_invoices
-            WHERE invoice_date BETWEEN ? AND ?
-            """ + (party != null ? " AND account_name = ?" : "") + """
+                SELECT invoice_date as date, account_name as party_name, 'Purchase Invoice' as type,
+                       gstin, taxable_amount, total_gst
+                FROM purchase_invoices
+                WHERE invoice_date BETWEEN ? AND ? AND account_name = ?
 
-            ORDER BY date
-            """;
+                ORDER BY date
+                """;
+        } else {
+            sql = """
+                SELECT invoice_date as date, account_name as party_name, 'Sale Invoice' as type,
+                       gstin, taxable_amount, total_gst
+                FROM sale_invoices
+                WHERE invoice_date BETWEEN ? AND ?
+
+                UNION ALL
+
+                SELECT invoice_date as date, account_name as party_name, 'Purchase Invoice' as type,
+                       gstin, taxable_amount, total_gst
+                FROM purchase_invoices
+                WHERE invoice_date BETWEEN ? AND ?
+
+                ORDER BY date
+                """;
+        }
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             int paramIndex = 1;
             pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
+            pstmt.setDate(paramIndex++, Date.valueOf(toDate));
             if (party != null) {
                 pstmt.setString(paramIndex++, party);
             }
+            pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
             pstmt.setDate(paramIndex++, Date.valueOf(toDate));
             if (party != null) {
                 pstmt.setString(paramIndex++, party);
