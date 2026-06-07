@@ -145,7 +145,8 @@ public class LorryReceiptPDFGenerator {
         PdfPCell noticeTitleCell = new PdfPCell(noticeTitle);
         noticeTitleCell.setBorder(Rectangle.BOTTOM);
         noticeTitleCell.setBorderWidthBottom(1f);
-        noticeTitleCell.setPadding(1);
+        noticeTitleCell.setPaddingTop(2);
+        noticeTitleCell.setPaddingBottom(4);
         noticeTitleCell.setHorizontalAlignment(Element.ALIGN_CENTER);
         noticeInner.addCell(noticeTitleCell);
 
@@ -172,8 +173,11 @@ public class LorryReceiptPDFGenerator {
         riskTitle.setAlignment(Element.ALIGN_CENTER);
         riskTitle.setLeading(8, 0);
         PdfPCell riskTitleCell = new PdfPCell(riskTitle);
-        riskTitleCell.setBorder(Rectangle.NO_BORDER);
-        riskTitleCell.setPadding(1);
+        riskTitleCell.setBorder(Rectangle.BOTTOM);
+        riskTitleCell.setBorderWidthBottom(1f);
+        riskTitleCell.setPaddingTop(2);
+        riskTitleCell.setPaddingBottom(4);
+        riskTitleCell.setHorizontalAlignment(Element.ALIGN_CENTER);
         riskInner.addCell(riskTitleCell);
 
         Paragraph line1 = new Paragraph("I the Costumer has stated that He has not", F_NORM_6);
@@ -567,7 +571,7 @@ public class LorryReceiptPDFGenerator {
         p.add(new Chunk(value.isEmpty() ? "____________________" : value, valueFont));
         PdfPCell cell = new PdfPCell(p);
         cell.setBorder(Rectangle.NO_BORDER);
-        cell.setPadding(8);
+        cell.setPadding(6);
         rowTable.addCell(cell);
 
         PdfPCell wrap = new PdfPCell(rowTable);
