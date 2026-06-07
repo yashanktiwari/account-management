@@ -494,7 +494,7 @@ public class LorryReceiptPDFGenerator {
         PdfPCell cell = new PdfPCell(p);
         cell.setBorder(Rectangle.BOTTOM);
         cell.setBorderWidthBottom(0.5f);
-        cell.setPadding(4);
+        cell.setPadding(8);
         rowTable.addCell(cell);
 
         PdfPCell wrap = new PdfPCell(rowTable);
