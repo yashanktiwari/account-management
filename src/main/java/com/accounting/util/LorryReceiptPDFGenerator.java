@@ -186,7 +186,7 @@ public class LorryReceiptPDFGenerator {
         PdfPCell riskTextCell = new PdfPCell(riskText);
         riskTextCell.setBorder(Rectangle.NO_BORDER);
         riskTextCell.setPaddingTop(0);
-        riskTextCell.setPaddingBottom(1);
+        riskTextCell.setPaddingBottom(3);
         riskInner.addCell(riskTextCell);
 
         // Company line
