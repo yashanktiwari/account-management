@@ -140,7 +140,7 @@ public class LorryReceiptPDFGenerator {
         PdfPTable noticeInner = new PdfPTable(1);
         noticeInner.setWidthPercentage(100);
 
-        Paragraph noticeTitle = new Paragraph("NOTICE", F_BOLD_10);
+        Paragraph noticeTitle = new Paragraph("NOTICE", F_BOLD_8);
         noticeTitle.setAlignment(Element.ALIGN_CENTER);
         PdfPCell noticeTitleCell = new PdfPCell(noticeTitle);
         noticeTitleCell.setBorder(Rectangle.BOTTOM);
@@ -180,32 +180,14 @@ public class LorryReceiptPDFGenerator {
         riskTitleCell.setHorizontalAlignment(Element.ALIGN_CENTER);
         riskInner.addCell(riskTitleCell);
 
-        Paragraph line1 = new Paragraph("I the Costumer has stated that He has not", F_NORM_6);
-        line1.setAlignment(Element.ALIGN_JUSTIFIED);
-        line1.setLeading(8, 0);
-        PdfPCell line1Cell = new PdfPCell(line1);
-        line1Cell.setBorder(Rectangle.NO_BORDER);
-        line1Cell.setPaddingTop(0);
-        line1Cell.setPaddingBottom(1);
-        riskInner.addCell(line1Cell);
-
-        Paragraph line2 = new Paragraph("insured the consignment or", F_NORM_6);
-        line2.setAlignment(Element.ALIGN_JUSTIFIED);
-        line2.setLeading(8, 0);
-        PdfPCell line2Cell = new PdfPCell(line2);
-        line2Cell.setBorder(Rectangle.NO_BORDER);
-        line2Cell.setPaddingTop(0);
-        line2Cell.setPaddingBottom(1);
-        riskInner.addCell(line2Cell);
-
-        Paragraph line3 = new Paragraph("He has insured the consignment", F_NORM_6);
-        line3.setAlignment(Element.ALIGN_JUSTIFIED);
-        line3.setLeading(8, 0);
-        PdfPCell line3Cell = new PdfPCell(line3);
-        line3Cell.setBorder(Rectangle.NO_BORDER);
-        line3Cell.setPaddingTop(0);
-        line3Cell.setPaddingBottom(1);
-        riskInner.addCell(line3Cell);
+        Paragraph riskText = new Paragraph("I the Costumer has stated that He has not insured the consignment or He has insured the consignment", F_NORM_6);
+        riskText.setAlignment(Element.ALIGN_JUSTIFIED);
+        riskText.setLeading(8, 0);
+        PdfPCell riskTextCell = new PdfPCell(riskText);
+        riskTextCell.setBorder(Rectangle.NO_BORDER);
+        riskTextCell.setPaddingTop(0);
+        riskTextCell.setPaddingBottom(1);
+        riskInner.addCell(riskTextCell);
 
         // Company line
         Paragraph companyLine = new Paragraph();
