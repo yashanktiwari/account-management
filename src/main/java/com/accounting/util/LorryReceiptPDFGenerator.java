@@ -28,6 +28,7 @@ public class LorryReceiptPDFGenerator {
     private static final Font F_NORM_9 = FontFactory.getFont(FontFactory.HELVETICA, 9);
     private static final Font F_NORM_8 = FontFactory.getFont(FontFactory.HELVETICA, 8);
     private static final Font F_NORM_7 = FontFactory.getFont(FontFactory.HELVETICA, 7);
+    private static final Font F_NORM_6 = FontFactory.getFont(FontFactory.HELVETICA, 6);
     private static final Font F_RED_BOLD_14 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, new Color(204, 0, 0));
 
     public static void generateLorryReceiptPDF(LorryReceipt lr, String outputPath, String copyLabel) {
