@@ -7,6 +7,7 @@ import com.accounting.database.AppConfig;
 import com.accounting.database.DBConnection;
 import com.accounting.model.Payment;
 import com.accounting.ui.dialog.*;
+import com.accounting.ui.dialog.ReportView;
 import com.accounting.util.AlertUtil;
 import com.accounting.util.AppExecutor;
 import com.accounting.util.AppLogger;
@@ -63,6 +64,7 @@ public class MainApp extends Application {
     private Button saleReceiptBtn;
     private Button loadingSlipBtn;
     private Button lorryReceiptBtn;
+    private Button reportsBtn;
 
     public static Stage getPrimaryStage() {
         return primaryStage;
@@ -191,6 +193,11 @@ public class MainApp extends Application {
         loadingSlipBtn = sidebarButton("Loading Slips", this::showLoadingSlips);
         lorryReceiptBtn = sidebarButton("Lorry Receipt (LR)", this::showLorryReceipts);
 
+        Label reportsTitle = new Label("Reports");
+        reportsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
+
+        reportsBtn = sidebarButton("Reports", this::showReports);
+
         Label settingsTitle = new Label("Settings");
         settingsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
 
@@ -204,6 +211,7 @@ public class MainApp extends Application {
                 invoicesTitle, purchaseInvoiceBtn, saleInvoiceBtn,
                 receiptsTitle, purchaseReceiptBtn, saleReceiptBtn,
                 slipsTitle, loadingSlipBtn, lorryReceiptBtn,
+                reportsTitle, reportsBtn,
                 settingsTitle, dbBtn, companyBtn, invoiceBtn
         );
 
@@ -273,6 +281,10 @@ public class MainApp extends Application {
 
     private void showLorryReceipts() {
         showContent(new LorryReceiptListView().createContent());
+    }
+
+    private void showReports() {
+        showContent(new ReportView().createContent());
     }
 
     private VBox buildDashboard() {
