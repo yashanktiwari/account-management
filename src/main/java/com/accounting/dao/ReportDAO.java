@@ -271,14 +271,14 @@ public class ReportDAO {
         if (party != null) {
             sql = """
                 SELECT invoice_date as date, account_name as party_name, 'Sale Invoice' as type,
-                       gstin, taxable_amount, total_gst
+                       rcvr_gstin as gstin, taxable_amount, total_gst
                 FROM sale_invoices
                 WHERE invoice_date BETWEEN ? AND ? AND account_name = ?
 
                 UNION ALL
 
                 SELECT invoice_date as date, account_name as party_name, 'Purchase Invoice' as type,
-                       gstin, taxable_amount, total_gst
+                       supplier_gst_no as gstin, taxable_amount, total_gst
                 FROM purchase_invoices
                 WHERE invoice_date BETWEEN ? AND ? AND account_name = ?
 
@@ -287,14 +287,14 @@ public class ReportDAO {
         } else {
             sql = """
                 SELECT invoice_date as date, account_name as party_name, 'Sale Invoice' as type,
-                       gstin, taxable_amount, total_gst
+                       rcvr_gstin as gstin, taxable_amount, total_gst
                 FROM sale_invoices
                 WHERE invoice_date BETWEEN ? AND ?
 
                 UNION ALL
 
                 SELECT invoice_date as date, account_name as party_name, 'Purchase Invoice' as type,
-                       gstin, taxable_amount, total_gst
+                       supplier_gst_no as gstin, taxable_amount, total_gst
                 FROM purchase_invoices
                 WHERE invoice_date BETWEEN ? AND ?
 
