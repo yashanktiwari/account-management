@@ -49,14 +49,12 @@ public class LorryReceiptPDFGenerator {
             outerCell.setPadding(0);
 
             // ╔════════════════════════════════════════════════╗
-            // ║  SECTION 1 — TOP ROW: Header + Right LR fields ║
+            // ║  TOP SECTION: 3-column grid                   ║
+            // ║  Col1: LR_NOTICE (1/3)  Col2: RISK (1/3)     ║
+            // ║  Col3: CONSIGNEE COPY (1/3, full height)      ║
+            // ║  LR_HEADER spans Col1+Col2 at top             ║
             // ╚════════════════════════════════════════════════╝
-            buildTopRow(outerCell, lr);
-
-            // ╔════════════════════════════════════════════════╗
-            // ║  SECTION 2 — MIDDLE ROW: Notice + Risk         ║
-            // ╚════════════════════════════════════════════════╝
-            buildMiddleRow(outerCell, lr);
+            buildTopSection(outerCell, lr);
 
             // ╔════════════════════════════════════════════════╗
             // ║  SECTION 3 — BOTTOM (full width, generated)    ║
@@ -74,41 +72,43 @@ public class LorryReceiptPDFGenerator {
     }
 
     // ══════════════════════════════════════════════════════════
-    //  SECTION 1 — TOP ROW: LR_HEADER.jpg (left) + Generated right side
+    //  TOP SECTION: 2-row, 3-column grid
+    //  Row 1: Col1+Col2 merged (LR_HEADER), Col3 (CONSIGNEE COPY top)
+    //  Row 2: Col1 (LR_NOTICE), Col2 (AT OWNER'S RISK), Col3 (CONSIGNEE COPY continuation)
     // ══════════════════════════════════════════════════════════
-    private static void buildTopRow(PdfPCell outerCell, LorryReceipt lr) throws Exception {
-        PdfPTable topRow = new PdfPTable(2);
-        topRow.setWidthPercentage(100);
-        topRow.setWidths(new float[]{3.2f, 1.8f});
+    private static void buildTopSection(PdfPCell outerCell, LorryReceipt lr) throws Exception {
+        PdfPTable topGrid = new PdfPTable(3);
+        topGrid.setWidthPercentage(100);
+        topGrid.setWidths(new float[]{1f, 1f, 1f});
 
-        // ── LEFT: LR_HEADER.jpg ──
-        PdfPCell leftCell = new PdfPCell();
-        leftCell.setBorder(Rectangle.BOX);
-        leftCell.setPadding(2);
-        leftCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        // ── ROW 1 ──
+        // ── Col1+Col2 merged: LR_HEADER (2/3 width) ──
+        PdfPCell headerCell = new PdfPCell();
+        headerCell.setBorder(Rectangle.BOX);
+        headerCell.setPadding(2);
+        headerCell.setColspan(2);
+        headerCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
 
         Image headerImg = loadImage("LR_HEADER");
         if (headerImg != null) {
-            headerImg.scaleToFit(
-                    (PageSize.A4.getWidth() - 28) * 3.2f / 5.0f - 6,
-                    200
-            );
+            float maxW = (PageSize.A4.getWidth() - 28) * 2f / 3f - 6;
+            headerImg.scaleToFit(maxW, 200);
             headerImg.setAlignment(Image.MIDDLE);
-            leftCell.addElement(headerImg);
+            headerCell.addElement(headerImg);
         } else {
-            leftCell.addElement(new Paragraph("[ LR_HEADER.jpg — place image in src/main/resources/images/ ]",
+            headerCell.addElement(new Paragraph("[ LR_HEADER.jpg — place image in src/main/resources/images/ ]",
                     F_NORM_8));
         }
-        topRow.addCell(leftCell);
+        topGrid.addCell(headerCell);
 
-        // ── RIGHT: CONSIGNEE COPY + LR fields (generated) ──
-        PdfPCell rightCell = new PdfPCell();
-        rightCell.setBorder(Rectangle.BOX);
-        rightCell.setPadding(0);
+        // ── Col3: CONSIGNEE COPY (1/3 width, spans to row 2) ──
+        PdfPCell ccCell = new PdfPCell();
+        ccCell.setBorder(Rectangle.BOX);
+        ccCell.setPadding(0);
+        ccCell.setRowspan(2); // Spans both rows
 
-        // "CONSIGNEE COPY" title
-        PdfPTable rightInner = new PdfPTable(1);
-        rightInner.setWidthPercentage(100);
+        PdfPTable ccInner = new PdfPTable(1);
+        ccInner.setWidthPercentage(100);
 
         Paragraph ccTitle = new Paragraph("CONSIGNEE COPY", F_BOLD_12);
         ccTitle.setAlignment(Element.ALIGN_CENTER);
@@ -117,7 +117,7 @@ public class LorryReceiptPDFGenerator {
         ccTitleCell.setBorderWidthBottom(1f);
         ccTitleCell.setPadding(5);
         ccTitleCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        rightInner.addCell(ccTitleCell);
+        ccInner.addCell(ccTitleCell);
 
         // LR field rows
         PdfPTable lrFields = new PdfPTable(2);
@@ -134,23 +134,13 @@ public class LorryReceiptPDFGenerator {
         PdfPCell lrFieldsWrap = new PdfPCell(lrFields);
         lrFieldsWrap.setBorder(Rectangle.NO_BORDER);
         lrFieldsWrap.setPadding(0);
-        rightInner.addCell(lrFieldsWrap);
+        ccInner.addCell(lrFieldsWrap);
 
-        rightCell.addElement(rightInner);
-        topRow.addCell(rightCell);
+        ccCell.addElement(ccInner);
+        topGrid.addCell(ccCell);
 
-        outerCell.addElement(topRow);
-    }
-
-    // ══════════════════════════════════════════════════════════
-    //  SECTION 2 — MIDDLE ROW: LR_NOTICE.jpg (left) + AT OWNER'S RISK (right, generated)
-    // ══════════════════════════════════════════════════════════
-    private static void buildMiddleRow(PdfPCell outerCell, LorryReceipt lr) throws Exception {
-        PdfPTable midRow = new PdfPTable(2);
-        midRow.setWidthPercentage(100);
-        midRow.setWidths(new float[]{1f, 1f});
-
-        // ── LEFT: LR_NOTICE.jpg ──
+        // ── ROW 2 ──
+        // ── Col1: LR_NOTICE (1/3 width) ──
         PdfPCell noticeCell = new PdfPCell();
         noticeCell.setBorder(Rectangle.BOX);
         noticeCell.setPadding(2);
@@ -158,7 +148,7 @@ public class LorryReceiptPDFGenerator {
 
         Image noticeImg = loadImage("LR_NOTICE");
         if (noticeImg != null) {
-            float maxW = (PageSize.A4.getWidth() - 28) / 2f - 6;
+            float maxW = (PageSize.A4.getWidth() - 28) / 3f - 6;
             noticeImg.scaleToFit(maxW, 150);
             noticeImg.setAlignment(Image.MIDDLE);
             noticeCell.addElement(noticeImg);
@@ -166,14 +156,13 @@ public class LorryReceiptPDFGenerator {
             noticeCell.addElement(new Paragraph("[ LR_NOTICE.jpg — place image in src/main/resources/images/ ]",
                     F_NORM_8));
         }
-        midRow.addCell(noticeCell);
+        topGrid.addCell(noticeCell);
 
-        // ── RIGHT: AT OWNER'S RISK / CARRIER'S RISK (generated) ──
+        // ── Col2: AT OWNER'S RISK (1/3 width) ──
         PdfPCell riskCell = new PdfPCell();
         riskCell.setBorder(Rectangle.BOX);
         riskCell.setPadding(5);
 
-        String riskType = lr.getRiskType() != null ? lr.getRiskType() : "OWNER'S RISK";
         Paragraph riskTitle = new Paragraph("AT OWNER'S RISK / CARRIER'S RISK", F_BOLD_9);
         riskTitle.setAlignment(Element.ALIGN_CENTER);
         riskCell.addElement(riskTitle);
@@ -202,8 +191,9 @@ public class LorryReceiptPDFGenerator {
         amountLine.add(new Chunk(lr.getInsuranceDate() != null ? lr.getInsuranceDate().format(DATE_FORMATTER) : "____________", F_NORM_8));
         riskCell.addElement(amountLine);
 
-        midRow.addCell(riskCell);
-        outerCell.addElement(midRow);
+        topGrid.addCell(riskCell);
+
+        outerCell.addElement(topGrid);
     }
 
     // ══════════════════════════════════════════════════════════
