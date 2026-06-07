@@ -106,7 +106,7 @@ public class LorryReceiptPDFGenerator {
         ccCell.setBorder(Rectangle.BOX);
         ccCell.setPadding(0);
         ccCell.setRowspan(2); // Spans both rows
-        ccCell.setMinimumHeight(300); // Ensure it has enough height
+        ccCell.setMinimumHeight(400); // Height to match LR_HEADER + AT OWNER'S RISK
 
         PdfPTable ccInner = new PdfPTable(1);
         ccInner.setWidthPercentage(100);
@@ -116,7 +116,7 @@ public class LorryReceiptPDFGenerator {
         PdfPCell ccTitleCell = new PdfPCell(ccTitle);
         ccTitleCell.setBorder(Rectangle.BOTTOM);
         ccTitleCell.setBorderWidthBottom(1f);
-        ccTitleCell.setPadding(8);
+        ccTitleCell.setPadding(12);
         ccTitleCell.setHorizontalAlignment(Element.ALIGN_CENTER);
         ccInner.addCell(ccTitleCell);
 
@@ -140,7 +140,7 @@ public class LorryReceiptPDFGenerator {
         // Add spacer to fill remaining height
         PdfPCell spacerCell = new PdfPCell(new Paragraph(" ", F_NORM_8));
         spacerCell.setBorder(Rectangle.NO_BORDER);
-        spacerCell.setPadding(20);
+        spacerCell.setPadding(50);
         ccInner.addCell(spacerCell);
 
         ccCell.addElement(ccInner);
@@ -168,19 +168,29 @@ public class LorryReceiptPDFGenerator {
         // ── Col2: AT OWNER'S RISK (1/3 width) ──
         PdfPCell riskCell = new PdfPCell();
         riskCell.setBorder(Rectangle.BOX);
-        riskCell.setPadding(3);
+        riskCell.setPadding(2);
 
         Paragraph riskTitle = new Paragraph("AT OWNER'S RISK / CARRIER'S RISK", F_BOLD_9);
         riskTitle.setAlignment(Element.ALIGN_CENTER);
+        riskTitle.setLeading(10, 0);
         riskCell.addElement(riskTitle);
 
-        riskCell.addElement(new Paragraph("I the Costumer has stated that He has not", F_NORM_7));
-        riskCell.addElement(new Paragraph("insured the consignment or", F_NORM_7));
-        riskCell.addElement(new Paragraph("He has insured the consignment", F_NORM_7));
+        Paragraph line1 = new Paragraph("I the Costumer has stated that He has not", F_NORM_7);
+        line1.setLeading(9, 0);
+        riskCell.addElement(line1);
+
+        Paragraph line2 = new Paragraph("insured the consignment or", F_NORM_7);
+        line2.setLeading(9, 0);
+        riskCell.addElement(line2);
+
+        Paragraph line3 = new Paragraph("He has insured the consignment", F_NORM_7);
+        line3.setLeading(9, 0);
+        riskCell.addElement(line3);
 
         Paragraph companyLine = new Paragraph();
         companyLine.add(new Chunk("Company ", F_NORM_7));
         companyLine.add(new Chunk(s(lr.getInsuranceCompany()).isEmpty() ? "______________________________________" : s(lr.getInsuranceCompany()), F_NORM_8));
+        companyLine.setLeading(9, 0);
         riskCell.addElement(companyLine);
 
         Paragraph policyLine = new Paragraph();
@@ -188,6 +198,7 @@ public class LorryReceiptPDFGenerator {
         policyLine.add(new Chunk(s(lr.getPolicyNo()).isEmpty() ? "__________________" : s(lr.getPolicyNo()), F_NORM_8));
         policyLine.add(new Chunk("    Date ", F_NORM_7));
         policyLine.add(new Chunk(lr.getPolicyDate() != null ? lr.getPolicyDate().format(DATE_FORMATTER) : "____________", F_NORM_8));
+        policyLine.setLeading(9, 0);
         riskCell.addElement(policyLine);
 
         Paragraph amountLine = new Paragraph();
@@ -195,6 +206,7 @@ public class LorryReceiptPDFGenerator {
         amountLine.add(new Chunk(s(lr.getInsuranceAmount()).isEmpty() ? "___________________" : s(lr.getInsuranceAmount()), F_NORM_8));
         amountLine.add(new Chunk("    Date ", F_NORM_7));
         amountLine.add(new Chunk(lr.getInsuranceDate() != null ? lr.getInsuranceDate().format(DATE_FORMATTER) : "____________", F_NORM_8));
+        amountLine.setLeading(9, 0);
         riskCell.addElement(amountLine);
 
         topGrid.addCell(riskCell);
