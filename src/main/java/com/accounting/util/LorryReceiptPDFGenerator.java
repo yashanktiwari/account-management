@@ -106,6 +106,7 @@ public class LorryReceiptPDFGenerator {
         ccCell.setBorder(Rectangle.BOX);
         ccCell.setPadding(0);
         ccCell.setRowspan(2); // Spans both rows
+        ccCell.setMinimumHeight(350); // Fill the height of LR_HEADER + LR_NOTICE/AT OWNER'S RISK
 
         PdfPTable ccInner = new PdfPTable(1);
         ccInner.setWidthPercentage(100);
