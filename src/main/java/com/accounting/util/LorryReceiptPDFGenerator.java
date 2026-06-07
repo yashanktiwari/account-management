@@ -125,7 +125,7 @@ public class LorryReceiptPDFGenerator {
         addLabelValueFullLine(ccInner, "Vehicle No.", s(lr.getVehicleNo()), F_BOLD_10);
         addLabelValueFullLine(ccInner, "From", s(lr.getFromLocation()), F_BOLD_10);
         addLabelValueFullLine(ccInner, "To", s(lr.getToLocation()), F_BOLD_10);
-        addLabelValueFullLine(ccInner, "E-Way Bill No.", s(lr.getEWayBillNo()), F_NORM_10);
+        addLabelValueFullLine(ccInner, "E-Way Bill No.", s(lr.getEWayBillNo()), F_NORM_10, false); // No underline
 
         ccCell.addElement(ccInner);
         topGrid.addCell(ccCell);
@@ -134,7 +134,7 @@ public class LorryReceiptPDFGenerator {
         // ── Col1: NOTICE (1/3 width) ──
         PdfPCell noticeCell = new PdfPCell();
         noticeCell.setBorder(Rectangle.BOX);
-        noticeCell.setPadding(5);
+        noticeCell.setPadding(2);
 
         PdfPTable noticeInner = new PdfPTable(1);
         noticeInner.setWidthPercentage(100);
@@ -144,15 +144,16 @@ public class LorryReceiptPDFGenerator {
         PdfPCell noticeTitleCell = new PdfPCell(noticeTitle);
         noticeTitleCell.setBorder(Rectangle.BOTTOM);
         noticeTitleCell.setBorderWidthBottom(1f);
-        noticeTitleCell.setPadding(5);
+        noticeTitleCell.setPadding(3);
         noticeTitleCell.setHorizontalAlignment(Element.ALIGN_CENTER);
         noticeInner.addCell(noticeTitleCell);
 
         Paragraph noticeText = new Paragraph("The consignment converted by this set of Special Lorry Receipt Form shall be stored at the destination under the control of the Transport Operator and shall be delivered to ortho the order of the Consignee Bank whose name is mentioned in the Lorry Receipt. It will under no circumstance be delivered to any one of its order endorsed o nthe consignee copy or on a separate letter of authorithy.", F_NORM_8);
         noticeText.setAlignment(Element.ALIGN_LEFT);
+        noticeText.setLeading(10, 0);
         PdfPCell noticeTextCell = new PdfPCell(noticeText);
         noticeTextCell.setBorder(Rectangle.NO_BORDER);
-        noticeTextCell.setPadding(5);
+        noticeTextCell.setPadding(3);
         noticeInner.addCell(noticeTextCell);
 
         noticeCell.addElement(noticeInner);
@@ -163,45 +164,117 @@ public class LorryReceiptPDFGenerator {
         riskCell.setBorder(Rectangle.BOX);
         riskCell.setPadding(2);
 
+        PdfPTable riskInner = new PdfPTable(1);
+        riskInner.setWidthPercentage(100);
+
         Paragraph riskTitle = new Paragraph("AT OWNER'S RISK / CARRIER'S RISK", F_BOLD_9);
         riskTitle.setAlignment(Element.ALIGN_CENTER);
         riskTitle.setLeading(10, 0);
-        riskCell.addElement(riskTitle);
+        PdfPCell riskTitleCell = new PdfPCell(riskTitle);
+        riskTitleCell.setBorder(Rectangle.NO_BORDER);
+        riskTitleCell.setPadding(3);
+        riskInner.addCell(riskTitleCell);
 
         Paragraph line1 = new Paragraph("I the Costumer has stated that He has not", F_NORM_7);
         line1.setLeading(9, 0);
-        riskCell.addElement(line1);
+        PdfPCell line1Cell = new PdfPCell(line1);
+        line1Cell.setBorder(Rectangle.NO_BORDER);
+        line1Cell.setPadding(2);
+        riskInner.addCell(line1Cell);
 
         Paragraph line2 = new Paragraph("insured the consignment or", F_NORM_7);
         line2.setLeading(9, 0);
-        riskCell.addElement(line2);
+        PdfPCell line2Cell = new PdfPCell(line2);
+        line2Cell.setBorder(Rectangle.NO_BORDER);
+        line2Cell.setPadding(2);
+        riskInner.addCell(line2Cell);
 
         Paragraph line3 = new Paragraph("He has insured the consignment", F_NORM_7);
         line3.setLeading(9, 0);
-        riskCell.addElement(line3);
+        PdfPCell line3Cell = new PdfPCell(line3);
+        line3Cell.setBorder(Rectangle.NO_BORDER);
+        line3Cell.setPadding(2);
+        riskInner.addCell(line3Cell);
 
+        // Company line
         Paragraph companyLine = new Paragraph();
         companyLine.add(new Chunk("Company ", F_NORM_7));
         companyLine.add(new Chunk(s(lr.getInsuranceCompany()).isEmpty() ? "______________________________________" : s(lr.getInsuranceCompany()), F_NORM_8));
         companyLine.setLeading(9, 0);
-        riskCell.addElement(companyLine);
+        PdfPCell companyCell = new PdfPCell(companyLine);
+        companyCell.setBorder(Rectangle.NO_BORDER);
+        companyCell.setPadding(2);
+        riskInner.addCell(companyCell);
 
-        Paragraph policyLine = new Paragraph();
-        policyLine.add(new Chunk("Policy No. ", F_NORM_7));
-        policyLine.add(new Chunk(s(lr.getPolicyNo()).isEmpty() ? "__________________" : s(lr.getPolicyNo()), F_NORM_8));
-        policyLine.add(new Chunk("    Date ", F_NORM_7));
-        policyLine.add(new Chunk(lr.getPolicyDate() != null ? lr.getPolicyDate().format(DATE_FORMATTER) : "____________", F_NORM_8));
-        policyLine.setLeading(9, 0);
-        riskCell.addElement(policyLine);
+        // Policy No. + Date (same line)
+        PdfPTable policyRow = new PdfPTable(2);
+        policyRow.setWidthPercentage(100);
+        policyRow.setWidths(new float[]{1.5f, 1f});
 
-        Paragraph amountLine = new Paragraph();
-        amountLine.add(new Chunk("Amount ", F_NORM_7));
-        amountLine.add(new Chunk(s(lr.getInsuranceAmount()).isEmpty() ? "___________________" : s(lr.getInsuranceAmount()), F_NORM_8));
-        amountLine.add(new Chunk("    Date ", F_NORM_7));
-        amountLine.add(new Chunk(lr.getInsuranceDate() != null ? lr.getInsuranceDate().format(DATE_FORMATTER) : "____________", F_NORM_8));
-        amountLine.setLeading(9, 0);
-        riskCell.addElement(amountLine);
+        Paragraph policyLabel = new Paragraph("Policy No. ", F_NORM_7);
+        PdfPCell policyLabelCell = new PdfPCell(policyLabel);
+        policyLabelCell.setBorder(Rectangle.NO_BORDER);
+        policyLabelCell.setPadding(2);
+        policyRow.addCell(policyLabelCell);
 
+        Paragraph policyValue = new Paragraph(s(lr.getPolicyNo()).isEmpty() ? "__________________" : s(lr.getPolicyNo()), F_NORM_8);
+        PdfPCell policyValueCell = new PdfPCell(policyValue);
+        policyValueCell.setBorder(Rectangle.NO_BORDER);
+        policyValueCell.setPadding(2);
+        policyRow.addCell(policyValueCell);
+
+        Paragraph dateLabel = new Paragraph("Date: ", F_NORM_7);
+        PdfPCell dateLabelCell = new PdfPCell(dateLabel);
+        dateLabelCell.setBorder(Rectangle.NO_BORDER);
+        dateLabelCell.setPadding(2);
+        policyRow.addCell(dateLabelCell);
+
+        Paragraph dateValue = new Paragraph(lr.getPolicyDate() != null ? lr.getPolicyDate().format(DATE_FORMATTER) : "____________", F_NORM_8);
+        PdfPCell dateValueCell = new PdfPCell(dateValue);
+        dateValueCell.setBorder(Rectangle.NO_BORDER);
+        dateValueCell.setPadding(2);
+        policyRow.addCell(dateValueCell);
+
+        PdfPCell policyWrap = new PdfPCell(policyRow);
+        policyWrap.setBorder(Rectangle.NO_BORDER);
+        policyWrap.setPadding(0);
+        riskInner.addCell(policyWrap);
+
+        // Amount + Date (same line)
+        PdfPTable amountRow = new PdfPTable(2);
+        amountRow.setWidthPercentage(100);
+        amountRow.setWidths(new float[]{1.5f, 1f});
+
+        Paragraph amountLabel = new Paragraph("Amount: ", F_NORM_7);
+        PdfPCell amountLabelCell = new PdfPCell(amountLabel);
+        amountLabelCell.setBorder(Rectangle.NO_BORDER);
+        amountLabelCell.setPadding(2);
+        amountRow.addCell(amountLabelCell);
+
+        Paragraph amountValue = new Paragraph(s(lr.getInsuranceAmount()).isEmpty() ? "___________________" : s(lr.getInsuranceAmount()), F_NORM_8);
+        PdfPCell amountValueCell = new PdfPCell(amountValue);
+        amountValueCell.setBorder(Rectangle.NO_BORDER);
+        amountValueCell.setPadding(2);
+        amountRow.addCell(amountValueCell);
+
+        Paragraph dateLabel2 = new Paragraph("Date: ", F_NORM_7);
+        PdfPCell dateLabel2Cell = new PdfPCell(dateLabel2);
+        dateLabel2Cell.setBorder(Rectangle.NO_BORDER);
+        dateLabel2Cell.setPadding(2);
+        amountRow.addCell(dateLabel2Cell);
+
+        Paragraph dateValue2 = new Paragraph(lr.getInsuranceDate() != null ? lr.getInsuranceDate().format(DATE_FORMATTER) : "____________", F_NORM_8);
+        PdfPCell dateValue2Cell = new PdfPCell(dateValue2);
+        dateValue2Cell.setBorder(Rectangle.NO_BORDER);
+        dateValue2Cell.setPadding(2);
+        amountRow.addCell(dateValue2Cell);
+
+        PdfPCell amountWrap = new PdfPCell(amountRow);
+        amountWrap.setBorder(Rectangle.NO_BORDER);
+        amountWrap.setPadding(0);
+        riskInner.addCell(amountWrap);
+
+        riskCell.addElement(riskInner);
         topGrid.addCell(riskCell);
 
         outerCell.addElement(topGrid);
@@ -494,6 +567,10 @@ public class LorryReceiptPDFGenerator {
     //  Helper: Label + Value with full underline (single column)
     // ══════════════════════════════════════════════════════════
     private static void addLabelValueFullLine(PdfPTable table, String label, String value, Font valueFont) {
+        addLabelValueFullLine(table, label, value, valueFont, true);
+    }
+
+    private static void addLabelValueFullLine(PdfPTable table, String label, String value, Font valueFont, boolean showUnderline) {
         PdfPTable rowTable = new PdfPTable(1);
         rowTable.setWidthPercentage(100);
 
@@ -506,8 +583,12 @@ public class LorryReceiptPDFGenerator {
         rowTable.addCell(cell);
 
         PdfPCell wrap = new PdfPCell(rowTable);
-        wrap.setBorder(Rectangle.BOTTOM);
-        wrap.setBorderWidthBottom(0.5f);
+        if (showUnderline) {
+            wrap.setBorder(Rectangle.BOTTOM);
+            wrap.setBorderWidthBottom(0.5f);
+        } else {
+            wrap.setBorder(Rectangle.NO_BORDER);
+        }
         wrap.setPadding(0);
         table.addCell(wrap);
     }
