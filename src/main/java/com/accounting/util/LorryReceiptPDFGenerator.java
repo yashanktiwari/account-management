@@ -131,22 +131,31 @@ public class LorryReceiptPDFGenerator {
         topGrid.addCell(ccCell);
 
         // ── ROW 2 ──
-        // ── Col1: LR_NOTICE (1/3 width) ──
+        // ── Col1: NOTICE (1/3 width) ──
         PdfPCell noticeCell = new PdfPCell();
         noticeCell.setBorder(Rectangle.BOX);
-        noticeCell.setPadding(2);
-        noticeCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        noticeCell.setPadding(5);
 
-        Image noticeImg = loadImage("LR_NOTICE");
-        if (noticeImg != null) {
-            float maxW = (PageSize.A4.getWidth() - 28) / 3f - 6;
-            noticeImg.scaleToFit(maxW, 150);
-            noticeImg.setAlignment(Image.MIDDLE);
-            noticeCell.addElement(noticeImg);
-        } else {
-            noticeCell.addElement(new Paragraph("[ LR_NOTICE.jpg — place image in src/main/resources/images/ ]",
-                    F_NORM_8));
-        }
+        PdfPTable noticeInner = new PdfPTable(1);
+        noticeInner.setWidthPercentage(100);
+
+        Paragraph noticeTitle = new Paragraph("NOTICE", F_BOLD_11);
+        noticeTitle.setAlignment(Element.ALIGN_CENTER);
+        PdfPCell noticeTitleCell = new PdfPCell(noticeTitle);
+        noticeTitleCell.setBorder(Rectangle.BOTTOM);
+        noticeTitleCell.setBorderWidthBottom(1f);
+        noticeTitleCell.setPadding(5);
+        noticeTitleCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        noticeInner.addCell(noticeTitleCell);
+
+        Paragraph noticeText = new Paragraph("The consignment converted by this set of Special Lorry Receipt Form shall be stored at the destination under the control of the Transport Operator and shall be delivered to ortho the order of the Consignee Bank whose name is mentioned in the Lorry Receipt. It will under no circumstance be delivered to any one of its order endorsed o nthe consignee copy or on a separate letter of authorithy.", F_NORM_8);
+        noticeText.setAlignment(Element.ALIGN_LEFT);
+        PdfPCell noticeTextCell = new PdfPCell(noticeText);
+        noticeTextCell.setBorder(Rectangle.NO_BORDER);
+        noticeTextCell.setPadding(5);
+        noticeInner.addCell(noticeTextCell);
+
+        noticeCell.addElement(noticeInner);
         topGrid.addCell(noticeCell);
 
         // ── Col2: AT OWNER'S RISK (1/3 width) ──
@@ -492,13 +501,13 @@ public class LorryReceiptPDFGenerator {
         p.add(new Chunk(label + " ", F_NORM_10));
         p.add(new Chunk(value.isEmpty() ? "____________________" : value, valueFont));
         PdfPCell cell = new PdfPCell(p);
-        cell.setBorder(Rectangle.BOTTOM);
-        cell.setBorderWidthBottom(0.5f);
+        cell.setBorder(Rectangle.NO_BORDER);
         cell.setPadding(8);
         rowTable.addCell(cell);
 
         PdfPCell wrap = new PdfPCell(rowTable);
-        wrap.setBorder(Rectangle.NO_BORDER);
+        wrap.setBorder(Rectangle.BOTTOM);
+        wrap.setBorderWidthBottom(0.5f);
         wrap.setPadding(0);
         table.addCell(wrap);
     }
