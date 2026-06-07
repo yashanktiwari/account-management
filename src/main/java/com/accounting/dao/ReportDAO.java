@@ -31,7 +31,7 @@ public class ReportDAO {
     public List<String> getAllVehicles() throws Exception {
         List<String> vehicles = new ArrayList<>();
         String sql = "SELECT DISTINCT vehicle_no FROM loading_slips WHERE vehicle_no IS NOT NULL ORDER BY vehicle_no";
-        
+
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -74,7 +74,7 @@ public class ReportDAO {
                 COALESCE(SUM(CASE WHEN type = 'DEBIT' THEN amount ELSE 0 END), 0) -
                 COALESCE(SUM(CASE WHEN type = 'CREDIT' THEN amount ELSE 0 END), 0) as balance
             FROM (
-                SELECT 'DEBIT' as type, total_amount as amount, invoice_date as date FROM sale_invoices
+                SELECT 'DEBIT' as type, net_amount as amount, invoice_date as date FROM sale_invoices
                 UNION ALL
                 SELECT 'CREDIT' as type, amount as amount, payment_date as date FROM payments
             ) combined
@@ -103,13 +103,13 @@ public class ReportDAO {
                    CASE WHEN type = 'CREDIT' THEN amount ELSE 0 END as credit
             FROM (
                 SELECT invoice_date as date, account_name as party_name, 'Invoice' as type, 
-                       invoice_no as reference, total_amount as amount
+                       invoice_no as reference, net_amount as amount
                 FROM sale_invoices
                 WHERE invoice_date BETWEEN ? AND ?
                 """ + (party != null ? " AND account_name = ?" : "") + """
-                
+
                 UNION ALL
-                
+
                 SELECT payment_date as date, account_name as party_name, 'Receipt' as type,
                        CONCAT('PAY-', id) as reference, amount as amount
                 FROM payments
@@ -158,20 +158,20 @@ public class ReportDAO {
         double totalAmount = 0.0;
 
         String sql = """
-            SELECT ls_date as date, vehicle_no, 'Loading Slip' as type, 
-                   CONCAT('LS-', slip_no) as reference, freight as amount
+            SELECT slip_date as date, vehicle_no, 'Loading Slip' as type,
+                   CONCAT('LS-', slip_no) as reference, freight_amount as amount
             FROM loading_slips
-            WHERE ls_date BETWEEN ? AND ?
+            WHERE slip_date BETWEEN ? AND ?
             """ + (vehicle != null ? " AND vehicle_no = ?" : "") + """
-            
+
             UNION ALL
-            
+
             SELECT lr_date as date, vehicle_no, 'Lorry Receipt' as type,
                    CONCAT('LR-', lr_no) as reference, freight as amount
             FROM lorry_receipts
             WHERE lr_date BETWEEN ? AND ?
             """ + (vehicle != null ? " AND vehicle_no = ?" : "") + """
-            
+
             ORDER BY date
             """;
 
@@ -212,19 +212,19 @@ public class ReportDAO {
 
         String sql = """
             SELECT invoice_date as date, account_name as party_name, 'Sale Invoice' as type,
-                   gstin, taxable_amount, gst_amount
+                   gstin, taxable_amount, total_gst
             FROM sale_invoices
             WHERE invoice_date BETWEEN ? AND ?
             """ + (party != null ? " AND account_name = ?" : "") + """
-            
+
             UNION ALL
-            
+
             SELECT invoice_date as date, account_name as party_name, 'Purchase Invoice' as type,
-                   gstin, taxable_amount, gst_amount
+                   gstin, taxable_amount, total_gst
             FROM purchase_invoices
             WHERE invoice_date BETWEEN ? AND ?
             """ + (party != null ? " AND account_name = ?" : "") + """
-            
+
             ORDER BY date
             """;
 
@@ -242,7 +242,7 @@ public class ReportDAO {
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    double gstPaid = rs.getDouble("gst_amount");
+                    double gstPaid = rs.getDouble("total_gst");
                     totalGST += gstPaid;
 
                     ReportRow row = new ReportRow();
@@ -265,18 +265,18 @@ public class ReportDAO {
         double totalAmount = 0.0;
 
         String sql = """
-            SELECT invoice_date as date, invoice_no as reference, 
-                   CONCAT('Sale - ', account_name) as description, total_amount as amount
+            SELECT invoice_date as date, invoice_no as reference,
+                   CONCAT('Sale - ', account_name) as description, net_amount as amount
             FROM sale_invoices
             WHERE invoice_date BETWEEN ? AND ?
-            
+
             UNION ALL
-            
+
             SELECT invoice_date as date, invoice_no as reference,
-                   CONCAT('Purchase - ', account_name) as description, total_amount as amount
+                   CONCAT('Purchase - ', account_name) as description, net_amount as amount
             FROM purchase_invoices
             WHERE invoice_date BETWEEN ? AND ?
-            
+
             ORDER BY date
             """;
 
@@ -346,11 +346,11 @@ public class ReportDAO {
         double totalAmount = 0.0;
 
         String sql = """
-            SELECT ls_date as date, CONCAT('LS-', slip_no) as reference,
-                   CONCAT('Loading Slip - ', from_location, ' to ', to_location) as description, freight as amount
+            SELECT slip_date as date, CONCAT('LS-', slip_no) as reference,
+                   CONCAT('Loading Slip - ', station, ' to ', to_location) as description, freight_amount as amount
             FROM loading_slips
-            WHERE ls_date BETWEEN ? AND ?
-            
+            WHERE slip_date BETWEEN ? AND ?
+
             ORDER BY date
             """;
 
@@ -386,7 +386,7 @@ public class ReportDAO {
                    CONCAT('Lorry Receipt - ', from_location, ' to ', to_location) as description, freight as amount
             FROM lorry_receipts
             WHERE lr_date BETWEEN ? AND ?
-            
+
             ORDER BY date
             """;
 
