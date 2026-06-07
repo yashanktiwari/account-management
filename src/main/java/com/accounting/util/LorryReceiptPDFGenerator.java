@@ -139,7 +139,7 @@ public class LorryReceiptPDFGenerator {
         // Add spacer to push content and fill space
         PdfPCell spacerCell = new PdfPCell(new Paragraph(" ", F_NORM_8));
         spacerCell.setBorder(Rectangle.NO_BORDER);
-        spacerCell.setPadding(30);
+        spacerCell.setPadding(80);
         ccInner.addCell(spacerCell);
 
         ccCell.addElement(ccInner);
