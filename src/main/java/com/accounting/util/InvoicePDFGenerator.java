@@ -855,20 +855,47 @@ public class InvoicePDFGenerator {
         // Signature column is ~2/5 of content width (~559 pt * 2/5 = ~223 pt), minus cell padding
         float sigCellWidth = (PageSize.A4.getWidth() - 36f) * 2f / 5f - 8f;
         float sigCellHeight = 72f - 20f; // leave ~10pt for text above + below
-        Image middleSignImage = loadImageFitToBox("AUTH_SIGN", sigCellWidth, sigCellHeight);
-        if (middleSignImage == null) {
-            middleSignImage = loadImageFitToBox("SIGNATURE", sigCellWidth, sigCellHeight);
+
+        // Create a nested table for the signature area to allow overlapping
+        PdfPTable sigTable = new PdfPTable(1);
+        sigTable.setWidthPercentage(100);
+
+        // Add AUTH_SIGN.png image (bottom layer)
+        Image authSignImg = loadImageFitToBox("AUTH_SIGN", sigCellWidth, sigCellHeight);
+        if (authSignImg != null) {
+            PdfPCell authCell = new PdfPCell(authSignImg);
+            authCell.setBorder(Rectangle.NO_BORDER);
+            authCell.setPadding(0);
+            authCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            sigTable.addCell(authCell);
         }
 
+        // Add SIGNATURE.png image (top layer, overlapping AUTH_SIGN)
+        Image signatureImg = loadImageFitToBox("SIGNATURE", sigCellWidth, sigCellHeight);
+        if (signatureImg != null) {
+            PdfPCell sigCell = new PdfPCell(signatureImg);
+            sigCell.setBorder(Rectangle.NO_BORDER);
+            sigCell.setPadding(0);
+            sigCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            // Use negative top padding to overlap with the image below
+            sigCell.setPaddingTop(-25f);
+            sigTable.addCell(sigCell);
+        }
+
+        // Add "For SIHAG ENTERPRISE" text (without comma)
         Paragraph signPara = new Paragraph();
         signPara.add(new Chunk("For SIHAG ENTERPRISE", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
         signPara.setAlignment(Element.ALIGN_CENTER);
         signPara.setSpacingAfter(5f);
-        signatureCell.addElement(signPara);
+        PdfPCell textCell = new PdfPCell(signPara);
+        textCell.setBorder(Rectangle.NO_BORDER);
+        textCell.setPadding(0);
+        textCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        sigTable.addCell(textCell);
 
-        if (middleSignImage != null) {
-            middleSignImage.setAlignment(Image.MIDDLE);
-            signatureCell.addElement(middleSignImage);
+        signatureCell.addElement(sigTable);
+
+        if (authSignImg != null || signatureImg != null) {
             Paragraph authPara = new Paragraph("Authorised Signatory", FontFactory.getFont(FontFactory.HELVETICA, 9));
             authPara.setAlignment(Element.ALIGN_CENTER);
             signatureCell.addElement(authPara);

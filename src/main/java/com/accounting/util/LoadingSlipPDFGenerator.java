@@ -29,7 +29,7 @@ public class LoadingSlipPDFGenerator {
             float footerHeight = footerImage != null ? footerImage.getScaledHeight() : 0;
 
             float topMargin = headerImage != null ? margin + headerHeight + 4 : margin;
-            float bottomMargin = footerImage != null ? 5 + footerHeight + 5 : margin;
+            float bottomMargin = footerImage != null ? footerHeight + 10 : margin;
 
             Document document = new Document(PageSize.A4, margin, margin, topMargin, bottomMargin);
             PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(outputPath));
@@ -180,23 +180,47 @@ public class LoadingSlipPDFGenerator {
             PdfPCell signatureCell = new PdfPCell();
             signatureCell.setBorder(Rectangle.BOX);
 
-            // "For, SIHAG ENTERPRISE"
-            Paragraph signPara = new Paragraph("For, SIHAG ENTERPRISE", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Font.ITALIC));
-            signPara.setAlignment(Element.ALIGN_CENTER);
-            signPara.setSpacingAfter(5f);
-            signatureCell.addElement(signPara);
+            // Create a nested table for the signature area to allow overlapping
+            PdfPTable sigTable = new PdfPTable(1);
+            sigTable.setWidthPercentage(100);
 
-            // Try to load auth sign image
+            // Add AUTH_SIGN.png image (bottom layer)
             float sigCellWidth = (PageSize.A4.getWidth() - 36f) * 2f / 5f - 8f;
             float sigCellHeight = 50f;
-            Image authSignImage = loadImageFitToBox("AUTH_SIGN", sigCellWidth, sigCellHeight);
-            if (authSignImage == null) {
-                authSignImage = loadImageFitToBox("SIGNATURE", sigCellWidth, sigCellHeight);
+            Image authSignImg = loadImageFitToBox("AUTH_SIGN", sigCellWidth, sigCellHeight);
+            if (authSignImg != null) {
+                PdfPCell authCell = new PdfPCell(authSignImg);
+                authCell.setBorder(Rectangle.NO_BORDER);
+                authCell.setPadding(0);
+                authCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                sigTable.addCell(authCell);
             }
 
-            if (authSignImage != null) {
-                authSignImage.setAlignment(Image.MIDDLE);
-                signatureCell.addElement(authSignImage);
+            // Add SIGNATURE.png image (top layer, overlapping AUTH_SIGN)
+            Image signatureImg = loadImageFitToBox("SIGNATURE", sigCellWidth, sigCellHeight);
+            if (signatureImg != null) {
+                PdfPCell sigCell = new PdfPCell(signatureImg);
+                sigCell.setBorder(Rectangle.NO_BORDER);
+                sigCell.setPadding(0);
+                sigCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                // Use negative top padding to overlap with the image below
+                sigCell.setPaddingTop(-25f);
+                sigTable.addCell(sigCell);
+            }
+
+            // Add "For SIHAG ENTERPRISE" text (without comma)
+            Paragraph signPara = new Paragraph("For SIHAG ENTERPRISE", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Font.ITALIC));
+            signPara.setAlignment(Element.ALIGN_CENTER);
+            signPara.setSpacingAfter(5f);
+            PdfPCell textCell = new PdfPCell(signPara);
+            textCell.setBorder(Rectangle.NO_BORDER);
+            textCell.setPadding(0);
+            textCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            sigTable.addCell(textCell);
+
+            signatureCell.addElement(sigTable);
+
+            if (authSignImg != null || signatureImg != null) {
                 Paragraph authPara = new Paragraph("Authorised Signatory", FontFactory.getFont(FontFactory.HELVETICA, 9));
                 authPara.setAlignment(Element.ALIGN_CENTER);
                 signatureCell.addElement(authPara);
