@@ -489,7 +489,31 @@ public class LorryReceiptPDFGenerator {
         forCell.setBorder(Rectangle.BOX);
         forCell.setPadding(4);
         forCell.setMinimumHeight(40);
-        Paragraph forPara = new Paragraph("For, SIHAG ENTERPRISE", F_BOLD_11);
+        forCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+        // Add AUTH_SIGN.png image (bottom layer)
+        Image authSignImg = loadImage("AUTH_SIGN");
+        if (authSignImg != null) {
+            authSignImg.scaleToFit(80, 30);
+            authSignImg.setAlignment(Image.MIDDLE);
+            forCell.addElement(authSignImg);
+        }
+
+        // Add SIGNATURE.png image (top layer, overlapping AUTH_SIGN)
+        Image signatureImg = loadImage("SIGNATURE");
+        if (signatureImg != null) {
+            signatureImg.scaleToFit(80, 30);
+            signatureImg.setAlignment(Image.MIDDLE);
+            // Use negative spacing to overlap with AUTH_SIGN
+            Paragraph sigPara = new Paragraph();
+            sigPara.setSpacingBefore(-25f);
+            sigPara.add(signatureImg);
+            sigPara.setAlignment(Element.ALIGN_CENTER);
+            forCell.addElement(sigPara);
+        }
+
+        // Add "For SIHAG ENTERPRISE" text (without comma)
+        Paragraph forPara = new Paragraph("For SIHAG ENTERPRISE", F_BOLD_11);
         forPara.setAlignment(Element.ALIGN_CENTER);
         forCell.addElement(forPara);
         discTable.addCell(forCell);
