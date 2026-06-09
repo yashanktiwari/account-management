@@ -360,9 +360,9 @@ public class LorryReceiptPDFGenerator {
         addDataCell(pkgTable, s(lr.getNoOfPackages()), 30);
         addDataCell(pkgTable, s(lr.getMethodOfPacking()), 30);
         addDataCell(pkgTable, s(lr.getDescription()), 30);
-        // Weight columns with no borders, centered
-        addDataCellNoBorder(pkgTable, s(lr.getWeightActual()), 30, Element.ALIGN_CENTER);
-        addDataCellNoBorder(pkgTable, s(lr.getWeightCharged()), 30, Element.ALIGN_CENTER);
+        // Weight columns with no horizontal borders, centered
+        addDataCellWeight(pkgTable, s(lr.getWeightActual()), 30, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
+        addDataCellWeight(pkgTable, s(lr.getWeightCharged()), 30, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
         addDataCell(pkgTable, s(lr.getRate()), 30, Element.ALIGN_RIGHT);
         addDataCell(pkgTable, lr.getFreightToPay() > 0 ? String.format("%.2f", lr.getFreightToPay()) : "", 30, Element.ALIGN_RIGHT);
         addDataCell(pkgTable, lr.getFreightPaid() > 0 ? String.format("%.2f", lr.getFreightPaid()) : "", 30, Element.ALIGN_RIGHT);
@@ -385,62 +385,62 @@ public class LorryReceiptPDFGenerator {
             pkgTable.addCell(e);
         }
 
-        // Row 6: S.H. No. | [empty] | [empty] | [empty no border] | [empty no border] | Freight | [empty] | [empty]
+        // Row 6: S.H. No. | [empty] | [empty] | [weight no horiz] | [weight no horiz] | Freight | [empty] | [empty]
         addLabelCell(pkgTable, "S.H. No.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
-        addEmptyCellNoBorder(pkgTable);
-        addEmptyCellNoBorder(pkgTable);
+        addEmptyCellWeight(pkgTable);
+        addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "Freight", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
 
-        // Row 7: S.T. No. | [empty] | [empty] | [empty no border] | [empty no border] | Advance | [empty] | [empty]
+        // Row 7: S.T. No. | [empty] | [empty] | [weight no horiz] | [weight no horiz] | Advance | [empty] | [empty]
         addLabelCell(pkgTable, "S.T. No.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
-        addEmptyCellNoBorder(pkgTable);
-        addEmptyCellNoBorder(pkgTable);
+        addEmptyCellWeight(pkgTable);
+        addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "Advance", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
 
-        // Row 8: Value Rs. | [empty] | G. Wt. | [empty no border] | [empty no border] | Balance | [empty] | [empty]
+        // Row 8: Value Rs. | [empty] | G. Wt. | [weight no horiz] | [weight no horiz] | Balance | [empty] | [empty]
         addLabelCell(pkgTable, "Value Rs.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addLabelCell(pkgTable, "G. Wt.", Element.ALIGN_RIGHT);
-        addEmptyCellNoBorder(pkgTable);
-        addEmptyCellNoBorder(pkgTable);
+        addEmptyCellWeight(pkgTable);
+        addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "Balance", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
 
-        // Row 9: [empty] | [empty] | T. Wt. | [empty no border] | [empty no border] | A.O.C. | [empty] | [empty]
+        // Row 9: [empty] | [empty] | T. Wt. | [weight no horiz] | [weight no horiz] | A.O.C. | [empty] | [empty]
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
         addLabelCell(pkgTable, "T. Wt.", Element.ALIGN_RIGHT);
-        addEmptyCellNoBorder(pkgTable);
-        addEmptyCellNoBorder(pkgTable);
+        addEmptyCellWeight(pkgTable);
+        addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "A.O.C.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
 
-        // Row 10: [empty] | [empty] | N. Wt. | [empty no border] | [empty no border] | S.T. Charge | [empty] | [empty]
+        // Row 10: [empty] | [empty] | N. Wt. | [weight no horiz] | [weight no horiz] | S.T. Charge | [empty] | [empty]
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
         addLabelCell(pkgTable, "N. Wt.", Element.ALIGN_RIGHT);
-        addEmptyCellNoBorder(pkgTable);
-        addEmptyCellNoBorder(pkgTable);
+        addEmptyCellWeight(pkgTable);
+        addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "S.T. Charge", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
 
-        // Row 11: [empty] | [empty] | [empty] | [empty no border] | [empty no border] | Total | [empty] | [empty]
+        // Row 11: [empty] | [empty] | [empty] | [weight no horiz] | [weight no horiz] | Total | [empty] | [empty]
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
-        addEmptyCellNoBorder(pkgTable);
-        addEmptyCellNoBorder(pkgTable);
+        addEmptyCellWeight(pkgTable);
+        addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "Total", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
@@ -630,6 +630,24 @@ public class LorryReceiptPDFGenerator {
         cell.setMinimumHeight(minHeight);
         cell.setHorizontalAlignment(alignment);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        table.addCell(cell);
+    }
+
+    private static void addDataCellWeight(PdfPTable table, String text, float minHeight, int alignment, int border) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, F_NORM_9));
+        cell.setBorder(border);
+        cell.setPadding(3);
+        cell.setMinimumHeight(minHeight);
+        cell.setHorizontalAlignment(alignment);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        table.addCell(cell);
+    }
+
+    private static void addEmptyCellWeight(PdfPTable table) {
+        PdfPCell cell = new PdfPCell(new Phrase(" ", F_NORM_8));
+        cell.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
+        cell.setPadding(3);
+        cell.setMinimumHeight(16);
         table.addCell(cell);
     }
 
