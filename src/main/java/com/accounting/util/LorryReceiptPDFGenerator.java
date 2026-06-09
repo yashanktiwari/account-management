@@ -327,7 +327,7 @@ public class LorryReceiptPDFGenerator {
         // Package header table (8 columns, 2-row header)
         PdfPTable pkgTable = new PdfPTable(8);
         pkgTable.setWidthPercentage(100);
-        pkgTable.setWidths(new float[]{0.7f, 0.8f, 2.0f, 0.6f, 0.6f, 0.7f, 0.7f, 0.7f});
+        pkgTable.setWidths(new float[]{0.7f, 0.8f, 1.8f, 0.6f, 0.6f, 0.7f, 0.7f, 0.7f});
 
         // Row 1 headers (rowspan=2 for 4 cols, colspan=2 for WEIGHT and FREIGHT)
         addHeaderCellRowspan(pkgTable, "No. of\nPackages", 2);
@@ -477,7 +477,7 @@ public class LorryReceiptPDFGenerator {
 
         PdfPCell discCell = new PdfPCell();
         discCell.setBorder(Rectangle.BOX);
-        discCell.setPadding(4);
+        discCell.setPadding(5);
         discCell.addElement(new Paragraph(
                 "The Consignment note issued subject to terms & condition printed overleaf", F_NORM_7));
         discCell.addElement(new Paragraph(
