@@ -514,8 +514,8 @@ public class LorryReceiptPDFGenerator {
             sigCell.setBorder(Rectangle.NO_BORDER);
             sigCell.setPadding(0);
             sigCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-            // Use negative top padding to overlap with the image below
-            sigCell.setPaddingTop(-25f);
+            // Use negative top padding to overlap with the image below (reduced overlap)
+            sigCell.setPaddingTop(-15f);
             sigTable.addCell(sigCell);
         }
 
