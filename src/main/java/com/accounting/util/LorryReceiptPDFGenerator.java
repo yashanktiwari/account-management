@@ -389,8 +389,8 @@ public class LorryReceiptPDFGenerator {
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
         addLabelCell(pkgTable, "Freight", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
@@ -399,8 +399,8 @@ public class LorryReceiptPDFGenerator {
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
         addLabelCell(pkgTable, "Advance", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
@@ -409,8 +409,8 @@ public class LorryReceiptPDFGenerator {
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
         addLabelCell(pkgTable, "Balance", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
@@ -419,8 +419,8 @@ public class LorryReceiptPDFGenerator {
         addLabelCell(pkgTable, "S.H. No.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addLabelCell(pkgTable, "G. Wt.", Element.ALIGN_RIGHT);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
         addLabelCell(pkgTable, "A.O.C.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
@@ -429,8 +429,8 @@ public class LorryReceiptPDFGenerator {
         addLabelCell(pkgTable, "S.T. No.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addLabelCell(pkgTable, "T. Wt.", Element.ALIGN_RIGHT);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
         addLabelCell(pkgTable, "S.T. Charge", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
@@ -439,8 +439,8 @@ public class LorryReceiptPDFGenerator {
         addLabelCell(pkgTable, "Value Rs.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addLabelCell(pkgTable, "N. Wt.", Element.ALIGN_RIGHT);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
         addLabelCell(pkgTable, "Total", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
