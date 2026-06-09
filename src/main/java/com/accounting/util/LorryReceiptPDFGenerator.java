@@ -374,7 +374,7 @@ public class LorryReceiptPDFGenerator {
             PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
             e.setBorder(Rectangle.BOX);
             e.setMinimumHeight(25);
-            e.setPadding(3);
+            e.setPadding(2);
             pkgTable.addCell(e);
         }
 
@@ -383,7 +383,7 @@ public class LorryReceiptPDFGenerator {
             PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
             e.setBorder(Rectangle.BOX);
             e.setMinimumHeight(25);
-            e.setPadding(3);
+            e.setPadding(2);
             pkgTable.addCell(e);
         }
 
