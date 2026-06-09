@@ -327,7 +327,7 @@ public class LorryReceiptPDFGenerator {
         // Package header table (8 columns, 2-row header)
         PdfPTable pkgTable = new PdfPTable(8);
         pkgTable.setWidthPercentage(100);
-        pkgTable.setWidths(new float[]{0.7f, 0.8f, 2.2f, 0.6f, 0.6f, 0.7f, 0.7f, 0.7f});
+        pkgTable.setWidths(new float[]{0.7f, 0.8f, 2.0f, 0.6f, 0.6f, 0.7f, 0.7f, 0.7f});
 
         // Row 1 headers (rowspan=2 for 4 cols, colspan=2 for WEIGHT and FREIGHT)
         addHeaderCellRowspan(pkgTable, "No. of\nPackages", 2);
