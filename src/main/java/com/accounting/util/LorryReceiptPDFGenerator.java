@@ -385,8 +385,8 @@ public class LorryReceiptPDFGenerator {
             pkgTable.addCell(e);
         }
 
-        // Row 6: S.H. No. | [empty] | [empty] | [weight no horiz] | [weight no horiz] | Freight | [empty] | [empty]
-        addLabelCell(pkgTable, "S.H. No.", Element.ALIGN_RIGHT);
+        // Row 6: [empty] | [empty] | [empty] | [weight no horiz] | [weight no horiz] | Freight | [empty] | [empty]
+        addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
         addEmptyCellWeight(pkgTable);
@@ -395,8 +395,8 @@ public class LorryReceiptPDFGenerator {
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
 
-        // Row 7: S.T. No. | [empty] | [empty] | [weight no horiz] | [weight no horiz] | Advance | [empty] | [empty]
-        addLabelCell(pkgTable, "S.T. No.", Element.ALIGN_RIGHT);
+        // Row 7: [empty] | [empty] | [empty] | [weight no horiz] | [weight no horiz] | Advance | [empty] | [empty]
+        addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
         addEmptyCellWeight(pkgTable);
@@ -405,40 +405,40 @@ public class LorryReceiptPDFGenerator {
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
 
-        // Row 8: Value Rs. | [empty] | G. Wt. | [weight no horiz] | [weight no horiz] | Balance | [empty] | [empty]
-        addLabelCell(pkgTable, "Value Rs.", Element.ALIGN_RIGHT);
+        // Row 8: S.H. No. | [empty] | [empty] | [weight no horiz] | [weight no horiz] | Balance | [empty] | [empty]
+        addLabelCell(pkgTable, "S.H. No.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
-        addLabelCell(pkgTable, "G. Wt.", Element.ALIGN_RIGHT);
+        addEmptyCell(pkgTable);
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "Balance", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
 
-        // Row 9: [empty] | [empty] | T. Wt. | [weight no horiz] | [weight no horiz] | A.O.C. | [empty] | [empty]
+        // Row 9: S.T. No. | [empty] | G. Wt. | [weight no horiz] | [weight no horiz] | A.O.C. | [empty] | [empty]
+        addLabelCell(pkgTable, "S.T. No.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addLabelCell(pkgTable, "T. Wt.", Element.ALIGN_RIGHT);
+        addLabelCell(pkgTable, "G. Wt.", Element.ALIGN_RIGHT);
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "A.O.C.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
 
-        // Row 10: [empty] | [empty] | N. Wt. | [weight no horiz] | [weight no horiz] | S.T. Charge | [empty] | [empty]
+        // Row 10: Value Rs. | [empty] | T. Wt. | [weight no horiz] | [weight no horiz] | S.T. Charge | [empty] | [empty]
+        addLabelCell(pkgTable, "Value Rs.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addLabelCell(pkgTable, "N. Wt.", Element.ALIGN_RIGHT);
+        addLabelCell(pkgTable, "T. Wt.", Element.ALIGN_RIGHT);
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "S.T. Charge", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
 
-        // Row 11: [empty] | [empty] | [empty] | [weight with bottom] | [weight with bottom] | Total | [empty] | [empty]
+        // Row 11: [empty] | [empty] | N. Wt. | [weight with bottom] | [weight with bottom] | Total | [empty] | [empty]
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
+        addLabelCell(pkgTable, "N. Wt.", Element.ALIGN_RIGHT);
         addEmptyCellWeightWithBottom(pkgTable);
         addEmptyCellWeightWithBottom(pkgTable);
         addLabelCell(pkgTable, "Total", Element.ALIGN_RIGHT);
