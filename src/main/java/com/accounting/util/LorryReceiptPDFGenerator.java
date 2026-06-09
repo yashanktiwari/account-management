@@ -498,7 +498,7 @@ public class LorryReceiptPDFGenerator {
         // Add AUTH_SIGN.png image (bottom layer)
         Image authSignImg = loadImage("AUTH_SIGN");
         if (authSignImg != null) {
-            authSignImg.scaleToFit(80, 30);
+            authSignImg.scaleToFit(100, 50);
             PdfPCell authCell = new PdfPCell(authSignImg);
             authCell.setBorder(Rectangle.NO_BORDER);
             authCell.setPadding(0);
@@ -509,7 +509,7 @@ public class LorryReceiptPDFGenerator {
         // Add SIGNATURE.png image (top layer, overlapping AUTH_SIGN)
         Image signatureImg = loadImage("SIGNATURE");
         if (signatureImg != null) {
-            signatureImg.scaleToFit(80, 30);
+            signatureImg.scaleToFit(100, 50);
             PdfPCell sigCell = new PdfPCell(signatureImg);
             sigCell.setBorder(Rectangle.NO_BORDER);
             sigCell.setPadding(0);
