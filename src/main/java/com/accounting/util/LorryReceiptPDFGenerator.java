@@ -360,9 +360,9 @@ public class LorryReceiptPDFGenerator {
         addDataCell(pkgTable, s(lr.getNoOfPackages()), 30);
         addDataCell(pkgTable, s(lr.getMethodOfPacking()), 30);
         addDataCell(pkgTable, s(lr.getDescription()), 30);
-        // Weight columns with no horizontal borders, centered
-        addDataCellWeight(pkgTable, s(lr.getWeightActual()), 30, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
-        addDataCellWeight(pkgTable, s(lr.getWeightCharged()), 30, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
+        // Weight columns with no horizontal borders, centered (but keep top border to connect with header)
+        addDataCellWeight(pkgTable, s(lr.getWeightActual()), 30, Element.ALIGN_CENTER, Rectangle.TOP | Rectangle.LEFT | Rectangle.RIGHT);
+        addDataCellWeight(pkgTable, s(lr.getWeightCharged()), 30, Element.ALIGN_CENTER, Rectangle.TOP | Rectangle.LEFT | Rectangle.RIGHT);
         addDataCell(pkgTable, s(lr.getRate()), 30, Element.ALIGN_RIGHT);
         addDataCell(pkgTable, lr.getFreightToPay() > 0 ? String.format("%.2f", lr.getFreightToPay()) : "", 30, Element.ALIGN_RIGHT);
         addDataCell(pkgTable, lr.getFreightPaid() > 0 ? String.format("%.2f", lr.getFreightPaid()) : "", 30, Element.ALIGN_RIGHT);
@@ -435,12 +435,12 @@ public class LorryReceiptPDFGenerator {
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
 
-        // Row 11: [empty] | [empty] | [empty] | [weight no horiz] | [weight no horiz] | Total | [empty] | [empty]
+        // Row 11: [empty] | [empty] | [empty] | [weight with bottom] | [weight with bottom] | Total | [empty] | [empty]
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
+        addEmptyCellWeightWithBottom(pkgTable);
+        addEmptyCellWeightWithBottom(pkgTable);
         addLabelCell(pkgTable, "Total", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
@@ -646,6 +646,14 @@ public class LorryReceiptPDFGenerator {
     private static void addEmptyCellWeight(PdfPTable table) {
         PdfPCell cell = new PdfPCell(new Phrase(" ", F_NORM_8));
         cell.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
+        cell.setPadding(3);
+        cell.setMinimumHeight(16);
+        table.addCell(cell);
+    }
+
+    private static void addEmptyCellWeightWithBottom(PdfPTable table) {
+        PdfPCell cell = new PdfPCell(new Phrase(" ", F_NORM_8));
+        cell.setBorder(Rectangle.BOTTOM | Rectangle.LEFT | Rectangle.RIGHT);
         cell.setPadding(3);
         cell.setMinimumHeight(16);
         table.addCell(cell);
