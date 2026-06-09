@@ -360,8 +360,9 @@ public class LorryReceiptPDFGenerator {
         addDataCell(pkgTable, s(lr.getNoOfPackages()), 30);
         addDataCell(pkgTable, s(lr.getMethodOfPacking()), 30);
         addDataCell(pkgTable, s(lr.getDescription()), 30);
-        addDataCell(pkgTable, s(lr.getWeightActual()), 30);
-        addDataCell(pkgTable, s(lr.getWeightCharged()), 30);
+        // Weight columns with no borders, centered
+        addDataCellNoBorder(pkgTable, s(lr.getWeightActual()), 30, Element.ALIGN_CENTER);
+        addDataCellNoBorder(pkgTable, s(lr.getWeightCharged()), 30, Element.ALIGN_CENTER);
         addDataCell(pkgTable, s(lr.getRate()), 30, Element.ALIGN_RIGHT);
         addDataCell(pkgTable, lr.getFreightToPay() > 0 ? String.format("%.2f", lr.getFreightToPay()) : "", 30, Element.ALIGN_RIGHT);
         addDataCell(pkgTable, lr.getFreightPaid() > 0 ? String.format("%.2f", lr.getFreightPaid()) : "", 30, Element.ALIGN_RIGHT);
@@ -615,6 +616,16 @@ public class LorryReceiptPDFGenerator {
     private static void addDataCell(PdfPTable table, String text, float minHeight, int alignment) {
         PdfPCell cell = new PdfPCell(new Phrase(text, F_NORM_9));
         cell.setBorder(Rectangle.BOX);
+        cell.setPadding(3);
+        cell.setMinimumHeight(minHeight);
+        cell.setHorizontalAlignment(alignment);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        table.addCell(cell);
+    }
+
+    private static void addDataCellNoBorder(PdfPTable table, String text, float minHeight, int alignment) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, F_NORM_9));
+        cell.setBorder(Rectangle.NO_BORDER);
         cell.setPadding(3);
         cell.setMinimumHeight(minHeight);
         cell.setHorizontalAlignment(alignment);
