@@ -418,7 +418,7 @@ public class LorryReceiptPDFGenerator {
         // Row 9: S.H. No. | [empty] | [empty] | [weight no horiz] | [weight no horiz] | A.O.C. | [empty] | [empty]
         addLabelCell(pkgTable, "S.H. No.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable, "G. Wt.", Element.ALIGN_RIGHT);
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "A.O.C.", Element.ALIGN_RIGHT);
@@ -428,7 +428,7 @@ public class LorryReceiptPDFGenerator {
         // Row 10: S.T. No. | [empty] | G. Wt. | [weight no horiz] | [weight no horiz] | S.T. Charge | [empty] | [empty]
         addLabelCell(pkgTable, "S.T. No.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
-        addLabelCell(pkgTable, "G. Wt.", Element.ALIGN_RIGHT);
+        addLabelCell(pkgTable, "T. Wt.", Element.ALIGN_RIGHT);
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "S.T. Charge", Element.ALIGN_RIGHT);
@@ -438,20 +438,10 @@ public class LorryReceiptPDFGenerator {
         // Row 11: Value Rs. | [empty] | T. Wt. | [weight no horiz] | [weight no horiz] | Total | [empty] | [empty]
         addLabelCell(pkgTable, "Value Rs.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
-        addLabelCell(pkgTable, "T. Wt.", Element.ALIGN_RIGHT);
+        addLabelCell(pkgTable, "N. Wt.", Element.ALIGN_RIGHT);
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "Total", Element.ALIGN_RIGHT);
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-
-        // Row 12: [empty] | [empty] | N. Wt. | [weight with bottom] | [weight with bottom] | [empty] | [empty] | [empty]
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addLabelCell(pkgTable, "N. Wt.", Element.ALIGN_RIGHT);
-        addEmptyCellWeightWithBottom(pkgTable);
-        addEmptyCellWeightWithBottom(pkgTable);
-        addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
 
