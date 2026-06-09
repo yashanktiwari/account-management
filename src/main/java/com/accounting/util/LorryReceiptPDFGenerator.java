@@ -473,7 +473,7 @@ public class LorryReceiptPDFGenerator {
         // ── 3c. Disclaimer + "For, SIHAG ENTERPRISE" ──
         PdfPTable discTable = new PdfPTable(2);
         discTable.setWidthPercentage(100);
-        discTable.setWidths(new float[]{3.2f, 1.8f});
+        discTable.setWidths(new float[]{3.5f, 1.5f});
 
         PdfPCell discCell = new PdfPCell();
         discCell.setBorder(Rectangle.BOX);
