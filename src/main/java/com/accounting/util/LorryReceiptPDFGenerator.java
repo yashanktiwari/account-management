@@ -356,7 +356,7 @@ public class LorryReceiptPDFGenerator {
         addSubHeaderTwoLine(pkgTable, "TO PAY", "Rs.       Ps.");
         addSubHeaderTwoLine(pkgTable, "PAID", "Rs.       Ps.");
 
-        // Data row with actual values
+        // Row 3: Data row with actual values
         addDataCell(pkgTable, s(lr.getNoOfPackages()), 30);
         addDataCell(pkgTable, s(lr.getMethodOfPacking()), 30);
         addDataCell(pkgTable, s(lr.getDescription()), 30);
@@ -366,54 +366,85 @@ public class LorryReceiptPDFGenerator {
         addDataCell(pkgTable, lr.getFreightToPay() > 0 ? String.format("%.2f", lr.getFreightToPay()) : "", 30, Element.ALIGN_RIGHT);
         addDataCell(pkgTable, lr.getFreightPaid() > 0 ? String.format("%.2f", lr.getFreightPaid()) : "", 30, Element.ALIGN_RIGHT);
 
-        // Empty spacer rows (2 rows to give height, like the physical form)
-        for (int r = 0; r < 2; r++) {
-            for (int c = 0; c < 8; c++) {
-                PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
-                e.setBorder(Rectangle.BOX);
-                e.setMinimumHeight(16);
-                e.setPadding(2);
-                pkgTable.addCell(e);
-            }
+        // Row 4: Empty spacer row
+        for (int c = 0; c < 8; c++) {
+            PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
+            e.setBorder(Rectangle.BOX);
+            e.setMinimumHeight(16);
+            e.setPadding(2);
+            pkgTable.addCell(e);
         }
 
+        // Row 5: Empty spacer row
+        for (int c = 0; c < 8; c++) {
+            PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
+            e.setBorder(Rectangle.BOX);
+            e.setMinimumHeight(16);
+            e.setPadding(2);
+            pkgTable.addCell(e);
+        }
+
+        // Row 6: S.H. No. | [empty] | [empty] | [empty no border] | [empty no border] | Freight | [empty] | [empty]
+        addLabelCell(pkgTable, "S.H. No.", Element.ALIGN_RIGHT);
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
+        addLabelCell(pkgTable, "Freight", Element.ALIGN_RIGHT);
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
+
+        // Row 7: S.T. No. | [empty] | [empty] | [empty no border] | [empty no border] | Advance | [empty] | [empty]
+        addLabelCell(pkgTable, "S.T. No.", Element.ALIGN_RIGHT);
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
+        addLabelCell(pkgTable, "Advance", Element.ALIGN_RIGHT);
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
+
+        // Row 8: Value Rs. | [empty] | G. Wt. | [empty no border] | [empty no border] | Balance | [empty] | [empty]
+        addLabelCell(pkgTable, "Value Rs.", Element.ALIGN_RIGHT);
+        addEmptyCell(pkgTable);
+        addLabelCell(pkgTable, "G. Wt.", Element.ALIGN_RIGHT);
+        addEmptyCellNoBorder(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
+        addLabelCell(pkgTable, "Balance", Element.ALIGN_RIGHT);
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
+
+        // Row 9: [empty] | [empty] | T. Wt. | [empty no border] | [empty no border] | A.O.C. | [empty] | [empty]
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
+        addLabelCell(pkgTable, "T. Wt.", Element.ALIGN_RIGHT);
+        addEmptyCellNoBorder(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
+        addLabelCell(pkgTable, "A.O.C.", Element.ALIGN_RIGHT);
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
+
+        // Row 10: [empty] | [empty] | N. Wt. | [empty no border] | [empty no border] | S.T. Charge | [empty] | [empty]
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
+        addLabelCell(pkgTable, "N. Wt.", Element.ALIGN_RIGHT);
+        addEmptyCellNoBorder(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
+        addLabelCell(pkgTable, "S.T. Charge", Element.ALIGN_RIGHT);
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
+
+        // Row 11: [empty] | [empty] | [empty] | [empty no border] | [empty no border] | Total | [empty] | [empty]
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
+        addEmptyCellNoBorder(pkgTable);
+        addLabelCell(pkgTable, "Total", Element.ALIGN_RIGHT);
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
+
         mainCell.addElement(pkgTable);
-
-        // S.T. No / S.H. No / Value / G.Wt / T.Wt / N.Wt sub-table
-        PdfPTable stTable = new PdfPTable(6);
-        stTable.setWidthPercentage(100);
-        stTable.setWidths(new float[]{1f, 0.7f, 1f, 0.7f, 0.7f, 0.9f});
-
-        // Row 1: S.T. No [box] S.H. No [box]   G. Wt. [value]
-        addBorderedCell(stTable, "S.T. No.", F_BOLD_8, Element.ALIGN_LEFT);
-        addBorderedCell(stTable, s(lr.getStNo()), F_NORM_9, Element.ALIGN_CENTER);
-        addBorderedCell(stTable, "S.H. No.", F_BOLD_8, Element.ALIGN_LEFT);
-        addBorderedCell(stTable, s(lr.getShNo()), F_NORM_9, Element.ALIGN_CENTER);
-        addBorderedCell(stTable, "G. Wt.", F_BOLD_8, Element.ALIGN_LEFT);
-        addBorderedCell(stTable, s(lr.getGrossWeight()), F_NORM_9, Element.ALIGN_LEFT);
-
-        // Row 2: Value Rs. [box colspan=3]   T. Wt. [value]
-        addBorderedCell(stTable, "Value Rs.", F_BOLD_8, Element.ALIGN_LEFT);
-        PdfPCell valSpan = new PdfPCell(new Phrase(s(lr.getValueRs()), F_NORM_9));
-        valSpan.setColspan(3);
-        valSpan.setBorder(Rectangle.BOX);
-        valSpan.setPadding(3);
-        valSpan.setMinimumHeight(16);
-        stTable.addCell(valSpan);
-        addBorderedCell(stTable, "T. Wt.", F_BOLD_8, Element.ALIGN_LEFT);
-        addBorderedCell(stTable, s(lr.getTareWeight()), F_NORM_9, Element.ALIGN_LEFT);
-
-        // Row 3: [empty colspan=4]   N. Wt. [value]
-        PdfPCell emptySpan = new PdfPCell(new Phrase(" ", F_NORM_8));
-        emptySpan.setColspan(4);
-        emptySpan.setBorder(Rectangle.BOX);
-        emptySpan.setPadding(3);
-        emptySpan.setMinimumHeight(16);
-        stTable.addCell(emptySpan);
-        addBorderedCell(stTable, "N. Wt.", F_BOLD_8, Element.ALIGN_LEFT);
-        addBorderedCell(stTable, s(lr.getNetWeight()), F_NORM_9, Element.ALIGN_LEFT);
-
-        mainCell.addElement(stTable);
         mainTable.addCell(mainCell);
 
         outerCell.addElement(mainTable);
@@ -598,6 +629,32 @@ public class LorryReceiptPDFGenerator {
         cell.setMinimumHeight(16);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         cell.setHorizontalAlignment(hAlign);
+        table.addCell(cell);
+    }
+
+    private static void addLabelCell(PdfPTable table, String text, int alignment) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, F_BOLD_8));
+        cell.setBorder(Rectangle.BOX);
+        cell.setPadding(3);
+        cell.setMinimumHeight(16);
+        cell.setHorizontalAlignment(alignment);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        table.addCell(cell);
+    }
+
+    private static void addEmptyCell(PdfPTable table) {
+        PdfPCell cell = new PdfPCell(new Phrase(" ", F_NORM_8));
+        cell.setBorder(Rectangle.BOX);
+        cell.setPadding(3);
+        cell.setMinimumHeight(16);
+        table.addCell(cell);
+    }
+
+    private static void addEmptyCellNoBorder(PdfPTable table) {
+        PdfPCell cell = new PdfPCell(new Phrase(" ", F_NORM_8));
+        cell.setBorder(Rectangle.NO_BORDER);
+        cell.setPadding(3);
+        cell.setMinimumHeight(16);
         table.addCell(cell);
     }
 
