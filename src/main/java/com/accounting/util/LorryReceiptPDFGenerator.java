@@ -418,7 +418,7 @@ public class LorryReceiptPDFGenerator {
         // Row 9: S.H. No. | [empty] | [empty] | [weight no horiz] | [weight no horiz] | A.O.C. | [empty] | [empty]
         addLabelCell(pkgTable, "S.H. No.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable, "G. Wt.", Element.ALIGN_RIGHT);
+        addLabelCell(pkgTable, "G. Wt.", Element.ALIGN_RIGHT);
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "A.O.C.", Element.ALIGN_RIGHT);
