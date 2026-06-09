@@ -366,13 +366,14 @@ public class LorryReceiptPDFGenerator {
         addDataCellWeight(pkgTable, s(lr.getWeightActual()), 25, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
         addDataCellWeight(pkgTable, s(lr.getWeightCharged()), 25, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
         addDataCell(pkgTable, s(lr.getRate()), 25, Element.ALIGN_RIGHT);
-        addDataCell(pkgTable, lr.getFreightToPay() > 0 ? String.format("%.2f", lr.getFreightToPay()) : "", 25, Element.ALIGN_RIGHT);
-        addDataCell(pkgTable, lr.getFreightPaid() > 0 ? String.format("%.2f", lr.getFreightPaid()) : "", 25, Element.ALIGN_RIGHT);
+        // Freight columns - empty with vertical borders only
+        addDataCellWeight(pkgTable, "", 25, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
+        addDataCellWeight(pkgTable, "", 25, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
 
         // Row 4: Empty spacer row
         for (int c = 0; c < 8; c++) {
-            if (c == 3 || c == 4) {
-                // Weight columns - vertical borders only
+            if (c == 3 || c == 4 || c == 6 || c == 7) {
+                // Weight and Freight columns - vertical borders only
                 PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
                 e.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
                 e.setMinimumHeight(25);
@@ -389,8 +390,8 @@ public class LorryReceiptPDFGenerator {
 
         // Row 5: Empty spacer row
         for (int c = 0; c < 8; c++) {
-            if (c == 3 || c == 4) {
-                // Weight columns - vertical borders only
+            if (c == 3 || c == 4 || c == 6 || c == 7) {
+                // Weight and Freight columns - vertical borders only
                 PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
                 e.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
                 e.setMinimumHeight(25);
@@ -405,65 +406,65 @@ public class LorryReceiptPDFGenerator {
             }
         }
 
-        // Row 6: [empty] | [empty] | [empty] | [weight vert] | [weight vert] | Freight | [empty] | [empty]
+        // Row 6: [empty] | [empty] | [empty] | [weight vert] | [weight vert] | Freight | [freight vert] | [freight vert]
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "Freight", Element.ALIGN_RIGHT);
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
+        addEmptyCellWeight(pkgTable);
+        addEmptyCellWeight(pkgTable);
 
-        // Row 7: [empty] | [empty] | [empty] | [weight vert] | [weight vert] | Advance | [empty] | [empty]
+        // Row 7: [empty] | [empty] | [empty] | [weight vert] | [weight vert] | Advance | [freight vert] | [freight vert]
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "Advance", Element.ALIGN_RIGHT);
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
+        addEmptyCellWeight(pkgTable);
+        addEmptyCellWeight(pkgTable);
 
-        // Row 8: [empty] | [empty] | [empty] | [weight vert] | [weight vert] | Balance | [empty] | [empty]
+        // Row 8: [empty] | [empty] | [empty] | [weight vert] | [weight vert] | Balance | [freight vert] | [freight vert]
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
         addEmptyCell(pkgTable);
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "Balance", Element.ALIGN_RIGHT);
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
+        addEmptyCellWeight(pkgTable);
+        addEmptyCellWeight(pkgTable);
 
-        // Row 9: S.H. No. | [empty] | [empty] | [weight vert] | [weight vert] | A.O.C. | [empty] | [empty]
+        // Row 9: S.H. No. | [empty] | [empty] | [weight vert] | [weight vert] | A.O.C. | [freight vert] | [freight vert]
         addLabelCell(pkgTable, "S.H. No.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addLabelCell(pkgTable, "G. Wt.", Element.ALIGN_RIGHT);
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "A.O.C.", Element.ALIGN_RIGHT);
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
+        addEmptyCellWeight(pkgTable);
+        addEmptyCellWeight(pkgTable);
 
-        // Row 10: S.T. No. | [empty] | G. Wt. | [weight vert] | [weight vert] | S.T. Charge | [empty] | [empty]
+        // Row 10: S.T. No. | [empty] | G. Wt. | [weight vert] | [weight vert] | S.T. Charge | [freight vert] | [freight vert]
         addLabelCell(pkgTable, "S.T. No.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addLabelCell(pkgTable, "T. Wt.", Element.ALIGN_RIGHT);
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "S.T. Charge", Element.ALIGN_RIGHT);
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
+        addEmptyCellWeight(pkgTable);
+        addEmptyCellWeight(pkgTable);
 
-        // Row 11: Value Rs. | [empty] | T. Wt. | [weight vert] | [weight vert] | Total | [empty] | [empty]
+        // Row 11: Value Rs. | [empty] | T. Wt. | [weight vert] | [weight vert] | Total | [freight vert] | [freight vert]
         addLabelCell(pkgTable, "Value Rs.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addLabelCell(pkgTable, "N. Wt.", Element.ALIGN_RIGHT);
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "Total", Element.ALIGN_RIGHT);
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
+        addEmptyCellWeight(pkgTable);
+        addEmptyCellWeight(pkgTable);
 
         mainCell.addElement(pkgTable);
         mainTable.addCell(mainCell);
