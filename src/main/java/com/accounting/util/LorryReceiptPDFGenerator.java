@@ -360,29 +360,47 @@ public class LorryReceiptPDFGenerator {
         addDataCell(pkgTable, s(lr.getNoOfPackages()), 30);
         addDataCell(pkgTable, s(lr.getMethodOfPacking()), 30);
         addDataCell(pkgTable, s(lr.getDescription()), 30);
-        // Weight columns with no horizontal borders, centered (but keep top border to connect with header)
-        addDataCellWeight(pkgTable, s(lr.getWeightActual()), 30, Element.ALIGN_CENTER, Rectangle.TOP | Rectangle.LEFT | Rectangle.RIGHT);
-        addDataCellWeight(pkgTable, s(lr.getWeightCharged()), 30, Element.ALIGN_CENTER, Rectangle.TOP | Rectangle.LEFT | Rectangle.RIGHT);
+        // Weight columns with no borders, centered
+        addDataCellNoBorder(pkgTable, s(lr.getWeightActual()), 30, Element.ALIGN_CENTER);
+        addDataCellNoBorder(pkgTable, s(lr.getWeightCharged()), 30, Element.ALIGN_CENTER);
         addDataCell(pkgTable, s(lr.getRate()), 30, Element.ALIGN_RIGHT);
         addDataCell(pkgTable, lr.getFreightToPay() > 0 ? String.format("%.2f", lr.getFreightToPay()) : "", 30, Element.ALIGN_RIGHT);
         addDataCell(pkgTable, lr.getFreightPaid() > 0 ? String.format("%.2f", lr.getFreightPaid()) : "", 30, Element.ALIGN_RIGHT);
 
         // Row 4: Empty spacer row
         for (int c = 0; c < 8; c++) {
-            PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
-            e.setBorder(Rectangle.BOX);
-            e.setMinimumHeight(16);
-            e.setPadding(2);
-            pkgTable.addCell(e);
+            if (c == 3 || c == 4) {
+                // Weight columns - no borders
+                PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
+                e.setBorder(Rectangle.NO_BORDER);
+                e.setMinimumHeight(16);
+                e.setPadding(2);
+                pkgTable.addCell(e);
+            } else {
+                PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
+                e.setBorder(Rectangle.BOX);
+                e.setMinimumHeight(16);
+                e.setPadding(2);
+                pkgTable.addCell(e);
+            }
         }
 
         // Row 5: Empty spacer row
         for (int c = 0; c < 8; c++) {
-            PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
-            e.setBorder(Rectangle.BOX);
-            e.setMinimumHeight(16);
-            e.setPadding(2);
-            pkgTable.addCell(e);
+            if (c == 3 || c == 4) {
+                // Weight columns - no borders
+                PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
+                e.setBorder(Rectangle.NO_BORDER);
+                e.setMinimumHeight(16);
+                e.setPadding(2);
+                pkgTable.addCell(e);
+            } else {
+                PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
+                e.setBorder(Rectangle.BOX);
+                e.setMinimumHeight(16);
+                e.setPadding(2);
+                pkgTable.addCell(e);
+            }
         }
 
         // Row 6: [empty] | [empty] | [empty] | [weight no horiz] | [weight no horiz] | Freight | [empty] | [empty]
