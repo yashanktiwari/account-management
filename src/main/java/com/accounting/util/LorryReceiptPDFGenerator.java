@@ -372,30 +372,33 @@ public class LorryReceiptPDFGenerator {
         int maxRows = Math.min(6, Math.max(Math.max(noPkgs.length, methods.length), descs.length));
         if (maxRows == 0) maxRows = 1;
 
+        // Calculate row height based on number of rows to fit in available space
+        float rowHeight = maxRows <= 2 ? 18 : (maxRows <= 4 ? 15 : 12);
+
         // Add rows for each package entry
         for (int i = 0; i < maxRows; i++) {
             String noPkg = i < noPkgs.length ? noPkgs[i].trim() : "";
             String method = i < methods.length ? methods[i].trim() : "";
             String desc = i < descs.length ? descs[i].trim() : "";
 
-            addDataCell(pkgTable, noPkg, 18);
-            addDataCell(pkgTable, method, 18);
-            addDataCell(pkgTable, desc, 18);
+            addDataCell(pkgTable, noPkg, rowHeight);
+            addDataCell(pkgTable, method, rowHeight);
+            addDataCell(pkgTable, desc, rowHeight);
 
             // Weight columns - only show data in first row
             if (i == 0) {
-                addDataCellWeight(pkgTable, s(lr.getWeightActual()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
-                addDataCellWeight(pkgTable, s(lr.getWeightCharged()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
-                addDataCell(pkgTable, s(lr.getRate()), 18, Element.ALIGN_RIGHT);
+                addDataCellWeight(pkgTable, s(lr.getWeightActual()), rowHeight, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
+                addDataCellWeight(pkgTable, s(lr.getWeightCharged()), rowHeight, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
+                addDataCell(pkgTable, s(lr.getRate()), rowHeight, Element.ALIGN_RIGHT);
             } else {
-                addEmptyCellWeight(pkgTable);
-                addEmptyCellWeight(pkgTable);
-                addEmptyCell(pkgTable);
+                addDataCellWeightWithHeight(pkgTable, rowHeight);
+                addDataCellWeightWithHeight(pkgTable, rowHeight);
+                addEmptyCellWithHeight(pkgTable, rowHeight);
             }
 
             // Freight columns - empty with vertical borders only
-            addDataCellWeight(pkgTable, "", 18, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
-            addDataCellWeight(pkgTable, "", 18, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
+            addDataCellWeight(pkgTable, "", rowHeight, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
+            addDataCellWeight(pkgTable, "", rowHeight, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
         }
 
         // Row 4: Empty spacer row
@@ -727,6 +730,22 @@ public class LorryReceiptPDFGenerator {
         cell.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
         cell.setPadding(3);
         cell.setMinimumHeight(18);
+        table.addCell(cell);
+    }
+
+    private static void addDataCellWeightWithHeight(PdfPTable table, float height) {
+        PdfPCell cell = new PdfPCell(new Phrase(" ", F_NORM_8));
+        cell.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
+        cell.setPadding(3);
+        cell.setMinimumHeight(height);
+        table.addCell(cell);
+    }
+
+    private static void addEmptyCellWithHeight(PdfPTable table, float height) {
+        PdfPCell cell = new PdfPCell(new Phrase(" ", F_NORM_8));
+        cell.setBorder(Rectangle.BOX);
+        cell.setPadding(3);
+        cell.setMinimumHeight(height);
         table.addCell(cell);
     }
 
