@@ -34,7 +34,7 @@ public class LorryReceiptPDFGenerator {
     public static void generateLorryReceiptPDF(LorryReceipt lr, String outputPath, String copyLabel) {
         try {
             float margin = 14;
-            Document document = new Document(PageSize.A4, margin, margin, margin, margin);
+            Document document = new Document(PageSize.A4.rotate(), margin, margin, margin, margin);
             PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(outputPath));
             document.open();
 
