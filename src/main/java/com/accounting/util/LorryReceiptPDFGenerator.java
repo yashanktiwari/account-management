@@ -622,6 +622,7 @@ public class LorryReceiptPDFGenerator {
             wrap.setBorder(Rectangle.NO_BORDER);
         }
         wrap.setPadding(0);
+        wrap.setMinimumHeight(25);
         table.addCell(wrap);
     }
 
