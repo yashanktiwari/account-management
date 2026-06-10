@@ -394,36 +394,6 @@ public class LorryReceiptPDFGenerator {
             addDataCellWeight(pkgTable, "", 18, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
         }
 
-        // Row 6: [empty] | [empty] | [empty] | [weight vert] | [weight vert] | Freight | [freight vert] | [freight vert]
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addLabelCell(pkgTable, "Freight", Element.ALIGN_RIGHT);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
-
-        // Row 7: [empty] | [empty] | [empty] | [weight vert] | [weight vert] | Advance | [freight vert] | [freight vert]
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addLabelCell(pkgTable, "Advance", Element.ALIGN_RIGHT);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
-
-        // Row 8: [empty] | [empty] | [empty] | [weight vert] | [weight vert] | Balance | [freight vert] | [freight vert]
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addLabelCell(pkgTable, "Balance", Element.ALIGN_RIGHT);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
-
         // Row 9: S.H. No. | [empty] | [empty] | [weight vert] | [weight vert] | A.O.C. | [freight vert] | [freight vert]
         addLabelCell(pkgTable, "S.H. No.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
