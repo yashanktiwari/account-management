@@ -17,19 +17,19 @@ public class LorryReceiptPDFGenerator {
     private static final String IMAGES_FOLDER = "src/main/resources/images";
 
     // Fonts
-    private static final Font F_BOLD_14 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
-    private static final Font F_BOLD_12 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
-    private static final Font F_BOLD_11 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11);
-    private static final Font F_BOLD_10 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
-    private static final Font F_BOLD_9 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9);
-    private static final Font F_BOLD_8 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8);
-    private static final Font F_BOLD_7 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7);
-    private static final Font F_NORM_10 = FontFactory.getFont(FontFactory.HELVETICA, 10);
-    private static final Font F_NORM_9 = FontFactory.getFont(FontFactory.HELVETICA, 9);
-    private static final Font F_NORM_8 = FontFactory.getFont(FontFactory.HELVETICA, 8);
-    private static final Font F_NORM_7 = FontFactory.getFont(FontFactory.HELVETICA, 7);
-    private static final Font F_NORM_6 = FontFactory.getFont(FontFactory.HELVETICA, 6);
-    private static final Font F_RED_BOLD_14 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, new Color(204, 0, 0));
+    private static final Font F_BOLD_14 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
+    private static final Font F_BOLD_12 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
+    private static final Font F_BOLD_11 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9);
+    private static final Font F_BOLD_10 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9);
+    private static final Font F_BOLD_9 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8);
+    private static final Font F_BOLD_8 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7);
+    private static final Font F_BOLD_7 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 6);
+    private static final Font F_NORM_10 = FontFactory.getFont(FontFactory.HELVETICA, 9);
+    private static final Font F_NORM_9 = FontFactory.getFont(FontFactory.HELVETICA, 8);
+    private static final Font F_NORM_8 = FontFactory.getFont(FontFactory.HELVETICA, 7);
+    private static final Font F_NORM_7 = FontFactory.getFont(FontFactory.HELVETICA, 6);
+    private static final Font F_NORM_6 = FontFactory.getFont(FontFactory.HELVETICA, 5);
+    private static final Font F_RED_BOLD_14 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, new Color(204, 0, 0));
 
     public static void generateLorryReceiptPDF(LorryReceipt lr, String outputPath, String copyLabel) {
         try {
@@ -92,8 +92,8 @@ public class LorryReceiptPDFGenerator {
 
         Image headerImg = loadImage("LR_HEADER");
         if (headerImg != null) {
-            float maxW = (PageSize.A4.getWidth() - 28) * 2f / 3f - 6;
-            headerImg.scaleToFit(maxW, 200);
+            float maxW = (PageSize.A4.getHeight() - 28) * 2f / 3f - 6;
+            headerImg.scaleToFit(maxW, 150);
             headerImg.setAlignment(Image.MIDDLE);
             headerCell.addElement(headerImg);
         } else {
@@ -276,7 +276,7 @@ public class LorryReceiptPDFGenerator {
         PdfPCell csorCell = new PdfPCell();
         csorCell.setBorder(Rectangle.BOX);
         csorCell.setPadding(4);
-        csorCell.setMinimumHeight(30);
+        csorCell.setMinimumHeight(22);
         Paragraph csorPara = new Paragraph();
         csorPara.add(new Chunk("Consignor", F_BOLD_9));
         csorPara.add(new Chunk("  " + s(lr.getConsignorName()), F_NORM_9));
@@ -286,7 +286,7 @@ public class LorryReceiptPDFGenerator {
         PdfPCell cseeCell = new PdfPCell();
         cseeCell.setBorder(Rectangle.BOX);
         cseeCell.setPadding(4);
-        cseeCell.setMinimumHeight(30);
+        cseeCell.setMinimumHeight(22);
         Paragraph cseePara = new Paragraph();
         cseePara.add(new Chunk("Consignee", F_BOLD_9));
         cseePara.add(new Chunk("  " + s(lr.getConsigneeName()), F_NORM_9));
@@ -297,7 +297,7 @@ public class LorryReceiptPDFGenerator {
         PdfPCell gstinCsor = new PdfPCell();
         gstinCsor.setBorder(Rectangle.BOX);
         gstinCsor.setPadding(4);
-        gstinCsor.setMinimumHeight(30);
+        gstinCsor.setMinimumHeight(22);
         Paragraph gstinCsorPara = new Paragraph();
         gstinCsorPara.add(new Chunk("GSTIN : ", F_BOLD_9));
         gstinCsorPara.add(new Chunk(s(lr.getConsignorGstin()), F_NORM_9));
@@ -307,7 +307,7 @@ public class LorryReceiptPDFGenerator {
         PdfPCell gstinCsee = new PdfPCell();
         gstinCsee.setBorder(Rectangle.BOX);
         gstinCsee.setPadding(4);
-        gstinCsee.setMinimumHeight(30);
+        gstinCsee.setMinimumHeight(22);
         Paragraph gstinCseePara = new Paragraph();
         gstinCseePara.add(new Chunk("GSTIN : ", F_BOLD_9));
         gstinCseePara.add(new Chunk(s(lr.getConsigneeGstin()), F_NORM_9));
@@ -376,13 +376,13 @@ public class LorryReceiptPDFGenerator {
                 // Weight and Freight columns - vertical borders only
                 PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
                 e.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
-                e.setMinimumHeight(25);
+                e.setMinimumHeight(18);
                 e.setPadding(2);
                 pkgTable.addCell(e);
             } else {
                 PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
                 e.setBorder(Rectangle.BOX);
-                e.setMinimumHeight(25);
+                e.setMinimumHeight(18);
                 e.setPadding(2);
                 pkgTable.addCell(e);
             }
@@ -394,13 +394,13 @@ public class LorryReceiptPDFGenerator {
                 // Weight and Freight columns - vertical borders only
                 PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
                 e.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
-                e.setMinimumHeight(25);
+                e.setMinimumHeight(18);
                 e.setPadding(2);
                 pkgTable.addCell(e);
             } else {
                 PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
                 e.setBorder(Rectangle.BOX);
-                e.setMinimumHeight(25);
+                e.setMinimumHeight(18);
                 e.setPadding(2);
                 pkgTable.addCell(e);
             }
@@ -488,7 +488,7 @@ public class LorryReceiptPDFGenerator {
         PdfPCell forCell = new PdfPCell();
         forCell.setBorder(Rectangle.BOX);
         forCell.setPadding(4);
-        forCell.setMinimumHeight(40);
+        forCell.setMinimumHeight(30);
         forCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
 
         // Create a nested table for the signature area to allow overlapping
@@ -675,7 +675,7 @@ public class LorryReceiptPDFGenerator {
         PdfPCell cell = new PdfPCell(new Phrase(text, F_NORM_9));
         cell.setBorder(Rectangle.BOX);
         cell.setPadding(3);
-        cell.setMinimumHeight(25);
+        cell.setMinimumHeight(18);
         cell.setHorizontalAlignment(alignment);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(cell);
@@ -685,7 +685,7 @@ public class LorryReceiptPDFGenerator {
         PdfPCell cell = new PdfPCell(new Phrase(text, F_NORM_9));
         cell.setBorder(Rectangle.NO_BORDER);
         cell.setPadding(3);
-        cell.setMinimumHeight(25);
+        cell.setMinimumHeight(18);
         cell.setHorizontalAlignment(alignment);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(cell);
@@ -705,7 +705,7 @@ public class LorryReceiptPDFGenerator {
         PdfPCell cell = new PdfPCell(new Phrase(" ", F_NORM_8));
         cell.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
         cell.setPadding(3);
-        cell.setMinimumHeight(25);
+        cell.setMinimumHeight(18);
         table.addCell(cell);
     }
 
@@ -713,7 +713,7 @@ public class LorryReceiptPDFGenerator {
         PdfPCell cell = new PdfPCell(new Phrase(" ", F_NORM_8));
         cell.setBorder(Rectangle.BOTTOM | Rectangle.LEFT | Rectangle.RIGHT);
         cell.setPadding(3);
-        cell.setMinimumHeight(25);
+        cell.setMinimumHeight(18);
         table.addCell(cell);
     }
 
@@ -721,7 +721,7 @@ public class LorryReceiptPDFGenerator {
         PdfPCell cell = new PdfPCell(new Phrase(text, font));
         cell.setBorder(Rectangle.BOX);
         cell.setPadding(3);
-        cell.setMinimumHeight(16);
+        cell.setMinimumHeight(12);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         cell.setHorizontalAlignment(hAlign);
         table.addCell(cell);
@@ -731,7 +731,7 @@ public class LorryReceiptPDFGenerator {
         PdfPCell cell = new PdfPCell(new Phrase(text, F_BOLD_8));
         cell.setBorder(Rectangle.BOX);
         cell.setPadding(3);
-        cell.setMinimumHeight(25);
+        cell.setMinimumHeight(18);
         cell.setHorizontalAlignment(alignment);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(cell);
@@ -741,7 +741,7 @@ public class LorryReceiptPDFGenerator {
         PdfPCell cell = new PdfPCell(new Phrase(" ", F_NORM_8));
         cell.setBorder(Rectangle.BOX);
         cell.setPadding(3);
-        cell.setMinimumHeight(25);
+        cell.setMinimumHeight(18);
         table.addCell(cell);
     }
 
@@ -749,7 +749,7 @@ public class LorryReceiptPDFGenerator {
         PdfPCell cell = new PdfPCell(new Phrase(" ", F_NORM_8));
         cell.setBorder(Rectangle.NO_BORDER);
         cell.setPadding(3);
-        cell.setMinimumHeight(25);
+        cell.setMinimumHeight(18);
         table.addCell(cell);
     }
 
