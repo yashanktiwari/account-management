@@ -158,11 +158,19 @@ public class LorryReceiptDialog {
         consigneeNameField.setText(lr.getConsigneeName());
         consigneeGstinField.setText(lr.getConsigneeGstin());
 
-        // Split package data into rows
+        // Split package data into rows (handle both old " | " and new "§" separators)
         packageRowsContainer.getChildren().clear();
-        String[] noPkgs = lr.getNoOfPackages() != null ? lr.getNoOfPackages().split("§") : new String[]{""};
-        String[] methods = lr.getMethodOfPacking() != null ? lr.getMethodOfPacking().split("§") : new String[]{""};
-        String[] descs = lr.getDescription() != null ? lr.getDescription().split("§") : new String[]{""};
+        String noPkgData = lr.getNoOfPackages() != null ? lr.getNoOfPackages() : "";
+        String methodData = lr.getMethodOfPacking() != null ? lr.getMethodOfPacking() : "";
+        String descData = lr.getDescription() != null ? lr.getDescription() : "";
+
+        String[] noPkgs = noPkgData.contains(" | ") ? noPkgData.split(" \\| ") : noPkgData.split("§");
+        String[] methods = methodData.contains(" | ") ? methodData.split(" \\| ") : methodData.split("§");
+        String[] descs = descData.contains(" | ") ? descData.split(" \\| ") : descData.split("§");
+
+        if (noPkgs.length == 0) noPkgs = new String[]{""};
+        if (methods.length == 0) methods = new String[]{""};
+        if (descs.length == 0) descs = new String[]{""};
 
         int maxRows = Math.min(6, Math.max(Math.max(noPkgs.length, methods.length), descs.length));
         for (int i = 0; i < maxRows; i++) {
