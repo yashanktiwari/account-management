@@ -358,17 +358,45 @@ public class LorryReceiptPDFGenerator {
         addSubHeaderTwoLine(pkgTable, "TO PAY", "Rs.       Ps.");
         addSubHeaderTwoLine(pkgTable, "PAID", "Rs.       Ps.");
 
-        // Row 3: Data row with actual values
-        addDataCell(pkgTable, s(lr.getNoOfPackages()), 25);
-        addDataCell(pkgTable, s(lr.getMethodOfPacking()), 25);
-        addDataCell(pkgTable, s(lr.getDescription()), 25);
-        // Weight columns with vertical line between them, centered
-        addDataCellWeight(pkgTable, s(lr.getWeightActual()), 25, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
-        addDataCellWeight(pkgTable, s(lr.getWeightCharged()), 25, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
-        addDataCell(pkgTable, s(lr.getRate()), 25, Element.ALIGN_RIGHT);
-        // Freight columns - empty with vertical borders only
-        addDataCellWeight(pkgTable, "", 25, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
-        addDataCellWeight(pkgTable, "", 25, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
+        // Row 3: Data row with actual values - split by separator
+        String noPkgData = s(lr.getNoOfPackages());
+        String methodData = s(lr.getMethodOfPacking());
+        String descData = s(lr.getDescription());
+
+        // Handle both old " | " and new "§" separators
+        String[] noPkgs = noPkgData.contains(" | ") ? noPkgData.split(" \\| ") : noPkgData.split("§");
+        String[] methods = methodData.contains(" | ") ? methodData.split(" \\| ") : methodData.split("§");
+        String[] descs = descData.contains(" | ") ? descData.split(" \\| ") : descData.split("§");
+
+        // Get max rows (up to 6)
+        int maxRows = Math.min(6, Math.max(Math.max(noPkgs.length, methods.length), descs.length));
+        if (maxRows == 0) maxRows = 1;
+
+        // Add rows for each package entry
+        for (int i = 0; i < maxRows; i++) {
+            String noPkg = i < noPkgs.length ? noPkgs[i].trim() : "";
+            String method = i < methods.length ? methods[i].trim() : "";
+            String desc = i < descs.length ? descs[i].trim() : "";
+
+            addDataCell(pkgTable, noPkg, 18);
+            addDataCell(pkgTable, method, 18);
+            addDataCell(pkgTable, desc, 18);
+
+            // Weight columns - only show data in first row
+            if (i == 0) {
+                addDataCellWeight(pkgTable, s(lr.getWeightActual()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
+                addDataCellWeight(pkgTable, s(lr.getWeightCharged()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
+                addDataCell(pkgTable, s(lr.getRate()), 18, Element.ALIGN_RIGHT);
+            } else {
+                addEmptyCellWeight(pkgTable);
+                addEmptyCellWeight(pkgTable);
+                addEmptyCell(pkgTable);
+            }
+
+            // Freight columns - empty with vertical borders only
+            addDataCellWeight(pkgTable, "", 18, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
+            addDataCellWeight(pkgTable, "", 18, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
+        }
 
         // Row 4: Empty spacer row
         for (int c = 0; c < 8; c++) {
