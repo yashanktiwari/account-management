@@ -483,6 +483,25 @@ public class LorryReceiptPDFGenerator {
                 "The Consignment note issued subject to terms & condition printed overleaf", F_NORM_7));
         discCell.addElement(new Paragraph(
                 "We are not responsible for the leakage & Breakage.", F_NORM_7));
+        discCell.addElement(spacer(6));
+
+        // Add footer content to disclaimer cell
+        Paragraph toPayLine = new Paragraph();
+        toPayLine.add(new Chunk("To Pay Rs. ", F_BOLD_9));
+        toPayLine.add(new Chunk(lr.getToPayRs() > 0 ? String.format("%.2f", lr.getToPayRs()) : "________________________", F_NORM_9));
+        toPayLine.add(new Chunk("     Adv. Paid Rs. ", F_BOLD_9));
+        toPayLine.add(new Chunk(lr.getAdvPaidRs() > 0 ? String.format("%.2f", lr.getAdvPaidRs()) : "________________________", F_NORM_9));
+        discCell.addElement(toPayLine);
+
+        discCell.addElement(spacer(4));
+
+        Paragraph invLine = new Paragraph();
+        invLine.add(new Chunk("Inv. No. ", F_BOLD_9));
+        invLine.add(new Chunk(s(lr.getInvNo()).isEmpty() ? "________________________" : s(lr.getInvNo()), F_NORM_9));
+        invLine.add(new Chunk("          Inv. Date ", F_BOLD_9));
+        invLine.add(new Chunk(lr.getInvDate() != null ? lr.getInvDate().format(DATE_FORMATTER) : "________________________", F_NORM_9));
+        discCell.addElement(invLine);
+
         discTable.addCell(discCell);
 
         PdfPCell forCell = new PdfPCell();
@@ -532,33 +551,6 @@ public class LorryReceiptPDFGenerator {
         discTable.addCell(forCell);
 
         outerCell.addElement(discTable);
-
-        // ── 3d. Footer: To Pay Rs / Adv. Paid Rs / Inv. No / Inv. Date ──
-        PdfPTable footerTable = new PdfPTable(1);
-        footerTable.setWidthPercentage(100);
-
-        PdfPCell footCell = new PdfPCell();
-        footCell.setBorder(Rectangle.BOX);
-        footCell.setPadding(5);
-
-        Paragraph toPayLine = new Paragraph();
-        toPayLine.add(new Chunk("To Pay Rs. ", F_BOLD_9));
-        toPayLine.add(new Chunk(lr.getToPayRs() > 0 ? String.format("%.2f", lr.getToPayRs()) : "________________________", F_NORM_9));
-        toPayLine.add(new Chunk("     Adv. Paid Rs. ", F_BOLD_9));
-        toPayLine.add(new Chunk(lr.getAdvPaidRs() > 0 ? String.format("%.2f", lr.getAdvPaidRs()) : "________________________", F_NORM_9));
-        footCell.addElement(toPayLine);
-
-        footCell.addElement(spacer(4));
-
-        Paragraph invLine = new Paragraph();
-        invLine.add(new Chunk("Inv. No. ", F_BOLD_9));
-        invLine.add(new Chunk(s(lr.getInvNo()).isEmpty() ? "________________________" : s(lr.getInvNo()), F_NORM_9));
-        invLine.add(new Chunk("          Inv. Date ", F_BOLD_9));
-        invLine.add(new Chunk(lr.getInvDate() != null ? lr.getInvDate().format(DATE_FORMATTER) : "________________________", F_NORM_9));
-        footCell.addElement(invLine);
-
-        footerTable.addCell(footCell);
-        outerCell.addElement(footerTable);
     }
 
     // ══════════════════════════════════════════════
