@@ -280,9 +280,13 @@ public class LorryReceiptDialog {
         );
         pkgSection.getChildren().add(pkgHeader);
 
-        // Package rows container
+        // Package rows container with scroll
         packageRowsContainer = new VBox(5);
-        pkgSection.getChildren().add(packageRowsContainer);
+        ScrollPane scrollPane = new ScrollPane(packageRowsContainer);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setPrefHeight(150);
+        scrollPane.setStyle("-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 4;");
+        pkgSection.getChildren().add(scrollPane);
 
         // Add row button
         Button addPackageBtn = new Button("+ Add Package Row");
