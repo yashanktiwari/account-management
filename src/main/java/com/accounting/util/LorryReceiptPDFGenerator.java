@@ -368,7 +368,7 @@ public class LorryReceiptPDFGenerator {
         String[] methods = methodData.contains(" | ") ? methodData.split(" \\| ") : methodData.split("§");
         String[] descs = descData.contains(" | ") ? descData.split(" \\| ") : descData.split("§");
 
-        // Always create exactly 3 rows (fixed layout)
+        // First 3 rows: dedicated package data rows
         for (int i = 0; i < 3; i++) {
             String noPkg = i < noPkgs.length ? noPkgs[i].trim() : "";
             String method = i < methods.length ? methods[i].trim() : "";
@@ -394,35 +394,27 @@ public class LorryReceiptPDFGenerator {
             addDataCellWeight(pkgTable, "", 18, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
         }
 
-        // Row 9: Freight (in Rate column)
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addLabelCell(pkgTable, "Freight", Element.ALIGN_RIGHT);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
+        // Rows 4-6 overflow into Freight/Advance/Balance label rows
+        String[] rateLabels = {"Freight", "Advance", "Balance"};
+        for (int j = 0; j < 3; j++) {
+            int dataIdx = 3 + j; // index 3, 4, 5
+            String noPkg = dataIdx < noPkgs.length ? noPkgs[dataIdx].trim() : "";
+            String method = dataIdx < methods.length ? methods[dataIdx].trim() : "";
+            String desc = dataIdx < descs.length ? descs[dataIdx].trim() : "";
 
-        // Row 10: Advance (in Rate column)
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addLabelCell(pkgTable, "Advance", Element.ALIGN_RIGHT);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
-
-        // Row 11: Balance (in Rate column)
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addLabelCell(pkgTable, "Balance", Element.ALIGN_RIGHT);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
+            // First 3 cols: package data (or empty)
+            addDataCell(pkgTable, noPkg, 18);
+            addDataCell(pkgTable, method, 18);
+            addDataCell(pkgTable, desc, 18);
+            // Weight cols: empty
+            addEmptyCellWeight(pkgTable);
+            addEmptyCellWeight(pkgTable);
+            // Rate col: label (Freight/Advance/Balance)
+            addLabelCell(pkgTable, rateLabels[j], Element.ALIGN_RIGHT);
+            // Freight cols: empty
+            addEmptyCellWeight(pkgTable);
+            addEmptyCellWeight(pkgTable);
+        }
 
         // Row 12: S.H. No. | [empty] | G. Wt. | [weight vert] | [weight vert] | A.O.C. | [freight vert] | [freight vert]
         addLabelCell(pkgTable, "S.H. No.", Element.ALIGN_RIGHT);
