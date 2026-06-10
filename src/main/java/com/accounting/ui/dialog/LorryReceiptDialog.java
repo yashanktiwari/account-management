@@ -655,7 +655,11 @@ public class LorryReceiptDialog {
                                 printerJob.print();
                                 Platform.runLater(() -> {
                                     AlertUtil.showInfo("Success", "Lorry Receipt sent to printer");
-                                    document.close();
+                                    try {
+                                        document.close();
+                                    } catch (Exception e) {
+                                        log.error("Failed to close document", e);
+                                    }
                                     stage.close();
                                     MainApp.showContentInApp(new LorryReceiptListView().createContent());
                                 });
