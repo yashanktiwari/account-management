@@ -30,6 +30,7 @@ public class LorryReceiptDialog {
     private Stage stage;
     private LorryReceipt lr;
     private Runnable onClose;
+    private Button printBtn;
 
     // Basic info
     private TextField lrNoField;
@@ -425,7 +426,7 @@ public class LorryReceiptDialog {
         saveBtn.setStyle("-fx-padding: 8 20; -fx-font-size: 12px; -fx-background-color: #16a34a; -fx-text-fill: white;");
         saveBtn.setOnAction(e -> saveLR());
 
-        Button printBtn = new Button("Print");
+        printBtn = new Button("Print");
         printBtn.setStyle("-fx-padding: 8 20; -fx-font-size: 12px; -fx-background-color: #2563eb; -fx-text-fill: white;");
         printBtn.setOnAction(e -> printLR());
 
@@ -604,23 +605,78 @@ public class LorryReceiptDialog {
             AlertUtil.showWarning("Warning", "Please save the LR before printing");
             return;
         }
-        try {
-            java.io.File dir = new java.io.File("lorry_receipts");
-            if (!dir.exists()) dir.mkdirs();
 
-            String fileName = "lorry_receipts/LR_" + lr.getLrNo() + "_" +
-                    java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".pdf";
+        // Disable print button and show loading
+        printBtn.setDisable(true);
+        printBtn.setText("Generating PDF...");
 
-            LorryReceiptPDFGenerator.generateLorryReceiptPDF(lr, fileName, "Original");
+        // Generate PDF in background to avoid UI freeze
+        AppExecutor.submit(() -> {
+            try {
+                java.io.File dir = new java.io.File("lorry_receipts");
+                if (!dir.exists()) dir.mkdirs();
 
-            stage.close();
-            new PrintPreviewDialog(fileName, (copyLabel, outputPath) ->
-                    LorryReceiptPDFGenerator.generateLorryReceiptPDF(lr, outputPath, copyLabel)
-            ).showInApp(() -> MainApp.showContentInApp(new LorryReceiptListView().createContent()));
-        } catch (Exception e) {
-            log.error("Failed to generate PDF", e);
-            AlertUtil.showError("Error", "Failed to generate PDF: " + e.getMessage());
-        }
+                String fileName = "lorry_receipts/LR_" + lr.getLrNo() + "_" +
+                        java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".pdf";
+
+                LorryReceiptPDFGenerator.generateLorryReceiptPDF(lr, fileName, "Original");
+
+                Platform.runLater(() -> {
+                    printBtn.setText("Print");
+                    printBtn.setDisable(false);
+                    // Show native print dialog directly (skip preview)
+                    printPDFDirectly(fileName);
+                });
+            } catch (Exception e) {
+                log.error("Failed to generate PDF", e);
+                Platform.runLater(() -> {
+                    printBtn.setText("Print");
+                    printBtn.setDisable(false);
+                    AlertUtil.showError("Error", "Failed to generate PDF: " + e.getMessage());
+                });
+            }
+        });
+    }
+
+    private void printPDFDirectly(String pdfFilePath) {
+        AppExecutor.submit(() -> {
+            try {
+                org.apache.pdfbox.pdmodel.PDDocument document = org.apache.pdfbox.Loader.loadPDF(new java.io.File(pdfFilePath));
+                java.awt.print.PrinterJob printerJob = java.awt.print.PrinterJob.getPrinterJob();
+                printerJob.setPageable(new org.apache.pdfbox.printing.PDFPageable(document));
+                printerJob.setJobName("Lorry Receipt - " + lr.getLrNo());
+
+                // Show native print dialog on UI thread
+                Platform.runLater(() -> {
+                    boolean doPrint = printerJob.printDialog();
+                    if (doPrint) {
+                        AppExecutor.submit(() -> {
+                            try {
+                                printerJob.print();
+                                Platform.runLater(() -> {
+                                    AlertUtil.showInfo("Success", "Lorry Receipt sent to printer");
+                                    document.close();
+                                    stage.close();
+                                    MainApp.showContentInApp(new LorryReceiptListView().createContent());
+                                });
+                            } catch (Exception e) {
+                                log.error("Failed to print", e);
+                                Platform.runLater(() -> AlertUtil.showError("Error", "Failed to print: " + e.getMessage()));
+                            }
+                        });
+                    } else {
+                        try {
+                            document.close();
+                        } catch (Exception e) {
+                            log.error("Failed to close document", e);
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                log.error("Failed to load PDF for printing", e);
+                Platform.runLater(() -> AlertUtil.showError("Error", "Failed to load PDF: " + e.getMessage()));
+            }
+        });
     }
 
     // ── Helpers ──
