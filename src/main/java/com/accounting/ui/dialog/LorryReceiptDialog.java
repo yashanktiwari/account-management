@@ -101,7 +101,12 @@ public class LorryReceiptDialog {
             stage.setOnHidden(e -> onClose.run());
         }
 
-        Scene scene = new Scene(createContent(), 1450, 950);
+        Parent content = createContent();
+        ScrollPane scrollPane = new ScrollPane(content);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+
+        Scene scene = new Scene(scrollPane, 1450, 950);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );
