@@ -358,7 +358,7 @@ public class LorryReceiptPDFGenerator {
         addSubHeaderTwoLine(pkgTable, "TO PAY", "Rs.       Ps.");
         addSubHeaderTwoLine(pkgTable, "PAID", "Rs.       Ps.");
 
-        // Row 3+: Data rows - split by separator and use fixed 6 rows
+        // Row 3+: Data rows - split by separator and use fixed 3 rows
         String noPkgData = s(lr.getNoOfPackages());
         String methodData = s(lr.getMethodOfPacking());
         String descData = s(lr.getDescription());
@@ -368,21 +368,21 @@ public class LorryReceiptPDFGenerator {
         String[] methods = methodData.contains(" | ") ? methodData.split(" \\| ") : methodData.split("§");
         String[] descs = descData.contains(" | ") ? descData.split(" \\| ") : descData.split("§");
 
-        // Always create exactly 6 rows (fixed layout)
-        for (int i = 0; i < 6; i++) {
+        // Always create exactly 3 rows (fixed layout)
+        for (int i = 0; i < 3; i++) {
             String noPkg = i < noPkgs.length ? noPkgs[i].trim() : "";
             String method = i < methods.length ? methods[i].trim() : "";
             String desc = i < descs.length ? descs[i].trim() : "";
 
-            addDataCell(pkgTable, noPkg, 14);
-            addDataCell(pkgTable, method, 14);
-            addDataCell(pkgTable, desc, 14);
+            addDataCell(pkgTable, noPkg, 18);
+            addDataCell(pkgTable, method, 18);
+            addDataCell(pkgTable, desc, 18);
 
             // Weight columns - only show data in first row
             if (i == 0) {
-                addDataCellWeight(pkgTable, s(lr.getWeightActual()), 14, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
-                addDataCellWeight(pkgTable, s(lr.getWeightCharged()), 14, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
-                addDataCell(pkgTable, s(lr.getRate()), 14, Element.ALIGN_RIGHT);
+                addDataCellWeight(pkgTable, s(lr.getWeightActual()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
+                addDataCellWeight(pkgTable, s(lr.getWeightCharged()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
+                addDataCell(pkgTable, s(lr.getRate()), 18, Element.ALIGN_RIGHT);
             } else {
                 addEmptyCellWeight(pkgTable);
                 addEmptyCellWeight(pkgTable);
@@ -390,41 +390,11 @@ public class LorryReceiptPDFGenerator {
             }
 
             // Freight columns - empty with vertical borders only
-            addDataCellWeight(pkgTable, "", 14, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
-            addDataCellWeight(pkgTable, "", 14, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
+            addDataCellWeight(pkgTable, "", 18, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
+            addDataCellWeight(pkgTable, "", 18, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
         }
 
-        // Row 9: Freight (in Rate column)
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addLabelCell(pkgTable, "Freight", Element.ALIGN_RIGHT);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
-
-        // Row 10: Advance (in Rate column)
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addLabelCell(pkgTable, "Advance", Element.ALIGN_RIGHT);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
-
-        // Row 11: Balance (in Rate column)
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addEmptyCell(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
-        addLabelCell(pkgTable, "Balance", Element.ALIGN_RIGHT);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
-
-        // Row 12: S.H. No. | [empty] | [empty] | [weight vert] | [weight vert] | A.O.C. | [freight vert] | [freight vert]
+        // Row 9: S.H. No. | [empty] | G. Wt. | [weight vert] | [weight vert] | A.O.C. | [freight vert] | [freight vert]
         addLabelCell(pkgTable, "S.H. No.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addLabelCell(pkgTable, "G. Wt.", Element.ALIGN_RIGHT);
@@ -434,7 +404,7 @@ public class LorryReceiptPDFGenerator {
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
 
-        // Row 13: S.T. No. | [empty] | T. Wt. | [weight vert] | [weight vert] | S.T. Charge | [freight vert] | [freight vert]
+        // Row 10: S.T. No. | [empty] | T. Wt. | [weight vert] | [weight vert] | S.T. Charge | [freight vert] | [freight vert]
         addLabelCell(pkgTable, "S.T. No.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addLabelCell(pkgTable, "T. Wt.", Element.ALIGN_RIGHT);
@@ -444,7 +414,7 @@ public class LorryReceiptPDFGenerator {
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
 
-        // Row 14: Value Rs. | [empty] | N. Wt. | [weight vert] | [weight vert] | Total | [freight vert] | [freight vert]
+        // Row 11: Value Rs. | [empty] | N. Wt. | [weight vert] | [weight vert] | Total | [freight vert] | [freight vert]
         addLabelCell(pkgTable, "Value Rs.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addLabelCell(pkgTable, "N. Wt.", Element.ALIGN_RIGHT);
@@ -686,7 +656,7 @@ public class LorryReceiptPDFGenerator {
         PdfPCell cell = new PdfPCell(new Phrase(" ", F_NORM_8));
         cell.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
         cell.setPadding(3);
-        cell.setMinimumHeight(14);
+        cell.setMinimumHeight(18);
         table.addCell(cell);
     }
 
@@ -728,7 +698,7 @@ public class LorryReceiptPDFGenerator {
         PdfPCell cell = new PdfPCell(new Phrase(text, F_BOLD_8));
         cell.setBorder(Rectangle.BOX);
         cell.setPadding(3);
-        cell.setMinimumHeight(14);
+        cell.setMinimumHeight(18);
         cell.setHorizontalAlignment(alignment);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(cell);
@@ -738,7 +708,7 @@ public class LorryReceiptPDFGenerator {
         PdfPCell cell = new PdfPCell(new Phrase(" ", F_NORM_8));
         cell.setBorder(Rectangle.BOX);
         cell.setPadding(3);
-        cell.setMinimumHeight(14);
+        cell.setMinimumHeight(18);
         table.addCell(cell);
     }
 

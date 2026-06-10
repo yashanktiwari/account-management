@@ -172,7 +172,7 @@ public class LorryReceiptDialog {
         if (methods.length == 0) methods = new String[]{""};
         if (descs.length == 0) descs = new String[]{""};
 
-        int maxRows = Math.min(6, Math.max(Math.max(noPkgs.length, methods.length), descs.length));
+        int maxRows = Math.min(3, Math.max(Math.max(noPkgs.length, methods.length), descs.length));
         for (int i = 0; i < maxRows; i++) {
             addPackageRow();
             HBox row = (HBox) packageRowsContainer.getChildren().get(i);
@@ -464,8 +464,8 @@ public class LorryReceiptDialog {
     }
 
     private void addPackageRow() {
-        if (packageRowsContainer.getChildren().size() >= 6) {
-            AlertUtil.showWarning("Limit Reached", "Maximum 6 package rows allowed");
+        if (packageRowsContainer.getChildren().size() >= 3) {
+            AlertUtil.showWarning("Limit Reached", "Maximum 3 package rows allowed");
             return;
         }
 
