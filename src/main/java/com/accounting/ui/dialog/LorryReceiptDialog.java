@@ -46,9 +46,7 @@ public class LorryReceiptDialog {
     private TextField consigneeGstinField;
 
     // Package details
-    private TextField noOfPackagesField;
-    private TextField methodOfPackingField;
-    private TextArea descriptionArea;
+    private VBox packageRowsContainer;
     private TextField weightActualField;
     private TextField weightChargedField;
     private TextField rateField;
@@ -114,6 +112,8 @@ public class LorryReceiptDialog {
             loadLrData();
         } else {
             generateNextLrNumber();
+            // Add one empty row for new LR
+            addPackageRow();
         }
     }
 
@@ -152,9 +152,26 @@ public class LorryReceiptDialog {
         consignorGstinField.setText(lr.getConsignorGstin());
         consigneeNameField.setText(lr.getConsigneeName());
         consigneeGstinField.setText(lr.getConsigneeGstin());
-        noOfPackagesField.setText(lr.getNoOfPackages());
-        methodOfPackingField.setText(lr.getMethodOfPacking());
-        descriptionArea.setText(lr.getDescription());
+
+        // Split package data into rows
+        packageRowsContainer.getChildren().clear();
+        String[] noPkgs = lr.getNoOfPackages() != null ? lr.getNoOfPackages().split(" \\| ") : new String[]{""};
+        String[] methods = lr.getMethodOfPacking() != null ? lr.getMethodOfPacking().split(" \\| ") : new String[]{""};
+        String[] descs = lr.getDescription() != null ? lr.getDescription().split(" \\| ") : new String[]{""};
+
+        int maxRows = Math.max(Math.max(noPkgs.length, methods.length), descs.length);
+        for (int i = 0; i < maxRows; i++) {
+            addPackageRow();
+            HBox row = (HBox) packageRowsContainer.getChildren().get(i);
+            TextField noPkgField = (TextField) row.getChildren().get(0);
+            TextField methodField = (TextField) row.getChildren().get(1);
+            TextField descField = (TextField) row.getChildren().get(2);
+
+            if (i < noPkgs.length) noPkgField.setText(noPkgs[i].trim());
+            if (i < methods.length) methodField.setText(methods[i].trim());
+            if (i < descs.length) descField.setText(descs[i].trim());
+        }
+
         weightActualField.setText(lr.getWeightActual());
         weightChargedField.setText(lr.getWeightCharged());
         rateField.setText(lr.getRate());
@@ -252,40 +269,50 @@ public class LorryReceiptDialog {
         partyGrid.add(consigneeGstinField, 1, 3, 3, 1);
 
         // ── Section 3: Package & Description ──
+        VBox pkgSection = new VBox(10);
+
+        // Package rows header
+        HBox pkgHeader = new HBox(10);
+        pkgHeader.setStyle("-fx-font-weight: bold; -fx-font-size: 11px;");
+        pkgHeader.getChildren().addAll(
+                label("No. of Packages"), label("Method of Packing"), label("Description"),
+                label("Action")
+        );
+        pkgSection.getChildren().add(pkgHeader);
+
+        // Package rows container
+        packageRowsContainer = new VBox(5);
+        pkgSection.getChildren().add(packageRowsContainer);
+
+        // Add row button
+        Button addPackageBtn = new Button("+ Add Package Row");
+        addPackageBtn.setStyle("-fx-background-color: #16a34a; -fx-text-fill: white; -fx-padding: 5 10;");
+        addPackageBtn.setOnAction(e -> addPackageRow());
+        pkgSection.getChildren().add(addPackageBtn);
+
+        // Other package fields
         GridPane pkgGrid = sectionGrid();
-        noOfPackagesField = tf();
-        pkgGrid.add(label("No. of Packages"), 0, 0);
-        pkgGrid.add(noOfPackagesField, 1, 0);
-
-        methodOfPackingField = tf();
-        pkgGrid.add(label("Method of Packing"), 2, 0);
-        pkgGrid.add(methodOfPackingField, 3, 0);
-
-        descriptionArea = new TextArea();
-        descriptionArea.setPrefRowCount(2);
-        descriptionArea.setPromptText("Description (Said to Contain)");
-        pkgGrid.add(label("Description"), 0, 1);
-        pkgGrid.add(descriptionArea, 1, 1, 3, 1);
-
         weightActualField = tf();
-        pkgGrid.add(label("Weight Actual"), 0, 2);
-        pkgGrid.add(weightActualField, 1, 2);
+        pkgGrid.add(label("Weight Actual"), 0, 0);
+        pkgGrid.add(weightActualField, 1, 0);
 
         weightChargedField = tf();
-        pkgGrid.add(label("Weight Charged"), 2, 2);
-        pkgGrid.add(weightChargedField, 3, 2);
+        pkgGrid.add(label("Weight Charged"), 2, 0);
+        pkgGrid.add(weightChargedField, 3, 0);
 
         rateField = tf();
-        pkgGrid.add(label("Rate"), 0, 3);
-        pkgGrid.add(rateField, 1, 3);
+        pkgGrid.add(label("Rate"), 0, 1);
+        pkgGrid.add(rateField, 1, 1);
 
         freightToPayField = numField();
-        pkgGrid.add(label("Freight To Pay"), 2, 3);
-        pkgGrid.add(freightToPayField, 3, 3);
+        pkgGrid.add(label("Freight To Pay"), 2, 1);
+        pkgGrid.add(freightToPayField, 3, 1);
 
         freightPaidField = numField();
-        pkgGrid.add(label("Freight Paid"), 0, 4);
-        pkgGrid.add(freightPaidField, 1, 4);
+        pkgGrid.add(label("Freight Paid"), 0, 2);
+        pkgGrid.add(freightPaidField, 1, 2);
+
+        pkgSection.getChildren().add(pkgGrid);
 
         // ── Section 4: Amounts (right side in image) ──
         GridPane amountGrid = sectionGrid();
@@ -408,7 +435,7 @@ public class LorryReceiptDialog {
         leftColumn.getChildren().addAll(
                 sectionLabel("Basic Info"), basicGrid,
                 sectionLabel("Consignor / Consignee"), partyGrid,
-                sectionLabel("Package & Description"), pkgGrid
+                sectionLabel("Package & Description"), pkgSection
         );
 
         // Right column
@@ -426,6 +453,28 @@ public class LorryReceiptDialog {
 
         root.getChildren().addAll(header, contentColumns, buttonsBox);
         return root;
+    }
+
+    private void addPackageRow() {
+        HBox row = new HBox(10);
+        row.setAlignment(Pos.CENTER_LEFT);
+
+        TextField noOfPackages = tf();
+        noOfPackages.setPrefWidth(120);
+
+        TextField methodOfPacking = tf();
+        methodOfPacking.setPrefWidth(150);
+
+        TextField description = new TextField();
+        description.setPrefWidth(300);
+        description.setPromptText("Description");
+
+        Button removeBtn = new Button("Remove");
+        removeBtn.setStyle("-fx-background-color: #dc2626; -fx-text-fill: white; -fx-padding: 5 10;");
+        removeBtn.setOnAction(e -> packageRowsContainer.getChildren().remove(row));
+
+        row.getChildren().addAll(noOfPackages, methodOfPacking, description, removeBtn);
+        packageRowsContainer.getChildren().add(row);
     }
 
     private void updateTotals() {
@@ -455,9 +504,32 @@ public class LorryReceiptDialog {
         lr.setConsignorGstin(consignorGstinField.getText().trim());
         lr.setConsigneeName(consigneeNameField.getText().trim());
         lr.setConsigneeGstin(consigneeGstinField.getText().trim());
-        lr.setNoOfPackages(noOfPackagesField.getText().trim());
-        lr.setMethodOfPacking(methodOfPackingField.getText().trim());
-        lr.setDescription(descriptionArea.getText() != null ? descriptionArea.getText().trim() : "");
+
+        // Concatenate package rows
+        StringBuilder noOfPackages = new StringBuilder();
+        StringBuilder methodOfPacking = new StringBuilder();
+        StringBuilder description = new StringBuilder();
+
+        for (int i = 0; i < packageRowsContainer.getChildren().size(); i++) {
+            HBox row = (HBox) packageRowsContainer.getChildren().get(i);
+            TextField noPkgField = (TextField) row.getChildren().get(0);
+            TextField methodField = (TextField) row.getChildren().get(1);
+            TextField descField = (TextField) row.getChildren().get(2);
+
+            if (i > 0) {
+                noOfPackages.append(" | ");
+                methodOfPacking.append(" | ");
+                description.append(" | ");
+            }
+            noOfPackages.append(noPkgField.getText().trim());
+            methodOfPacking.append(methodField.getText().trim());
+            description.append(descField.getText().trim());
+        }
+
+        lr.setNoOfPackages(noOfPackages.toString());
+        lr.setMethodOfPacking(methodOfPacking.toString());
+        lr.setDescription(description.toString());
+
         lr.setWeightActual(weightActualField.getText().trim());
         lr.setWeightCharged(weightChargedField.getText().trim());
         lr.setRate(rateField.getText().trim());
