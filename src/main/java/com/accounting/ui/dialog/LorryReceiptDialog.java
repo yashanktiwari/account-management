@@ -403,15 +403,28 @@ public class LorryReceiptDialog {
         buttonsBox.setPadding(new Insets(12));
         buttonsBox.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
 
-        root.getChildren().addAll(header,
+        // Left column
+        VBox leftColumn = new VBox(10);
+        leftColumn.getChildren().addAll(
                 sectionLabel("Basic Info"), basicGrid,
                 sectionLabel("Consignor / Consignee"), partyGrid,
-                sectionLabel("Package & Description"), pkgGrid,
+                sectionLabel("Package & Description"), pkgGrid
+        );
+
+        // Right column
+        VBox rightColumn = new VBox(10);
+        rightColumn.getChildren().addAll(
                 sectionLabel("Freight Amounts"), amountGrid,
                 sectionLabel("S.T. / S.H. / Weights"), weightsGrid,
                 sectionLabel("Insurance Details"), insGrid,
-                sectionLabel("Invoice / Payment"), footerGrid,
-                buttonsBox);
+                sectionLabel("Invoice / Payment"), footerGrid
+        );
+
+        // Two-column layout
+        HBox contentColumns = new HBox(20, leftColumn, rightColumn);
+        contentColumns.setPadding(new Insets(10));
+
+        root.getChildren().addAll(header, contentColumns, buttonsBox);
         return root;
     }
 
