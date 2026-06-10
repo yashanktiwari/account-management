@@ -2,6 +2,7 @@ package com.accounting.ui.dialog;
 
 import com.accounting.MainApp;
 import com.accounting.util.AlertUtil;
+import com.accounting.util.AppExecutor;
 import com.accounting.util.AppLogger;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
@@ -32,6 +33,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
+import javafx.application.Platform;
+import javafx.stage.FileChooser;
+import javafx.stage.Window;
 
 public class PrintPreviewDialog {
 
@@ -87,7 +91,7 @@ public class PrintPreviewDialog {
         Button printButton = new Button("Print");
         printButton.setStyle("-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-size: 13px; " +
                 "-fx-padding: 8 24; -fx-background-radius: 6; -fx-cursor: hand; -fx-font-weight: bold;");
-        printButton.setOnAction(e -> printCopies(copiesSpinner.getValue()));
+        printButton.setOnAction(e -> showPrintDialog(copiesSpinner.getValue()));
 
         Button closeButton = new Button("Close");
         closeButton.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-size: 13px; " +
@@ -99,7 +103,7 @@ public class PrintPreviewDialog {
         topBar.getChildren().addAll(titleLabel, spacer, copiesLabel, copiesSpinner, printButton, closeButton);
         root.setTop(topBar);
 
-        // --- Center: PDF Preview ---
+        // --- Center: PDF Preview (with loading indicator) ---
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
         scrollPane.setStyle("-fx-background: #e5e7eb; -fx-background-color: #e5e7eb;");
@@ -108,44 +112,66 @@ public class PrintPreviewDialog {
         pagesContainer.setAlignment(Pos.TOP_CENTER);
         pagesContainer.setPadding(new Insets(10));
 
-        try {
-            File pdfFile = new File(pdfFilePath);
-            if (pdfFile.exists()) {
-                PDDocument document = Loader.loadPDF(pdfFile);
-                PDFRenderer renderer = new PDFRenderer(document);
-                int pageCount = document.getNumberOfPages();
-
-                for (int i = 0; i < pageCount; i++) {
-                    BufferedImage bufferedImage = renderer.renderImageWithDPI(i, 150);
-                    WritableImage fxImage = SwingFXUtils.toFXImage(bufferedImage, null);
-                    ImageView imageView = new ImageView(fxImage);
-                    imageView.setPreserveRatio(true);
-                    imageView.setFitWidth(560);
-                    imageView.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 2, 2);");
-
-                    Label pageLabel = new Label("Page " + (i + 1) + " of " + pageCount);
-                    pageLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
-
-                    VBox pageBox = new VBox(4, imageView, pageLabel);
-                    pageBox.setAlignment(Pos.CENTER);
-                    pagesContainer.getChildren().add(pageBox);
-                }
-                document.close();
-            } else {
-                Label errorLabel = new Label("PDF file not found: " + pdfFilePath);
-                errorLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #ef4444;");
-                pagesContainer.getChildren().add(errorLabel);
-            }
-        } catch (Exception e) {
-            log.error("Failed to render PDF preview", e);
-            Label errorLabel = new Label("Failed to load PDF preview: " + e.getMessage());
-            errorLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #ef4444;");
-            errorLabel.setWrapText(true);
-            pagesContainer.getChildren().add(errorLabel);
-        }
+        // Show loading message initially
+        Label loadingLabel = new Label("Loading preview...");
+        loadingLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #64748b;");
+        pagesContainer.getChildren().add(loadingLabel);
 
         scrollPane.setContent(pagesContainer);
         root.setCenter(scrollPane);
+
+        // Render PDF in background to avoid UI freeze
+        AppExecutor.submit(() -> {
+            try {
+                File pdfFile = new File(pdfFilePath);
+                if (pdfFile.exists()) {
+                    PDDocument document = Loader.loadPDF(pdfFile);
+                    PDFRenderer renderer = new PDFRenderer(document);
+                    int pageCount = document.getNumberOfPages();
+
+                    javafx.scene.image.WritableImage[] fxImages = new javafx.scene.image.WritableImage[pageCount];
+                    for (int i = 0; i < pageCount; i++) {
+                        BufferedImage bufferedImage = renderer.renderImageWithDPI(i, 96); // Reduced DPI for faster rendering
+                        fxImages[i] = SwingFXUtils.toFXImage(bufferedImage, null);
+                    }
+                    document.close();
+
+                    // Update UI on FX thread
+                    Platform.runLater(() -> {
+                        pagesContainer.getChildren().clear();
+                        for (int i = 0; i < pageCount; i++) {
+                            ImageView imageView = new ImageView(fxImages[i]);
+                            imageView.setPreserveRatio(true);
+                            imageView.setFitWidth(560);
+                            imageView.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 2, 2);");
+
+                            Label pageLabel = new Label("Page " + (i + 1) + " of " + pageCount);
+                            pageLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
+
+                            VBox pageBox = new VBox(4, imageView, pageLabel);
+                            pageBox.setAlignment(Pos.CENTER);
+                            pagesContainer.getChildren().add(pageBox);
+                        }
+                    });
+                } else {
+                    Platform.runLater(() -> {
+                        pagesContainer.getChildren().clear();
+                        Label errorLabel = new Label("PDF file not found: " + pdfFilePath);
+                        errorLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #ef4444;");
+                        pagesContainer.getChildren().add(errorLabel);
+                    });
+                }
+            } catch (Exception e) {
+                log.error("Failed to render PDF preview", e);
+                Platform.runLater(() -> {
+                    pagesContainer.getChildren().clear();
+                    Label errorLabel = new Label("Failed to load PDF preview: " + e.getMessage());
+                    errorLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #ef4444;");
+                    errorLabel.setWrapText(true);
+                    pagesContainer.getChildren().add(errorLabel);
+                });
+            }
+        });
 
         // --- Bottom info bar ---
         HBox bottomBar = new HBox(10);
@@ -169,65 +195,52 @@ public class PrintPreviewDialog {
         return root;
     }
 
-    private void printCopies(int numberOfCopies) {
-        try {
-            // Collect all PDF files: Original + Duplicates
-            List<File> filesToPrint = new ArrayList<>();
-            filesToPrint.add(new File(pdfFilePath));
+    private void showPrintDialog(int numberOfCopies) {
+        // Show file chooser to select output path
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save PDF As");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
 
-            if (numberOfCopies > 1 && pdfGenerator != null) {
-                String basePath = pdfFilePath.replace(".pdf", "");
-                for (int i = 2; i <= numberOfCopies; i++) {
-                    String copyLabel = (i == 2) ? "Duplicate" : "Triplicate";
-                    String duplicatePath = basePath + "_" + copyLabel + "_" + i + ".pdf";
-                    try {
-                        pdfGenerator.accept(copyLabel, duplicatePath);
-                        filesToPrint.add(new File(duplicatePath));
-                    } catch (Exception e) {
-                        log.error("Failed to generate " + copyLabel + " copy " + i, e);
+        File originalFile = new File(pdfFilePath);
+        fileChooser.setInitialFileName(originalFile.getName());
+
+        Window window = MainApp.getPrimaryStage();
+        File selectedFile = fileChooser.showSaveDialog(window);
+
+        if (selectedFile != null) {
+            // Generate copies in background
+            AppExecutor.submit(() -> {
+                try {
+                    // Copy original to selected location
+                    java.nio.file.Files.copy(originalFile.toPath(), selectedFile.toPath(),
+                            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                    // Generate additional copies if needed
+                    if (numberOfCopies > 1 && pdfGenerator != null) {
+                        String basePath = selectedFile.getAbsolutePath().replace(".pdf", "");
+                        for (int i = 2; i <= numberOfCopies; i++) {
+                            String copyLabel = (i == 2) ? "Duplicate" : "Triplicate";
+                            String duplicatePath = basePath + "_" + copyLabel + "_" + i + ".pdf";
+                            try {
+                                pdfGenerator.accept(copyLabel, duplicatePath);
+                            } catch (Exception e) {
+                                log.error("Failed to generate " + copyLabel + " copy " + i, e);
+                            }
+                        }
                     }
-                }
-            } else if (numberOfCopies > 1) {
-                for (int i = 2; i <= numberOfCopies; i++) {
-                    filesToPrint.add(new File(pdfFilePath));
-                }
-            }
 
-            // Merge all PDFs into one document for a single print job
-            PDDocument mergedDoc = new PDDocument();
-            for (File file : filesToPrint) {
-                if (file.exists()) {
-                    PDDocument doc = Loader.loadPDF(file);
-                    for (int p = 0; p < doc.getNumberOfPages(); p++) {
-                        mergedDoc.addPage(doc.getPage(p));
-                    }
-                    // Note: don't close doc yet, pages are referenced
+                    Platform.runLater(() -> {
+                        String copyInfo = "Saved: " + selectedFile.getAbsolutePath();
+                        if (numberOfCopies > 1) {
+                            copyInfo += "\nAdditional copies generated in same directory.";
+                        }
+                        AlertUtil.showInfo("Success", "PDF saved successfully.\n" + copyInfo);
+                    });
+                } catch (Exception e) {
+                    log.error("Failed to save PDF", e);
+                    Platform.runLater(() -> AlertUtil.showError("Error", "Failed to save PDF: " + e.getMessage()));
                 }
-            }
-
-            if (mergedDoc.getNumberOfPages() > 0) {
-                PrinterJob printerJob = PrinterJob.getPrinterJob();
-                printerJob.setPageable(new PDFPageable(mergedDoc));
-                printerJob.setJobName("Invoice - " + numberOfCopies + " copies");
-
-                // Show single native print dialog
-                if (printerJob.printDialog()) {
-                    printerJob.print();
-                    String copyInfo = "Copy 1: Original";
-                    if (numberOfCopies >= 2) {
-                        copyInfo += "\nCopy 2: Duplicate";
-                    }
-                    if (numberOfCopies >= 3) {
-                        copyInfo += "\nCopies 3-" + numberOfCopies + ": Triplicate";
-                    }
-                    AlertUtil.showInfo("Print", "Sent " + numberOfCopies + " copy(ies) to printer.\n" + copyInfo);
-                }
-            }
-
-            mergedDoc.close();
-        } catch (Exception e) {
-            log.error("Failed to print", e);
-            AlertUtil.showError("Error", "Failed to print: " + e.getMessage());
+            });
         }
     }
 }
