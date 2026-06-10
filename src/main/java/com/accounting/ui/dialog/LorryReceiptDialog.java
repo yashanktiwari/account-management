@@ -106,7 +106,7 @@ public class LorryReceiptDialog {
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
 
-        Scene scene = new Scene(scrollPane, 1450, 1050);
+        Scene scene = new Scene(scrollPane, 1450, 950);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );
