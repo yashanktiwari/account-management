@@ -117,8 +117,7 @@ public class LorryReceiptDialog {
             loadLrData();
         } else {
             generateNextLrNumber();
-            // Add two empty rows for new LR
-            addPackageRow();
+            // Add one empty row for new LR
             addPackageRow();
         }
     }
@@ -161,11 +160,11 @@ public class LorryReceiptDialog {
 
         // Split package data into rows
         packageRowsContainer.getChildren().clear();
-        String[] noPkgs = lr.getNoOfPackages() != null ? lr.getNoOfPackages().split(" \\| ") : new String[]{""};
-        String[] methods = lr.getMethodOfPacking() != null ? lr.getMethodOfPacking().split(" \\| ") : new String[]{""};
-        String[] descs = lr.getDescription() != null ? lr.getDescription().split(" \\| ") : new String[]{""};
+        String[] noPkgs = lr.getNoOfPackages() != null ? lr.getNoOfPackages().split("§") : new String[]{""};
+        String[] methods = lr.getMethodOfPacking() != null ? lr.getMethodOfPacking().split("§") : new String[]{""};
+        String[] descs = lr.getDescription() != null ? lr.getDescription().split("§") : new String[]{""};
 
-        int maxRows = Math.max(Math.max(noPkgs.length, methods.length), descs.length);
+        int maxRows = Math.min(6, Math.max(Math.max(noPkgs.length, methods.length), descs.length));
         for (int i = 0; i < maxRows; i++) {
             addPackageRow();
             HBox row = (HBox) packageRowsContainer.getChildren().get(i);
@@ -457,6 +456,11 @@ public class LorryReceiptDialog {
     }
 
     private void addPackageRow() {
+        if (packageRowsContainer.getChildren().size() >= 6) {
+            AlertUtil.showWarning("Limit Reached", "Maximum 6 package rows allowed");
+            return;
+        }
+
         HBox row = new HBox(10);
         row.setAlignment(Pos.CENTER_LEFT);
 
@@ -520,9 +524,9 @@ public class LorryReceiptDialog {
             TextField descField = (TextField) row.getChildren().get(2);
 
             if (i > 0) {
-                noOfPackages.append(" | ");
-                methodOfPacking.append(" | ");
-                description.append(" | ");
+                noOfPackages.append("§");
+                methodOfPacking.append("§");
+                description.append("§");
             }
             noOfPackages.append(noPkgField.getText().trim());
             methodOfPacking.append(methodField.getText().trim());
