@@ -103,7 +103,7 @@ public class LorryReceiptDialog {
             stage.setOnHidden(e -> onClose.run());
         }
 
-        Scene scene = new Scene(createContent(), 1350, 950);
+        Scene scene = new Scene(createContent(), 1450, 950);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );
