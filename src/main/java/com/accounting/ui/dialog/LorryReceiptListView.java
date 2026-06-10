@@ -283,12 +283,20 @@ public class LorryReceiptListView {
             java.io.File dir = new java.io.File("lorry_receipts");
             if (!dir.exists()) dir.mkdirs();
 
-            String fileName = "lorry_receipts/LR_" + lr.getLrNo() + "_" +
-                    java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".pdf";
+            String baseFileName = "lorry_receipts/LR_" + lr.getLrNo() + "_" +
+                    java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
 
-            LorryReceiptPDFGenerator.generateLorryReceiptPDF(lr, fileName, "Original");
+            // Generate 4 copies with different labels
+            String[] copyLabels = {"CONSIGNEE COPY", "CONSIGNOR COPY", "ACCOUNT COPY", "DRIVER COPY"};
+            String[] fileNames = new String[4];
 
-            new PrintPreviewDialog(fileName, (copyLabel, outputPath) ->
+            for (int i = 0; i < 4; i++) {
+                fileNames[i] = baseFileName + "_" + copyLabels[i].replace(" ", "_") + ".pdf";
+                LorryReceiptPDFGenerator.generateLorryReceiptPDF(lr, fileNames[i], copyLabels[i]);
+            }
+
+            // Show preview with the first copy (Consignee Copy)
+            new PrintPreviewDialog(fileNames[0], (copyLabel, outputPath) ->
                     LorryReceiptPDFGenerator.generateLorryReceiptPDF(lr, outputPath, copyLabel)
             ).showInApp(() -> MainApp.showContentInApp(createContent()));
         } catch (Exception e) {

@@ -55,7 +55,7 @@ public class LorryReceiptPDFGenerator {
             // ║  Col3: CONSIGNEE COPY (1/3, full height)      ║
             // ║  LR_HEADER spans Col1+Col2 at top             ║
             // ╚════════════════════════════════════════════════╝
-            buildTopSection(outerCell, lr);
+            buildTopSection(outerCell, lr, copyLabel);
 
             // ╔════════════════════════════════════════════════╗
             // ║  SECTION 3 — BOTTOM (full width, generated)    ║
@@ -74,10 +74,10 @@ public class LorryReceiptPDFGenerator {
 
     // ══════════════════════════════════════════════════════════
     //  TOP SECTION: 2-row, 3-column grid
-    //  Row 1: Col1+Col2 merged (LR_HEADER), Col3 (CONSIGNEE COPY top)
-    //  Row 2: Col1 (LR_NOTICE), Col2 (AT OWNER'S RISK), Col3 (CONSIGNEE COPY continuation)
+    //  Row 1: Col1+Col2 merged (LR_HEADER), Col3 (COPY LABEL top)
+    //  Row 2: Col1 (LR_NOTICE), Col2 (AT OWNER'S RISK), Col3 (COPY LABEL continuation)
     // ══════════════════════════════════════════════════════════
-    private static void buildTopSection(PdfPCell outerCell, LorryReceipt lr) throws Exception {
+    private static void buildTopSection(PdfPCell outerCell, LorryReceipt lr, String copyLabel) throws Exception {
         PdfPTable topGrid = new PdfPTable(3);
         topGrid.setWidthPercentage(100);
         topGrid.setWidths(new float[]{1f, 1f, 1f});
@@ -111,7 +111,7 @@ public class LorryReceiptPDFGenerator {
         PdfPTable ccInner = new PdfPTable(1);
         ccInner.setWidthPercentage(100);
 
-        Paragraph ccTitle = new Paragraph("CONSIGNEE COPY", F_BOLD_12);
+        Paragraph ccTitle = new Paragraph(copyLabel, F_BOLD_12);
         ccTitle.setAlignment(Element.ALIGN_CENTER);
         PdfPCell ccTitleCell = new PdfPCell(ccTitle);
         ccTitleCell.setBorder(Rectangle.BOTTOM);
