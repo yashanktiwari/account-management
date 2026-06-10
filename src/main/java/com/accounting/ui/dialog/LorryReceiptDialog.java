@@ -103,11 +103,7 @@ public class LorryReceiptDialog {
             stage.setOnHidden(e -> onClose.run());
         }
 
-        ScrollPane scrollPane = new ScrollPane(createContent());
-        scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background-color: #f8fafc;");
-
-        Scene scene = new Scene(scrollPane, 850, 700);
+        Scene scene = new Scene(createContent(), 1100, 850);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );
