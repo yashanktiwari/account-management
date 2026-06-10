@@ -358,7 +358,7 @@ public class LorryReceiptPDFGenerator {
         addSubHeaderTwoLine(pkgTable, "TO PAY", "Rs.       Ps.");
         addSubHeaderTwoLine(pkgTable, "PAID", "Rs.       Ps.");
 
-        // Row 3: Data row with actual values - split by separator
+        // Row 3+: Data rows - split by separator and use fixed 6 rows
         String noPkgData = s(lr.getNoOfPackages());
         String methodData = s(lr.getMethodOfPacking());
         String descData = s(lr.getDescription());
@@ -368,73 +368,30 @@ public class LorryReceiptPDFGenerator {
         String[] methods = methodData.contains(" | ") ? methodData.split(" \\| ") : methodData.split("§");
         String[] descs = descData.contains(" | ") ? descData.split(" \\| ") : descData.split("§");
 
-        // Get max rows (up to 6)
-        int maxRows = Math.min(6, Math.max(Math.max(noPkgs.length, methods.length), descs.length));
-        if (maxRows == 0) maxRows = 1;
-
-        // Calculate row height based on number of rows to fit in available space
-        float rowHeight = maxRows <= 2 ? 18 : (maxRows <= 4 ? 15 : 12);
-
-        // Add rows for each package entry
-        for (int i = 0; i < maxRows; i++) {
+        // Always create exactly 6 rows (fixed layout)
+        for (int i = 0; i < 6; i++) {
             String noPkg = i < noPkgs.length ? noPkgs[i].trim() : "";
             String method = i < methods.length ? methods[i].trim() : "";
             String desc = i < descs.length ? descs[i].trim() : "";
 
-            addDataCell(pkgTable, noPkg, rowHeight);
-            addDataCell(pkgTable, method, rowHeight);
-            addDataCell(pkgTable, desc, rowHeight);
+            addDataCell(pkgTable, noPkg, 18);
+            addDataCell(pkgTable, method, 18);
+            addDataCell(pkgTable, desc, 18);
 
             // Weight columns - only show data in first row
             if (i == 0) {
-                addDataCellWeight(pkgTable, s(lr.getWeightActual()), rowHeight, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
-                addDataCellWeight(pkgTable, s(lr.getWeightCharged()), rowHeight, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
-                addDataCell(pkgTable, s(lr.getRate()), rowHeight, Element.ALIGN_RIGHT);
+                addDataCellWeight(pkgTable, s(lr.getWeightActual()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
+                addDataCellWeight(pkgTable, s(lr.getWeightCharged()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
+                addDataCell(pkgTable, s(lr.getRate()), 18, Element.ALIGN_RIGHT);
             } else {
-                addDataCellWeightWithHeight(pkgTable, rowHeight);
-                addDataCellWeightWithHeight(pkgTable, rowHeight);
-                addEmptyCellWithHeight(pkgTable, rowHeight);
+                addEmptyCellWeight(pkgTable);
+                addEmptyCellWeight(pkgTable);
+                addEmptyCell(pkgTable);
             }
 
             // Freight columns - empty with vertical borders only
-            addDataCellWeight(pkgTable, "", rowHeight, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
-            addDataCellWeight(pkgTable, "", rowHeight, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
-        }
-
-        // Row 4: Empty spacer row
-        for (int c = 0; c < 8; c++) {
-            if (c == 3 || c == 4 || c == 6 || c == 7) {
-                // Weight and Freight columns - vertical borders only
-                PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
-                e.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
-                e.setMinimumHeight(18);
-                e.setPadding(2);
-                pkgTable.addCell(e);
-            } else {
-                PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
-                e.setBorder(Rectangle.BOX);
-                e.setMinimumHeight(18);
-                e.setPadding(2);
-                pkgTable.addCell(e);
-            }
-        }
-
-        // Row 5: Empty spacer row
-        for (int c = 0; c < 8; c++) {
-            if (c == 3 || c == 4 || c == 6 || c == 7) {
-                // Weight and Freight columns - vertical borders only
-                PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
-                e.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
-                e.setMinimumHeight(18);
-                e.setPadding(2);
-                pkgTable.addCell(e);
-            } else {
-                PdfPCell e = new PdfPCell(new Phrase(" ", F_NORM_8));
-                e.setBorder(Rectangle.BOX);
-                e.setMinimumHeight(18);
-                e.setPadding(2);
-                pkgTable.addCell(e);
-            }
+            addDataCellWeight(pkgTable, "", 18, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
+            addDataCellWeight(pkgTable, "", 18, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
         }
 
         // Row 6: [empty] | [empty] | [empty] | [weight vert] | [weight vert] | Freight | [freight vert] | [freight vert]
