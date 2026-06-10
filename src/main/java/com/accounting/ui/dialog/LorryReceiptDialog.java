@@ -473,7 +473,7 @@ public class LorryReceiptDialog {
         description.setPromptText("Description");
 
         Button removeBtn = new Button("Remove");
-        removeBtn.setStyle("-fx-background-color: #dc2626; -fx-text-fill: white; -fx-padding: 5 10;");
+        removeBtn.setStyle("-fx-background-color: #dc2626; -fx-text-fill: white; -fx-padding: 5 15; -fx-min-width: 80;");
         removeBtn.setOnAction(e -> packageRowsContainer.getChildren().remove(row));
 
         row.getChildren().addAll(noOfPackages, methodOfPacking, description, removeBtn);
