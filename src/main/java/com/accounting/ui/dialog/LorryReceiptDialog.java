@@ -106,7 +106,7 @@ public class LorryReceiptDialog {
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
 
-        Scene scene = new Scene(scrollPane, 1450, 950);
+        Scene scene = new Scene(scrollPane, 1450, 1050);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );
@@ -117,7 +117,8 @@ public class LorryReceiptDialog {
             loadLrData();
         } else {
             generateNextLrNumber();
-            // Add one empty row for new LR
+            // Add two empty rows for new LR
+            addPackageRow();
             addPackageRow();
         }
     }
@@ -276,20 +277,11 @@ public class LorryReceiptDialog {
         // ── Section 3: Package & Description ──
         VBox pkgSection = new VBox(10);
 
-        // Package rows header
-        HBox pkgHeader = new HBox(10);
-        pkgHeader.setStyle("-fx-font-weight: bold; -fx-font-size: 11px;");
-        pkgHeader.getChildren().addAll(
-                label("No. of Packages"), label("Method of Packing"), label("Description"),
-                label("Action")
-        );
-        pkgSection.getChildren().add(pkgHeader);
-
         // Package rows container with scroll
         packageRowsContainer = new VBox(5);
         ScrollPane scrollPane = new ScrollPane(packageRowsContainer);
         scrollPane.setFitToWidth(true);
-        scrollPane.setPrefHeight(150);
+        scrollPane.setPrefHeight(80);
         scrollPane.setStyle("-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 4;");
         pkgSection.getChildren().add(scrollPane);
 
@@ -470,9 +462,11 @@ public class LorryReceiptDialog {
 
         TextField noOfPackages = tf();
         noOfPackages.setPrefWidth(120);
+        noOfPackages.setPromptText("No. of Packages");
 
         TextField methodOfPacking = tf();
         methodOfPacking.setPrefWidth(150);
+        methodOfPacking.setPromptText("Method of Packing");
 
         TextField description = new TextField();
         description.setPrefWidth(300);
