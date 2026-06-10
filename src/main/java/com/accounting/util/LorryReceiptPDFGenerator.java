@@ -394,7 +394,37 @@ public class LorryReceiptPDFGenerator {
             addDataCellWeight(pkgTable, "", 18, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
         }
 
-        // Row 9: S.H. No. | [empty] | [empty] | [weight vert] | [weight vert] | A.O.C. | [freight vert] | [freight vert]
+        // Row 9: Freight (in Rate column)
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
+        addEmptyCellWeight(pkgTable);
+        addEmptyCellWeight(pkgTable);
+        addLabelCell(pkgTable, "Freight", Element.ALIGN_RIGHT);
+        addEmptyCellWeight(pkgTable);
+        addEmptyCellWeight(pkgTable);
+
+        // Row 10: Advance (in Rate column)
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
+        addEmptyCellWeight(pkgTable);
+        addEmptyCellWeight(pkgTable);
+        addLabelCell(pkgTable, "Advance", Element.ALIGN_RIGHT);
+        addEmptyCellWeight(pkgTable);
+        addEmptyCellWeight(pkgTable);
+
+        // Row 11: Balance (in Rate column)
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
+        addEmptyCellWeight(pkgTable);
+        addEmptyCellWeight(pkgTable);
+        addLabelCell(pkgTable, "Balance", Element.ALIGN_RIGHT);
+        addEmptyCellWeight(pkgTable);
+        addEmptyCellWeight(pkgTable);
+
+        // Row 12: S.H. No. | [empty] | [empty] | [weight vert] | [weight vert] | A.O.C. | [freight vert] | [freight vert]
         addLabelCell(pkgTable, "S.H. No.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addLabelCell(pkgTable, "G. Wt.", Element.ALIGN_RIGHT);
@@ -404,7 +434,7 @@ public class LorryReceiptPDFGenerator {
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
 
-        // Row 10: S.T. No. | [empty] | G. Wt. | [weight vert] | [weight vert] | S.T. Charge | [freight vert] | [freight vert]
+        // Row 13: S.T. No. | [empty] | T. Wt. | [weight vert] | [weight vert] | S.T. Charge | [freight vert] | [freight vert]
         addLabelCell(pkgTable, "S.T. No.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addLabelCell(pkgTable, "T. Wt.", Element.ALIGN_RIGHT);
@@ -414,7 +444,7 @@ public class LorryReceiptPDFGenerator {
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
 
-        // Row 11: Value Rs. | [empty] | T. Wt. | [weight vert] | [weight vert] | Total | [freight vert] | [freight vert]
+        // Row 14: Value Rs. | [empty] | N. Wt. | [weight vert] | [weight vert] | Total | [freight vert] | [freight vert]
         addLabelCell(pkgTable, "Value Rs.", Element.ALIGN_RIGHT);
         addEmptyCell(pkgTable);
         addLabelCell(pkgTable, "N. Wt.", Element.ALIGN_RIGHT);
