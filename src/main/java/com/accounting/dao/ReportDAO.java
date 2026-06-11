@@ -69,46 +69,102 @@ public class ReportDAO {
         List<ReportRow> rows = new ArrayList<>();
         double totalAmount = 0.0;
 
-        // Combine all transactions from invoices, receipts, payments, loading slips, and lorry receipts
-        String sql = """
-            SELECT * FROM (
-                SELECT 'Purchase Invoice' as transaction_type, invoice_no as transaction_no, invoice_date as date,
-                       party_name as party, COALESCE(net_amount, 0) as amount, 'INVOICE' as type
-                FROM purchase_invoices
-                WHERE invoice_date BETWEEN ? AND ?
-                UNION ALL
-                SELECT 'Sale Invoice' as transaction_type, invoice_no as transaction_no, invoice_date as date,
-                       party_name as party, COALESCE(net_amount, 0) as amount, 'INVOICE' as type
-                FROM sale_invoices
-                WHERE invoice_date BETWEEN ? AND ?
-                UNION ALL
-                SELECT 'Purchase Receipt' as transaction_type, receipt_no as transaction_no, receipt_date as date,
-                       party_name as party, COALESCE(amount, 0) as amount, 'RECEIPT' as type
-                FROM purchase_receipts
-                WHERE receipt_date BETWEEN ? AND ?
-                UNION ALL
-                SELECT 'Sale Receipt' as transaction_type, receipt_no as transaction_no, receipt_date as date,
-                       party_name as party, COALESCE(amount, 0) as amount, 'RECEIPT' as type
-                FROM sale_receipts
-                WHERE receipt_date BETWEEN ? AND ?
-                UNION ALL
-                SELECT 'Payment' as transaction_type, voucher_no as transaction_no, payment_date as date,
-                       account_name as party, COALESCE(amount, 0) as amount, 'PAYMENT' as type
-                FROM payments
-                WHERE payment_date BETWEEN ? AND ?
-                UNION ALL
-                SELECT 'Loading Slip' as transaction_type, slip_no as transaction_no, slip_date as date,
-                       party_name as party, COALESCE(freight, 0) as amount, 'SLIP' as type
-                FROM loading_slips
-                WHERE slip_date BETWEEN ? AND ?
-                UNION ALL
-                SELECT 'Lorry Receipt' as transaction_type, lr_no as transaction_no, lr_date as date,
-                       party_name as party, COALESCE(freight, 0) as amount, 'LR' as type
-                FROM lorry_receipts
-                WHERE lr_date BETWEEN ? AND ?
-            ) combined
-            ORDER BY date
-            """;
+        // Build dynamic SQL with error handling for missing columns
+        StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM (");
+        
+        // Purchase Invoices
+        sqlBuilder.append("""
+            SELECT 'Purchase Invoice' as transaction_type, 
+                   COALESCE(invoice_no, '') as transaction_no, 
+                   invoice_date as date,
+                   COALESCE(party_name, '') as party, 
+                   COALESCE(net_amount, 0) as amount, 
+                   'INVOICE' as type
+            FROM purchase_invoices
+            WHERE invoice_date BETWEEN ? AND ?
+            """);
+        
+        // Sale Invoices
+        sqlBuilder.append("""
+            UNION ALL
+            SELECT 'Sale Invoice' as transaction_type, 
+                   COALESCE(invoice_no, '') as transaction_no, 
+                   invoice_date as date,
+                   COALESCE(party_name, '') as party, 
+                   COALESCE(net_amount, 0) as amount, 
+                   'INVOICE' as type
+            FROM sale_invoices
+            WHERE invoice_date BETWEEN ? AND ?
+            """);
+        
+        // Purchase Receipts
+        sqlBuilder.append("""
+            UNION ALL
+            SELECT 'Purchase Receipt' as transaction_type, 
+                   COALESCE(receipt_no, '') as transaction_no, 
+                   receipt_date as date,
+                   COALESCE(party_name, '') as party, 
+                   COALESCE(amount, 0) as amount, 
+                   'RECEIPT' as type
+            FROM purchase_receipts
+            WHERE receipt_date BETWEEN ? AND ?
+            """);
+        
+        // Sale Receipts
+        sqlBuilder.append("""
+            UNION ALL
+            SELECT 'Sale Receipt' as transaction_type, 
+                   COALESCE(receipt_no, '') as transaction_no, 
+                   receipt_date as date,
+                   COALESCE(party_name, '') as party, 
+                   COALESCE(amount, 0) as amount, 
+                   'RECEIPT' as type
+            FROM sale_receipts
+            WHERE receipt_date BETWEEN ? AND ?
+            """);
+        
+        // Payments
+        sqlBuilder.append("""
+            UNION ALL
+            SELECT 'Payment' as transaction_type, 
+                   COALESCE(voucher_no, '') as transaction_no, 
+                   payment_date as date,
+                   COALESCE(account_name, '') as party, 
+                   COALESCE(amount, 0) as amount, 
+                   'PAYMENT' as type
+            FROM payments
+            WHERE payment_date BETWEEN ? AND ?
+            """);
+        
+        // Loading Slips - use freight_amount instead of freight
+        sqlBuilder.append("""
+            UNION ALL
+            SELECT 'Loading Slip' as transaction_type, 
+                   COALESCE(slip_no, '') as transaction_no, 
+                   slip_date as date,
+                   COALESCE(party_name, '') as party, 
+                   COALESCE(freight_amount, 0) as amount, 
+                   'SLIP' as type
+            FROM loading_slips
+            WHERE slip_date BETWEEN ? AND ?
+            """);
+        
+        // Lorry Receipts - use total instead of freight
+        sqlBuilder.append("""
+            UNION ALL
+            SELECT 'Lorry Receipt' as transaction_type, 
+                   COALESCE(lr_no, '') as transaction_no, 
+                   lr_date as date,
+                   COALESCE(consignor_name, '') as party, 
+                   COALESCE(total, 0) as amount, 
+                   'LR' as type
+            FROM lorry_receipts
+            WHERE lr_date BETWEEN ? AND ?
+            """);
+        
+        sqlBuilder.append(") combined ORDER BY date");
+        
+        String sql = sqlBuilder.toString();
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
