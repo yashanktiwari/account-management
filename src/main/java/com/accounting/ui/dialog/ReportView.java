@@ -119,8 +119,6 @@ public class ReportView {
         return section;
     }
 
-    private HBox buildBalanceSection() {
-
     private VBox buildTableSection() {
         VBox section = new VBox(8);
         section.setPadding(new Insets(16));
