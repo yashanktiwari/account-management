@@ -317,7 +317,7 @@ public class PurchaseInvoiceListView {
             // Show print preview embedded in app; Close returns to this list
             new PrintPreviewDialog(fileName, (copyLabel, outputPath) ->
                     com.accounting.util.InvoicePDFGenerator.generatePurchaseInvoicePDF(invoice, outputPath, copyLabel)
-            ).showInApp(() -> MainApp.showContentInApp(createContent()));
+            , true).showInApp(() -> MainApp.showContentInApp(createContent()));
         } catch (Exception e) {
             e.printStackTrace();
             AlertUtil.showError("Error", "Failed to generate PDF: " + e.getMessage());

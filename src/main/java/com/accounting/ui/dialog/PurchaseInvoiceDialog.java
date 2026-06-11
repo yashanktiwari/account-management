@@ -1100,7 +1100,7 @@ public class PurchaseInvoiceDialog {
             stage.close();
             new PrintPreviewDialog(fileName, (copyLabel, outputPath) ->
                     com.accounting.util.InvoicePDFGenerator.generatePurchaseInvoicePDF(invoice, outputPath, copyLabel)
-            ).showInApp(() -> MainApp.showContentInApp(new PurchaseInvoiceListView().createContent()));
+            , true).showInApp(() -> MainApp.showContentInApp(new PurchaseInvoiceListView().createContent()));
         } catch (Exception e) {
             log.error("Failed to generate PDF", e);
             AlertUtil.showError("Error", "Failed to generate PDF: " + e.getMessage());

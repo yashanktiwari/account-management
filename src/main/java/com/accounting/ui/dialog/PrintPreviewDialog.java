@@ -42,6 +42,7 @@ public class PrintPreviewDialog {
     private static final Logger log = AppLogger.get(PrintPreviewDialog.class);
     private final String pdfFilePath;
     private final BiConsumer<String, String> pdfGenerator;
+    private final boolean generateCopiesFromSpinner;
     private Runnable onClose;
 
     public PrintPreviewDialog(String pdfFilePath) {
@@ -49,8 +50,13 @@ public class PrintPreviewDialog {
     }
 
     public PrintPreviewDialog(String pdfFilePath, BiConsumer<String, String> pdfGenerator) {
+        this(pdfFilePath, pdfGenerator, false);
+    }
+
+    public PrintPreviewDialog(String pdfFilePath, BiConsumer<String, String> pdfGenerator, boolean generateCopiesFromSpinner) {
         this.pdfFilePath = pdfFilePath;
         this.pdfGenerator = pdfGenerator;
+        this.generateCopiesFromSpinner = generateCopiesFromSpinner;
     }
 
     public void show(Window owner) {
@@ -211,6 +217,11 @@ public class PrintPreviewDialog {
             // Generate copies in background
             AppExecutor.submit(() -> {
                 try {
+                    if (generateCopiesFromSpinner && pdfGenerator != null) {
+                        generateAndSaveCopies(selectedFile, numberOfCopies);
+                        return;
+                    }
+
                     // Copy original to selected location
                     java.nio.file.Files.copy(originalFile.toPath(), selectedFile.toPath(),
                             java.nio.file.StandardCopyOption.REPLACE_EXISTING);
@@ -266,5 +277,39 @@ public class PrintPreviewDialog {
                 }
             });
         }
+    }
+
+    private void generateAndSaveCopies(File selectedFile, int numberOfCopies) {
+        int safeCopies = Math.max(1, numberOfCopies);
+        String baseName = selectedFile.getName();
+        String extension = ".pdf";
+        if (baseName.toLowerCase().endsWith(".pdf")) {
+            baseName = baseName.substring(0, baseName.length() - 4);
+        }
+
+        File parentDir = selectedFile.getParentFile();
+        List<String> savedPaths = new ArrayList<>();
+
+        for (int i = 1; i <= safeCopies; i++) {
+            String copyLabel = getCopyLabel(i);
+            String outputName = (i == 1)
+                    ? selectedFile.getName()
+                    : baseName + "_" + copyLabel + extension;
+            File outputFile = new File(parentDir, outputName);
+            pdfGenerator.accept(copyLabel, outputFile.getAbsolutePath());
+            savedPaths.add(outputFile.getAbsolutePath());
+        }
+
+        Platform.runLater(() -> AlertUtil.showInfo(
+                "Success",
+                "Generated " + safeCopies + " copy/copies successfully.\n" + String.join("\n", savedPaths)
+        ));
+    }
+
+    private String getCopyLabel(int copyIndex) {
+        if (copyIndex == 1) return "Original";
+        if (copyIndex == 2) return "Duplicate";
+        if (copyIndex == 3) return "Triplicate";
+        return copyIndex + "th Copy";
     }
 }
