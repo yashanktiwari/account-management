@@ -19,6 +19,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.prefs.Preferences;
 
 public class ReportView {
 
@@ -343,6 +344,12 @@ public class ReportView {
                 advanceCol, balanceCol, paymentModeCol, chequeNoCol, chequeDateCol, bankCol,
                 remarksCol, statusCol
             );
+
+        // Save column state when columns change
+        resultTable.getColumns().addListener((javafx.collections.ListChangeListener<TableColumn<ReportDAO.ReportRow, ?>>) change -> saveColumnState());
+
+        // Load saved column state
+        loadColumnState();
     }
 
             private TableCell<ReportDAO.ReportRow, Double> formatCurrencyCell() {
@@ -503,6 +510,71 @@ public class ReportView {
                 searchTerms.remove(term);
                 searchTagsList.remove(term);
                 applyFilters();
+            }
+
+            private void saveColumnState() {
+                Preferences prefs = Preferences.userNodeForPackage(ReportView.class);
+                StringBuilder columnOrder = new StringBuilder();
+                StringBuilder columnWidths = new StringBuilder();
+
+                for (int i = 0; i < resultTable.getColumns().size(); i++) {
+                    TableColumn<ReportDAO.ReportRow, ?> col = resultTable.getColumns().get(i);
+                    if (i > 0) {
+                        columnOrder.append(",");
+                        columnWidths.append(",");
+                    }
+                    columnOrder.append(col.getText());
+                    columnWidths.append((int) col.getWidth());
+                }
+
+                prefs.put("reportTable_columnOrder", columnOrder.toString());
+                prefs.put("reportTable_columnWidths", columnWidths.toString());
+            }
+
+            private void loadColumnState() {
+                Preferences prefs = Preferences.userNodeForPackage(ReportView.class);
+                String columnOrderStr = prefs.get("reportTable_columnOrder", "");
+                String columnWidthsStr = prefs.get("reportTable_columnWidths", "");
+
+                try {
+                    // Restore column order
+                    if (!columnOrderStr.isEmpty()) {
+                        String[] columnNames = columnOrderStr.split(",");
+                        List<TableColumn<ReportDAO.ReportRow, ?>> currentColumns = new java.util.ArrayList<>(resultTable.getColumns());
+
+                        // Reorder columns based on saved order
+                        for (int i = 0; i < columnNames.length && i < currentColumns.size(); i++) {
+                            String targetName = columnNames[i];
+                            for (int j = i; j < currentColumns.size(); j++) {
+                                if (currentColumns.get(j).getText().equals(targetName)) {
+                                    // Swap columns
+                                    TableColumn<ReportDAO.ReportRow, ?> temp = currentColumns.get(i);
+                                    currentColumns.set(i, currentColumns.get(j));
+                                    currentColumns.set(j, temp);
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Clear and re-add columns in correct order
+                        resultTable.getColumns().clear();
+                        resultTable.getColumns().addAll(currentColumns);
+                    }
+
+                    // Restore column widths
+                    if (!columnWidthsStr.isEmpty()) {
+                        String[] widths = columnWidthsStr.split(",");
+                        for (int i = 0; i < widths.length && i < resultTable.getColumns().size(); i++) {
+                            int width = Integer.parseInt(widths[i]);
+                            if (width > 0) {
+                                resultTable.getColumns().get(i).setPrefWidth(width);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    // Ignore if preferences are corrupted
+                    e.printStackTrace();
+                }
             }
 
             private void updateResultCount() {
