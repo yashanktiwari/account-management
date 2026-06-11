@@ -196,11 +196,10 @@ public class SaleReceiptDialog {
         AppExecutor.submit(() -> {
             try {
                 List<Party> customers = new PartyDAO().findByType("CUSTOMER");
+                final List<Party> allCustomers = customers;
                 Platform.runLater(() -> {
-                    partyCombo.setItems(FXCollections.observableArrayList(customers));
-                    if (!customers.isEmpty()) {
-                        partyCombo.setValue(customers.get(0));
-                    }
+                    partyCombo.setItems(FXCollections.observableArrayList(allCustomers));
+                    // Don't auto-select first item - let user type or select
                     // After loading parties, load receipt data if editing
                     if (receipt.getId() > 0) {
                         loadReceiptData();
@@ -208,6 +207,19 @@ public class SaleReceiptDialog {
                         // New receipt - auto-generate receipt number
                         generateNextReceiptNumber();
                     }
+
+                    // Add autocomplete filtering
+                    partyCombo.getEditor().textProperty().addListener((obs, oldVal, newVal) -> {
+                        if (newVal == null || newVal.trim().isEmpty()) {
+                            partyCombo.setItems(FXCollections.observableArrayList(allCustomers));
+                            return;
+                        }
+                        String filter = newVal.toLowerCase();
+                        List<Party> filtered = allCustomers.stream()
+                                .filter(p -> p.getName().toLowerCase().contains(filter))
+                                .collect(java.util.stream.Collectors.toList());
+                        partyCombo.setItems(FXCollections.observableArrayList(filtered));
+                    });
                 });
             } catch (Exception e) {
                 log.error("Failed to load customers", e);
