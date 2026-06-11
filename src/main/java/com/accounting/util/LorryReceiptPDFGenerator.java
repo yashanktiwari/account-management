@@ -384,7 +384,8 @@ public class LorryReceiptPDFGenerator {
                 addDataCellWeight(pkgTable, s(lr.getWeightCharged()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
                 addDataCell(pkgTable, s(lr.getRate()), 18, Element.ALIGN_RIGHT);
                 // Freight columns - show watermark text spanning both columns
-                PdfPCell watermarkCell = new PdfPCell(new Phrase(s(lr.getFreightWatermark()), F_BOLD_10));
+                String watermarkText = lr.getFreightWatermark() != null ? lr.getFreightWatermark() : "";
+                PdfPCell watermarkCell = new PdfPCell(new Phrase(watermarkText, F_BOLD_10));
                 watermarkCell.setFixedHeight(18);
                 watermarkCell.setColspan(2);
                 watermarkCell.setBorder(Rectangle.NO_BORDER);
