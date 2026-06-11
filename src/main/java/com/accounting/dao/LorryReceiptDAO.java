@@ -13,6 +13,19 @@ import static com.accounting.util.AppLogger.get;
 public class LorryReceiptDAO {
 
     private static final Logger log = get(LorryReceiptDAO.class);
+    private static Boolean freightWatermarkColumnExists = null;
+
+    private boolean checkFreightWatermarkColumn() throws Exception {
+        if (freightWatermarkColumnExists != null) {
+            return freightWatermarkColumnExists;
+        }
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+            ResultSet rs = stmt.executeQuery("SHOW COLUMNS FROM lorry_receipts LIKE 'freight_watermark'");
+            freightWatermarkColumnExists = rs.next();
+            return freightWatermarkColumnExists;
+        }
+    }
 
     public void ensureTable() throws Exception {
         try (Connection conn = DBConnection.getConnection();
@@ -80,19 +93,34 @@ public class LorryReceiptDAO {
 
     public void save(LorryReceipt lr) throws Exception {
         ensureTable();
-        String sql = """
-                INSERT INTO lorry_receipts (lr_no, lr_date, vehicle_no, from_location, to_location,
-                e_way_bill_no, consignor_name, consignor_gstin, consignee_name, consignee_gstin,
-                no_of_packages, method_of_packing, description, weight_actual, weight_charged, rate,
-                freight_to_pay, freight_paid, freight, freight_watermark, advance, balance, aoc, st_charge, total,
-                st_no, sh_no, gross_weight, tare_weight, net_weight, value_rs, to_pay_rs, adv_paid_rs,
-                inv_no, inv_date, insurance_company, policy_no, policy_date, insurance_amount,
-                insurance_date, risk_type, status, created_at, updated_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())
-                """;
+        boolean hasFreightWatermark = checkFreightWatermarkColumn();
+        String sql;
+        if (hasFreightWatermark) {
+            sql = """
+                    INSERT INTO lorry_receipts (lr_no, lr_date, vehicle_no, from_location, to_location,
+                    e_way_bill_no, consignor_name, consignor_gstin, consignee_name, consignee_gstin,
+                    no_of_packages, method_of_packing, description, weight_actual, weight_charged, rate,
+                    freight_to_pay, freight_paid, freight, freight_watermark, advance, balance, aoc, st_charge, total,
+                    st_no, sh_no, gross_weight, tare_weight, net_weight, value_rs, to_pay_rs, adv_paid_rs,
+                    inv_no, inv_date, insurance_company, policy_no, policy_date, insurance_amount,
+                    insurance_date, risk_type, status, created_at, updated_at)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())
+                    """;
+        } else {
+            sql = """
+                    INSERT INTO lorry_receipts (lr_no, lr_date, vehicle_no, from_location, to_location,
+                    e_way_bill_no, consignor_name, consignor_gstin, consignee_name, consignee_gstin,
+                    no_of_packages, method_of_packing, description, weight_actual, weight_charged, rate,
+                    freight_to_pay, freight_paid, freight, advance, balance, aoc, st_charge, total,
+                    st_no, sh_no, gross_weight, tare_weight, net_weight, value_rs, to_pay_rs, adv_paid_rs,
+                    inv_no, inv_date, insurance_company, policy_no, policy_date, insurance_amount,
+                    insurance_date, risk_type, status, created_at, updated_at)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())
+                    """;
+        }
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement p = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            setAllParams(p, lr);
+            setAllParams(p, lr, hasFreightWatermark);
             p.executeUpdate();
             try (ResultSet rs = p.getGeneratedKeys()) {
                 if (rs.next()) lr.setId(rs.getInt(1));
@@ -103,26 +131,41 @@ public class LorryReceiptDAO {
 
     public void update(LorryReceipt lr) throws Exception {
         ensureTable();
-        String sql = """
-                UPDATE lorry_receipts SET lr_no=?, lr_date=?, vehicle_no=?, from_location=?, to_location=?,
-                e_way_bill_no=?, consignor_name=?, consignor_gstin=?, consignee_name=?, consignee_gstin=?,
-                no_of_packages=?, method_of_packing=?, description=?, weight_actual=?, weight_charged=?, rate=?,
-                freight_to_pay=?, freight_paid=?, freight=?, freight_watermark=?, advance=?, balance=?, aoc=?, st_charge=?, total=?,
-                st_no=?, sh_no=?, gross_weight=?, tare_weight=?, net_weight=?, value_rs=?, to_pay_rs=?, adv_paid_rs=?,
-                inv_no=?, inv_date=?, insurance_company=?, policy_no=?, policy_date=?, insurance_amount=?,
-                insurance_date=?, risk_type=?, status=?, updated_at=NOW()
-                WHERE id=?
-                """;
+        boolean hasFreightWatermark = checkFreightWatermarkColumn();
+        String sql;
+        if (hasFreightWatermark) {
+            sql = """
+                    UPDATE lorry_receipts SET lr_no=?, lr_date=?, vehicle_no=?, from_location=?, to_location=?,
+                    e_way_bill_no=?, consignor_name=?, consignor_gstin=?, consignee_name=?, consignee_gstin=?,
+                    no_of_packages=?, method_of_packing=?, description=?, weight_actual=?, weight_charged=?, rate=?,
+                    freight_to_pay=?, freight_paid=?, freight=?, freight_watermark=?, advance=?, balance=?, aoc=?, st_charge=?, total=?,
+                    st_no=?, sh_no=?, gross_weight=?, tare_weight=?, net_weight=?, value_rs=?, to_pay_rs=?, adv_paid_rs=?,
+                    inv_no=?, inv_date=?, insurance_company=?, policy_no=?, policy_date=?, insurance_amount=?,
+                    insurance_date=?, risk_type=?, status=?, updated_at=NOW()
+                    WHERE id=?
+                    """;
+        } else {
+            sql = """
+                    UPDATE lorry_receipts SET lr_no=?, lr_date=?, vehicle_no=?, from_location=?, to_location=?,
+                    e_way_bill_no=?, consignor_name=?, consignor_gstin=?, consignee_name=?, consignee_gstin=?,
+                    no_of_packages=?, method_of_packing=?, description=?, weight_actual=?, weight_charged=?, rate=?,
+                    freight_to_pay=?, freight_paid=?, freight=?, advance=?, balance=?, aoc=?, st_charge=?, total=?,
+                    st_no=?, sh_no=?, gross_weight=?, tare_weight=?, net_weight=?, value_rs=?, to_pay_rs=?, adv_paid_rs=?,
+                    inv_no=?, inv_date=?, insurance_company=?, policy_no=?, policy_date=?, insurance_amount=?,
+                    insurance_date=?, risk_type=?, status=?, updated_at=NOW()
+                    WHERE id=?
+                    """;
+        }
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement p = conn.prepareStatement(sql)) {
-            setAllParams(p, lr);
-            p.setInt(43, lr.getId());
+            setAllParams(p, lr, hasFreightWatermark);
+            p.setInt(hasFreightWatermark ? 43 : 42, lr.getId());
             p.executeUpdate();
             log.info("Lorry receipt updated: {}", lr.getLrNo());
         }
     }
 
-    private void setAllParams(PreparedStatement p, LorryReceipt lr) throws SQLException {
+    private void setAllParams(PreparedStatement p, LorryReceipt lr, boolean hasFreightWatermark) throws SQLException {
         p.setString(1, lr.getLrNo());
         p.setDate(2, java.sql.Date.valueOf(lr.getLrDate()));
         p.setString(3, lr.getVehicleNo());
@@ -142,29 +185,31 @@ public class LorryReceiptDAO {
         p.setDouble(17, lr.getFreightToPay());
         p.setDouble(18, lr.getFreightPaid());
         p.setDouble(19, lr.getFreight());
-        p.setString(20, lr.getFreightWatermark());
-        p.setDouble(21, lr.getAdvance());
-        p.setDouble(22, lr.getBalance());
-        p.setDouble(23, lr.getAoc());
-        p.setDouble(24, lr.getStCharge());
-        p.setDouble(25, lr.getTotal());
-        p.setString(26, lr.getStNo());
-        p.setString(27, lr.getShNo());
-        p.setString(28, lr.getGrossWeight());
-        p.setString(29, lr.getTareWeight());
-        p.setString(30, lr.getNetWeight());
-        p.setString(31, lr.getValueRs());
-        p.setDouble(32, lr.getToPayRs());
-        p.setDouble(33, lr.getAdvPaidRs());
-        p.setString(34, lr.getInvNo());
-        p.setDate(35, lr.getInvDate() != null ? java.sql.Date.valueOf(lr.getInvDate()) : null);
-        p.setString(36, lr.getInsuranceCompany());
-        p.setString(37, lr.getPolicyNo());
-        p.setDate(38, lr.getPolicyDate() != null ? java.sql.Date.valueOf(lr.getPolicyDate()) : null);
-        p.setString(39, lr.getInsuranceAmount());
-        p.setDate(40, lr.getInsuranceDate() != null ? java.sql.Date.valueOf(lr.getInsuranceDate()) : null);
-        p.setString(41, lr.getRiskType());
-        p.setString(42, lr.getStatus());
+        if (hasFreightWatermark) {
+            p.setString(20, lr.getFreightWatermark());
+        }
+        p.setDouble(hasFreightWatermark ? 21 : 20, lr.getAdvance());
+        p.setDouble(hasFreightWatermark ? 22 : 21, lr.getBalance());
+        p.setDouble(hasFreightWatermark ? 23 : 22, lr.getAoc());
+        p.setDouble(hasFreightWatermark ? 24 : 23, lr.getStCharge());
+        p.setDouble(hasFreightWatermark ? 25 : 24, lr.getTotal());
+        p.setString(hasFreightWatermark ? 26 : 25, lr.getStNo());
+        p.setString(hasFreightWatermark ? 27 : 26, lr.getShNo());
+        p.setString(hasFreightWatermark ? 28 : 27, lr.getGrossWeight());
+        p.setString(hasFreightWatermark ? 29 : 28, lr.getTareWeight());
+        p.setString(hasFreightWatermark ? 30 : 29, lr.getNetWeight());
+        p.setString(hasFreightWatermark ? 31 : 30, lr.getValueRs());
+        p.setDouble(hasFreightWatermark ? 32 : 31, lr.getToPayRs());
+        p.setDouble(hasFreightWatermark ? 33 : 32, lr.getAdvPaidRs());
+        p.setString(hasFreightWatermark ? 34 : 33, lr.getInvNo());
+        p.setDate(hasFreightWatermark ? 35 : 34, lr.getInvDate() != null ? java.sql.Date.valueOf(lr.getInvDate()) : null);
+        p.setString(hasFreightWatermark ? 36 : 35, lr.getInsuranceCompany());
+        p.setString(hasFreightWatermark ? 37 : 36, lr.getPolicyNo());
+        p.setDate(hasFreightWatermark ? 38 : 37, lr.getPolicyDate() != null ? java.sql.Date.valueOf(lr.getPolicyDate()) : null);
+        p.setString(hasFreightWatermark ? 39 : 38, lr.getInsuranceAmount());
+        p.setDate(hasFreightWatermark ? 40 : 39, lr.getInsuranceDate() != null ? java.sql.Date.valueOf(lr.getInsuranceDate()) : null);
+        p.setString(hasFreightWatermark ? 41 : 40, lr.getRiskType());
+        p.setString(hasFreightWatermark ? 42 : 41, lr.getStatus());
     }
 
     public void delete(int id) throws Exception {
@@ -261,7 +306,12 @@ public class LorryReceiptDAO {
         lr.setFreightToPay(rs.getDouble("freight_to_pay"));
         lr.setFreightPaid(rs.getDouble("freight_paid"));
         lr.setFreight(rs.getDouble("freight"));
-        lr.setFreightWatermark(rs.getString("freight_watermark"));
+        try {
+            lr.setFreightWatermark(rs.getString("freight_watermark"));
+        } catch (SQLException e) {
+            // Column might not exist in older databases
+            lr.setFreightWatermark(null);
+        }
         lr.setAdvance(rs.getDouble("advance"));
         lr.setBalance(rs.getDouble("balance"));
         lr.setAoc(rs.getDouble("aoc"));
