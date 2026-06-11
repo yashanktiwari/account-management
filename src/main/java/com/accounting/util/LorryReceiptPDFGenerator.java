@@ -416,32 +416,32 @@ public class LorryReceiptPDFGenerator {
             addEmptyCellWeight(pkgTable);
         }
 
-        // Row 12: S.H. No. | [value] | G. Wt. | [empty] | [value] | A.O.C. | [freight vert] | [freight vert]
+        // Row 12: S.H. No. | [value] | G. Wt. | [value] | [empty] | A.O.C. | [freight vert] | [freight vert]
         addLabelCell(pkgTable, "S.H. No.", Element.ALIGN_RIGHT);
         addDataCell(pkgTable, s(lr.getShNo()), 18);
         addLabelCell(pkgTable, "G. Wt.", Element.ALIGN_RIGHT);
-        addEmptyCell(pkgTable);
         addDataCellWeight(pkgTable, s(lr.getGrossWeight()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
+        addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "A.O.C.", Element.ALIGN_RIGHT);
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
 
-        // Row 13: S.T. No. | [value] | T. Wt. | [empty] | [value] | S.T. Charge | [freight vert] | [freight vert]
+        // Row 13: S.T. No. | [value] | T. Wt. | [value] | [empty] | S.T. Charge | [freight vert] | [freight vert]
         addLabelCell(pkgTable, "S.T. No.", Element.ALIGN_RIGHT);
         addDataCell(pkgTable, s(lr.getStNo()), 18);
         addLabelCell(pkgTable, "T. Wt.", Element.ALIGN_RIGHT);
-        addEmptyCell(pkgTable);
         addDataCellWeight(pkgTable, s(lr.getTareWeight()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
+        addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "S.T. Charge", Element.ALIGN_RIGHT);
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
 
-        // Row 14: Value Rs. | [value] | N. Wt. | [empty] | [value] | Total | [freight vert] | [freight vert]
+        // Row 14: Value Rs. | [value] | N. Wt. | [value] | [empty] | Total | [freight vert] | [freight vert]
         addLabelCell(pkgTable, "Value Rs.", Element.ALIGN_RIGHT);
         addDataCell(pkgTable, s(lr.getValueRs()), 18);
         addLabelCell(pkgTable, "N. Wt.", Element.ALIGN_RIGHT);
-        addEmptyCell(pkgTable);
         addDataCellWeight(pkgTable, s(lr.getNetWeight()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
+        addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "Total", Element.ALIGN_RIGHT);
         addEmptyCellWeight(pkgTable);
         addEmptyCellWeight(pkgTable);
