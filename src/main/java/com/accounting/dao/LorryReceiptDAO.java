@@ -23,6 +23,7 @@ public class LorryReceiptDAO {
              Statement stmt = conn.createStatement()) {
             ResultSet rs = stmt.executeQuery("SHOW COLUMNS FROM lorry_receipts LIKE 'freight_watermark'");
             freightWatermarkColumnExists = rs.next();
+            log.info("freight_watermark column exists: {}", freightWatermarkColumnExists);
             return freightWatermarkColumnExists;
         }
     }
@@ -81,12 +82,15 @@ public class LorryReceiptDAO {
             """);
             // Add freight_watermark column if it doesn't exist (for existing databases)
             try {
-                stmt.executeUpdate("ALTER TABLE lorry_receipts ADD COLUMN IF NOT EXISTS freight_watermark VARCHAR(255) AFTER freight");
-            } catch (SQLException e) {
-                // Column might already exist, ignore error
-                if (!e.getMessage().contains("Duplicate column")) {
-                    log.warn("Could not add freight_watermark column: {}", e.getMessage());
+                ResultSet rs = stmt.executeQuery("SHOW COLUMNS FROM lorry_receipts LIKE 'freight_watermark'");
+                if (!rs.next()) {
+                    stmt.executeUpdate("ALTER TABLE lorry_receipts ADD COLUMN freight_watermark VARCHAR(255) AFTER freight");
+                    log.info("freight_watermark column added");
+                } else {
+                    log.info("freight_watermark column already exists");
                 }
+            } catch (SQLException e) {
+                log.warn("Could not check/add freight_watermark column: {}", e.getMessage());
             }
         }
     }
