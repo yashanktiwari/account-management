@@ -244,6 +244,29 @@ public class PurchaseReceiptDialog {
         }
 
         try {
+            // Generate receipt number if empty
+            String receiptNo = receiptNoField.getText().trim();
+            if (receiptNo.isEmpty()) {
+                try {
+                    SettingsDAO settingsDAO = new SettingsDAO();
+                    String startingNumberStr = settingsDAO.getSetting("purchase_receipt_starting_number");
+                    int startingNumber = startingNumberStr != null ? Integer.parseInt(startingNumberStr) : 1;
+
+                    PurchaseReceiptDAO dao = new PurchaseReceiptDAO();
+                    String lastReceiptNo = dao.getLastReceiptNumber();
+                    int lastNumber = lastReceiptNo != null && !lastReceiptNo.isEmpty() ? Integer.parseInt(lastReceiptNo) : 0;
+
+                    int nextNumber = Math.max(startingNumber, lastNumber + 1);
+                    receiptNo = String.valueOf(nextNumber);
+                    receiptNoField.setText(receiptNo);
+                } catch (Exception e) {
+                    log.error("Failed to generate receipt number", e);
+                    AlertUtil.showWarning("Validation", "Failed to auto-generate receipt number. Please enter it manually.");
+                    return;
+                }
+            }
+
+            receipt.setReceiptNo(receiptNo);
             receipt.setReceiptDate(receiptDatePicker.getValue());
             receipt.setPartyId(partyCombo.getValue().getId());
             receipt.setPartyName(partyCombo.getValue().getName());
