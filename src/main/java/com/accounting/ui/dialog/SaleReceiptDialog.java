@@ -219,7 +219,7 @@ public class SaleReceiptDialog {
             if (!partyPopup.isShowing()) {
                 javafx.geometry.Point2D p = partyField.localToScreen(0, partyField.getHeight());
                 if (p != null) {
-                    partyPopup.show(partyField, p.getX(), p.getY());
+                    partyPopup.show(stage, p.getX(), p.getY());
                 }
             }
         });
