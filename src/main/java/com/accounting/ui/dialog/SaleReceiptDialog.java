@@ -400,8 +400,8 @@ public class SaleReceiptDialog {
                 newParty.setName(partyName);
                 newParty.setType("CUSTOMER");
                 PartyDAO partyDAO = new PartyDAO();
-                int newPartyId = partyDAO.save(newParty);
-                receipt.setPartyId(newPartyId);
+                partyDAO.save(newParty);
+                receipt.setPartyId(newParty.getId());
                 receipt.setPartyName(partyName);
             }
             receipt.setAmount(Double.parseDouble(amountField.getText()));
