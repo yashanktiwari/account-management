@@ -73,37 +73,37 @@ public class ReportDAO {
         String sql = """
             SELECT * FROM (
                 SELECT 'Purchase Invoice' as transaction_type, invoice_no as transaction_no, invoice_date as date,
-                       party_name as party, total_amount as amount, 'INVOICE' as type
+                       party_name as party, COALESCE(net_amount, 0) as amount, 'INVOICE' as type
                 FROM purchase_invoices
                 WHERE invoice_date BETWEEN ? AND ?
                 UNION ALL
                 SELECT 'Sale Invoice' as transaction_type, invoice_no as transaction_no, invoice_date as date,
-                       party_name as party, total_amount as amount, 'INVOICE' as type
+                       party_name as party, COALESCE(net_amount, 0) as amount, 'INVOICE' as type
                 FROM sale_invoices
                 WHERE invoice_date BETWEEN ? AND ?
                 UNION ALL
                 SELECT 'Purchase Receipt' as transaction_type, receipt_no as transaction_no, receipt_date as date,
-                       party_name as party, amount as amount, 'RECEIPT' as type
+                       party_name as party, COALESCE(amount, 0) as amount, 'RECEIPT' as type
                 FROM purchase_receipts
                 WHERE receipt_date BETWEEN ? AND ?
                 UNION ALL
                 SELECT 'Sale Receipt' as transaction_type, receipt_no as transaction_no, receipt_date as date,
-                       party_name as party, amount as amount, 'RECEIPT' as type
+                       party_name as party, COALESCE(amount, 0) as amount, 'RECEIPT' as type
                 FROM sale_receipts
                 WHERE receipt_date BETWEEN ? AND ?
                 UNION ALL
                 SELECT 'Payment' as transaction_type, voucher_no as transaction_no, payment_date as date,
-                       account_name as party, amount as amount, 'PAYMENT' as type
+                       account_name as party, COALESCE(amount, 0) as amount, 'PAYMENT' as type
                 FROM payments
                 WHERE payment_date BETWEEN ? AND ?
                 UNION ALL
                 SELECT 'Loading Slip' as transaction_type, slip_no as transaction_no, slip_date as date,
-                       party_name as party, freight as amount, 'SLIP' as type
+                       party_name as party, COALESCE(freight, 0) as amount, 'SLIP' as type
                 FROM loading_slips
                 WHERE slip_date BETWEEN ? AND ?
                 UNION ALL
                 SELECT 'Lorry Receipt' as transaction_type, lr_no as transaction_no, lr_date as date,
-                       party_name as party, freight as amount, 'LR' as type
+                       party_name as party, COALESCE(freight, 0) as amount, 'LR' as type
                 FROM lorry_receipts
                 WHERE lr_date BETWEEN ? AND ?
             ) combined
