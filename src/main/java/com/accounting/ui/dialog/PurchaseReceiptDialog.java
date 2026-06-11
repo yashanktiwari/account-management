@@ -5,7 +5,10 @@ import com.accounting.dao.PurchaseReceiptDAO;
 import com.accounting.dao.SettingsDAO;
 import com.accounting.model.Party;
 import com.accounting.model.PurchaseReceipt;
-import javafx.util.StringConverter;
+import javafx.collections.ObservableList;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.stage.Popup;
 import com.accounting.util.AlertUtil;
 import com.accounting.util.AppExecutor;
 import com.accounting.util.AppLogger;
@@ -32,7 +35,10 @@ public class PurchaseReceiptDialog {
     private static final Logger log = AppLogger.get(PurchaseReceiptDialog.class);
     private Stage stage;
     private PurchaseReceipt receipt;
-    private ComboBox<Party> partyCombo;
+    private TextField partyField;
+    private ObservableList<Party> allParties = FXCollections.observableArrayList();
+    private Popup partyPopup;
+    private ListView<Party> partyListView;
     private TextField receiptNoField;
     private DatePicker receiptDatePicker;
     private TextField amountField;
@@ -102,33 +108,12 @@ public class PurchaseReceiptDialog {
         grid.add(label("Receipt Date"), 0, 1);
         grid.add(receiptDatePicker, 1, 1);
 
-        partyCombo = new ComboBox<>();
-        partyCombo.setPrefWidth(250);
-        partyCombo.setEditable(true);
-        partyCombo.setConverter(new StringConverter<Party>() {
-            @Override
-            public String toString(Party party) {
-                return party == null ? "" : party.getName();
-            }
-
-            @Override
-            public Party fromString(String string) {
-                if (string == null || string.trim().isEmpty()) return null;
-                // Try to find matching party
-                for (Party party : partyCombo.getItems()) {
-                    if (party.getName().equalsIgnoreCase(string.trim())) {
-                        return party;
-                    }
-                }
-                // If not found, create a temporary party with the custom name
-                Party customParty = new Party();
-                customParty.setName(string.trim());
-                customParty.setId(0); // 0 indicates custom/not in database
-                return customParty;
-            }
-        });
+        partyField = new TextField();
+        partyField.setPrefWidth(250);
+        partyField.setPromptText("Type to search supplier...");
+        setupPartyAutocomplete();
         grid.add(label("Supplier"), 0, 2);
-        grid.add(partyCombo, 1, 2);
+        grid.add(partyField, 1, 2);
 
         amountField = new TextField();
         amountField.setPromptText("0.00");
@@ -192,14 +177,120 @@ public class PurchaseReceiptDialog {
         return box;
     }
 
+    private void setupPartyAutocomplete() {
+        partyPopup = new Popup();
+        partyPopup.setAutoHide(true);
+
+        partyListView = new ListView<>();
+        partyListView.setFocusTraversable(false);
+        partyListView.setCellFactory(param -> new ListCell<Party>() {
+            @Override
+            protected void updateItem(Party party, boolean empty) {
+                super.updateItem(party, empty);
+                setText(empty || party == null ? "" : party.getName());
+            }
+        });
+
+        partyPopup.getContent().add(partyListView);
+
+        partyField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal == null || newVal.isBlank()) {
+                partyPopup.hide();
+                return;
+            }
+
+            List<Party> filtered = allParties.stream()
+                    .filter(p -> p.getName() != null && p.getName().toLowerCase().contains(newVal.toLowerCase()))
+                    .sorted((p1, p2) -> p1.getName().compareToIgnoreCase(p2.getName()))
+                    .collect(java.util.stream.Collectors.toList());
+
+            if (filtered.isEmpty()) {
+                partyPopup.hide();
+                return;
+            }
+
+            partyListView.getItems().setAll(filtered);
+
+            int visibleRows = Math.min(filtered.size(), 10);
+            partyListView.setPrefHeight(visibleRows * 26 + 2);
+            partyListView.setPrefWidth(partyField.getWidth());
+
+            if (!partyPopup.isShowing()) {
+                javafx.geometry.Point2D p = partyField.localToScreen(0, partyField.getHeight());
+                if (p != null) {
+                    partyPopup.show(partyField, p.getX(), p.getY());
+                }
+            }
+        });
+
+        // Mouse selection
+        partyListView.setOnMouseClicked(e -> {
+            Party selected = partyListView.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                partyField.setText(selected.getName());
+                partyPopup.hide();
+            }
+        });
+
+        // Keyboard navigation
+        partyField.setOnKeyPressed(event -> {
+            switch (event.getCode()) {
+                case DOWN -> {
+                    if (partyPopup.isShowing() && !partyListView.getItems().isEmpty()) {
+                        partyListView.requestFocus();
+                        if (partyListView.getSelectionModel().isEmpty()) {
+                            partyListView.getSelectionModel().selectFirst();
+                        }
+                    }
+                }
+                case ESCAPE -> partyPopup.hide();
+                case TAB -> {
+                    if (partyPopup.isShowing() && !partyListView.getItems().isEmpty()) {
+                        Party first = partyListView.getItems().get(0);
+                        partyField.setText(first.getName());
+                        partyPopup.hide();
+                    }
+                }
+                case ENTER -> {
+                    if (partyPopup.isShowing() && !partyListView.getItems().isEmpty()) {
+                        Party selected = partyListView.getSelectionModel().getSelectedItem();
+                        if (selected != null) {
+                            partyField.setText(selected.getName());
+                            partyPopup.hide();
+                        } else {
+                            Party first = partyListView.getItems().get(0);
+                            partyField.setText(first.getName());
+                            partyPopup.hide();
+                        }
+                    }
+                }
+            }
+        });
+
+        partyListView.setOnKeyPressed(event -> {
+            switch (event.getCode()) {
+                case ENTER -> {
+                    Party selected = partyListView.getSelectionModel().getSelectedItem();
+                    if (selected != null) {
+                        partyField.setText(selected.getName());
+                        partyField.requestFocus();
+                    }
+                    partyPopup.hide();
+                }
+                case ESCAPE -> {
+                    partyPopup.hide();
+                    partyField.requestFocus();
+                }
+            }
+        });
+    }
+
     private void loadParties() {
         AppExecutor.submit(() -> {
             try {
                 List<Party> suppliers = new PartyDAO().findByType("SUPPLIER");
-                final List<Party> allSuppliers = suppliers;
                 Platform.runLater(() -> {
-                    partyCombo.setItems(FXCollections.observableArrayList(allSuppliers));
-                    // Don't auto-select first item - let user type or select
+                    allParties.setAll(suppliers);
                     // After loading parties, load receipt data if editing
                     if (receipt.getId() > 0) {
                         loadReceiptData();
@@ -207,19 +298,6 @@ public class PurchaseReceiptDialog {
                         // New receipt - auto-generate receipt number
                         generateNextReceiptNumber();
                     }
-
-                    // Add autocomplete filtering
-                    partyCombo.getEditor().textProperty().addListener((obs, oldVal, newVal) -> {
-                        if (newVal == null || newVal.trim().isEmpty()) {
-                            partyCombo.setItems(FXCollections.observableArrayList(allSuppliers));
-                            return;
-                        }
-                        String filter = newVal.toLowerCase();
-                        List<Party> filtered = allSuppliers.stream()
-                                .filter(p -> p.getName().toLowerCase().contains(filter))
-                                .collect(java.util.stream.Collectors.toList());
-                        partyCombo.setItems(FXCollections.observableArrayList(filtered));
-                    });
                 });
             } catch (Exception e) {
                 log.error("Failed to load suppliers", e);
@@ -259,24 +337,12 @@ public class PurchaseReceiptDialog {
         chequeDatePicker.setValue(receipt.getChequeDate());
         bankNameField.setText(receipt.getBankName());
         remarksField.setText(receipt.getRemarks());
-
-        // Select the party by ID or set custom name
-        if (receipt.getPartyId() > 0) {
-            for (Party party : partyCombo.getItems()) {
-                if (party.getId() == receipt.getPartyId()) {
-                    partyCombo.setValue(party);
-                    break;
-                }
-            }
-        } else {
-            // Custom party name
-            partyCombo.getEditor().setText(receipt.getPartyName());
-        }
+        partyField.setText(receipt.getPartyName());
     }
 
     private void saveReceipt() {
-        if (partyCombo.getValue() == null && partyCombo.getEditor().getText().trim().isEmpty()) {
-            AlertUtil.showWarning("Validation", "Please select a supplier or enter a name");
+        if (partyField.getText().trim().isEmpty()) {
+            AlertUtil.showWarning("Validation", "Please enter supplier name");
             return;
         }
         if (amountField.getText().isEmpty()) {
@@ -309,13 +375,20 @@ public class PurchaseReceiptDialog {
 
             receipt.setReceiptNo(receiptNo);
             receipt.setReceiptDate(receiptDatePicker.getValue());
-            Party selectedParty = partyCombo.getValue();
-            if (selectedParty != null) {
-                receipt.setPartyId(selectedParty.getId());
-                receipt.setPartyName(selectedParty.getName());
+            
+            // Find party by name or use custom name
+            String partyName = partyField.getText().trim();
+            Party matchedParty = allParties.stream()
+                    .filter(p -> p.getName().equalsIgnoreCase(partyName))
+                    .findFirst()
+                    .orElse(null);
+            
+            if (matchedParty != null) {
+                receipt.setPartyId(matchedParty.getId());
+                receipt.setPartyName(matchedParty.getName());
             } else {
                 receipt.setPartyId(0);
-                receipt.setPartyName(partyCombo.getEditor().getText().trim());
+                receipt.setPartyName(partyName);
             }
             receipt.setAmount(Double.parseDouble(amountField.getText()));
             receipt.setPaymentMode(paymentModeCombo.getValue());
