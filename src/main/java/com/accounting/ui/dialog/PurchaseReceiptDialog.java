@@ -219,7 +219,11 @@ public class PurchaseReceiptDialog {
             if (!partyPopup.isShowing()) {
                 javafx.geometry.Point2D p = partyField.localToScreen(0, partyField.getHeight());
                 if (p != null) {
-                    partyPopup.show(stage, p.getX(), p.getY());
+                    if (stage != null && stage.isShowing()) {
+                        partyPopup.show(stage, p.getX(), p.getY());
+                    } else {
+                        partyPopup.show(partyField.getScene().getWindow(), p.getX(), p.getY());
+                    }
                 }
             }
         });
@@ -376,14 +380,17 @@ public class PurchaseReceiptDialog {
 
             receipt.setReceiptNo(receiptNo);
             receipt.setReceiptDate(receiptDatePicker.getValue());
-            
+
             // Find party by name or use custom name
             String partyName = partyField.getText().trim();
-            Party matchedParty = allParties.stream()
-                    .filter(p -> p.getName().equalsIgnoreCase(partyName))
-                    .findFirst()
-                    .orElse(null);
-            
+            Party matchedParty = null;
+            if (allParties != null && !allParties.isEmpty()) {
+                matchedParty = allParties.stream()
+                        .filter(p -> p.getName() != null && p.getName().equalsIgnoreCase(partyName))
+                        .findFirst()
+                        .orElse(null);
+            }
+
             if (matchedParty != null) {
                 receipt.setPartyId(matchedParty.getId());
                 receipt.setPartyName(matchedParty.getName());
