@@ -9,6 +9,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.stage.Popup;
+import javafx.stage.Window;
 import com.accounting.util.AlertUtil;
 import com.accounting.util.AppExecutor;
 import com.accounting.util.AppLogger;
@@ -219,10 +220,9 @@ public class SaleReceiptDialog {
             if (!partyPopup.isShowing()) {
                 javafx.geometry.Point2D p = partyField.localToScreen(0, partyField.getHeight());
                 if (p != null) {
-                    if (stage != null && stage.isShowing()) {
-                        partyPopup.show(stage, p.getX(), p.getY());
-                    } else {
-                        partyPopup.show(partyField.getScene().getWindow(), p.getX(), p.getY());
+                    Window owner = partyField.getScene().getWindow();
+                    if (owner != null) {
+                        partyPopup.show(owner, p.getX(), p.getY());
                     }
                 }
             }
