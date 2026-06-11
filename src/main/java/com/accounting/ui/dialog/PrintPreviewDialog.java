@@ -217,29 +217,44 @@ public class PrintPreviewDialog {
 
                     // Also copy any other files that were generated alongside (for LR 4-copy flow)
                     File originalDir = originalFile.getParentFile();
-                    String originalBaseName = originalFile.getName().replace(".pdf", "");
+                    String originalName = originalFile.getName();
                     String selectedBaseName = selectedFile.getName().replace(".pdf", "");
 
-                    // Find all PDFs with the same base name pattern and copy them
-                    File[] matchingFiles = originalDir.listFiles((dir, name) ->
-                            name.startsWith(originalBaseName) && name.endsWith(".pdf"));
+                    // Extract the base timestamp pattern (everything before the copy label)
+                    // For LR: LR_123_20240611_103000_CONSIGNEE_COPY.pdf -> base = LR_123_20240611_103000
+                    String basePattern = originalName.replace(".pdf", "");
+                    if (basePattern.contains("_CONSIGNEE_COPY")) {
+                        basePattern = basePattern.substring(0, basePattern.indexOf("_CONSIGNEE_COPY"));
+                    } else if (basePattern.contains("_CONSIGNOR_COPY")) {
+                        basePattern = basePattern.substring(0, basePattern.indexOf("_CONSIGNOR_COPY"));
+                    } else if (basePattern.contains("_ACCOUNT_COPY")) {
+                        basePattern = basePattern.substring(0, basePattern.indexOf("_ACCOUNT_COPY"));
+                    } else if (basePattern.contains("_DRIVER_COPY")) {
+                        basePattern = basePattern.substring(0, basePattern.indexOf("_DRIVER_COPY"));
+                    }
 
+                    // Find all PDFs with the same base pattern and copy them
+                    File[] matchingFiles = originalDir.listFiles((dir, name) ->
+                            name.startsWith(basePattern) && name.endsWith(".pdf"));
+
+                    int additionalCopies = 0;
                     if (matchingFiles != null) {
                         for (File sourceFile : matchingFiles) {
                             if (!sourceFile.equals(originalFile)) {
-                                // Extract the suffix from the source file name
-                                String suffix = sourceFile.getName().substring(originalBaseName.length());
+                                // Extract the suffix from the source file name (everything after base pattern)
+                                String suffix = sourceFile.getName().substring(basePattern.length());
                                 File destFile = new File(selectedFile.getParentFile(), selectedBaseName + suffix);
                                 java.nio.file.Files.copy(sourceFile.toPath(), destFile.toPath(),
                                         java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                                additionalCopies++;
                             }
                         }
                     }
 
                     Platform.runLater(() -> {
                         String copyInfo = "Saved: " + selectedFile.getAbsolutePath();
-                        if (matchingFiles != null && matchingFiles.length > 1) {
-                            copyInfo += "\n" + (matchingFiles.length - 1) + " additional copy/copies saved in same directory.";
+                        if (additionalCopies > 0) {
+                            copyInfo += "\n" + additionalCopies + " additional copy/copies saved in same directory.";
                         }
                         AlertUtil.showInfo("Success", "PDF saved successfully.\n" + copyInfo);
                     });
