@@ -369,6 +369,10 @@ public class LorryReceiptPDFGenerator {
         String[] descs = descData.contains(" | ") ? descData.split(" \\| ") : descData.split("§");
 
         // First 3 rows: dedicated package data rows
+        String watermarkText = lr.getFreightWatermark() != null ? lr.getFreightWatermark() : "";
+        int watermarkIndex = 0;
+        int charsPerRow = 25; // Approximate characters that fit in the freight column
+
         for (int i = 0; i < 3; i++) {
             String noPkg = i < noPkgs.length ? noPkgs[i].trim() : "";
             String method = i < methods.length ? methods[i].trim() : "";
@@ -383,20 +387,25 @@ public class LorryReceiptPDFGenerator {
                 addDataCellWeight(pkgTable, s(lr.getWeightActual()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
                 addDataCellWeight(pkgTable, s(lr.getWeightCharged()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
                 addDataCell(pkgTable, s(lr.getRate()), 18, Element.ALIGN_RIGHT);
-                // Freight columns - show watermark text spanning both columns
-                String watermarkText = lr.getFreightWatermark() != null ? lr.getFreightWatermark() : "";
-                PdfPCell watermarkCell = new PdfPCell(new Phrase(watermarkText, F_BOLD_10));
+            } else {
+                addEmptyCellWeight(pkgTable);
+                addEmptyCellWeight(pkgTable);
+                addEmptyCell(pkgTable);
+            }
+
+            // Freight columns - show watermark text spanning both columns
+            if (watermarkText != null && !watermarkText.isEmpty() && watermarkIndex < watermarkText.length()) {
+                int endIndex = Math.min(watermarkIndex + charsPerRow, watermarkText.length());
+                String chunk = watermarkText.substring(watermarkIndex, endIndex);
+                PdfPCell watermarkCell = new PdfPCell(new Phrase(chunk, F_BOLD_10));
                 watermarkCell.setFixedHeight(18);
                 watermarkCell.setColspan(2);
                 watermarkCell.setBorder(Rectangle.NO_BORDER);
                 watermarkCell.setHorizontalAlignment(Element.ALIGN_CENTER);
                 watermarkCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
                 pkgTable.addCell(watermarkCell);
+                watermarkIndex = endIndex;
             } else {
-                addEmptyCellWeight(pkgTable);
-                addEmptyCellWeight(pkgTable);
-                addEmptyCell(pkgTable);
-                // Freight columns - empty without borders
                 addEmptyCellNoBorder(pkgTable);
                 addEmptyCellNoBorder(pkgTable);
             }
@@ -419,9 +428,22 @@ public class LorryReceiptPDFGenerator {
             addEmptyCellWeight(pkgTable);
             // Rate col: label (Freight/Advance/Balance)
             addLabelCell(pkgTable, rateLabels[j], Element.ALIGN_RIGHT);
-            // Freight cols: empty without borders
-            addEmptyCellNoBorder(pkgTable);
-            addEmptyCellNoBorder(pkgTable);
+            // Freight cols - continue watermark text if remaining
+            if (watermarkText != null && !watermarkText.isEmpty() && watermarkIndex < watermarkText.length()) {
+                int endIndex = Math.min(watermarkIndex + charsPerRow, watermarkText.length());
+                String chunk = watermarkText.substring(watermarkIndex, endIndex);
+                PdfPCell watermarkCell = new PdfPCell(new Phrase(chunk, F_BOLD_10));
+                watermarkCell.setFixedHeight(18);
+                watermarkCell.setColspan(2);
+                watermarkCell.setBorder(Rectangle.NO_BORDER);
+                watermarkCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                watermarkCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                pkgTable.addCell(watermarkCell);
+                watermarkIndex = endIndex;
+            } else {
+                addEmptyCellNoBorder(pkgTable);
+                addEmptyCellNoBorder(pkgTable);
+            }
         }
 
         // Row 12: S.H. No. | [value] | G. Wt. | [value] | [empty] | A.O.C. | [freight no border] | [freight no border]
@@ -431,8 +453,22 @@ public class LorryReceiptPDFGenerator {
         addDataCellWeight(pkgTable, s(lr.getGrossWeight()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
         addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "A.O.C.", Element.ALIGN_RIGHT);
-        addEmptyCellNoBorder(pkgTable);
-        addEmptyCellNoBorder(pkgTable);
+        // Freight cols - continue watermark text if remaining
+        if (watermarkText != null && !watermarkText.isEmpty() && watermarkIndex < watermarkText.length()) {
+            int endIndex = Math.min(watermarkIndex + charsPerRow, watermarkText.length());
+            String chunk = watermarkText.substring(watermarkIndex, endIndex);
+            PdfPCell watermarkCell = new PdfPCell(new Phrase(chunk, F_BOLD_10));
+            watermarkCell.setFixedHeight(18);
+            watermarkCell.setColspan(2);
+            watermarkCell.setBorder(Rectangle.NO_BORDER);
+            watermarkCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            watermarkCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            pkgTable.addCell(watermarkCell);
+            watermarkIndex = endIndex;
+        } else {
+            addEmptyCellNoBorder(pkgTable);
+            addEmptyCellNoBorder(pkgTable);
+        }
 
         // Row 13: S.T. No. | [value] | T. Wt. | [value] | [empty] | S.T. Charge | [freight no border] | [freight no border]
         addLabelCell(pkgTable, "S.T. No.", Element.ALIGN_RIGHT);
@@ -441,8 +477,22 @@ public class LorryReceiptPDFGenerator {
         addDataCellWeight(pkgTable, s(lr.getTareWeight()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
         addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "S.T. Charge", Element.ALIGN_RIGHT);
-        addEmptyCellNoBorder(pkgTable);
-        addEmptyCellNoBorder(pkgTable);
+        // Freight cols - continue watermark text if remaining
+        if (watermarkText != null && !watermarkText.isEmpty() && watermarkIndex < watermarkText.length()) {
+            int endIndex = Math.min(watermarkIndex + charsPerRow, watermarkText.length());
+            String chunk = watermarkText.substring(watermarkIndex, endIndex);
+            PdfPCell watermarkCell = new PdfPCell(new Phrase(chunk, F_BOLD_10));
+            watermarkCell.setFixedHeight(18);
+            watermarkCell.setColspan(2);
+            watermarkCell.setBorder(Rectangle.NO_BORDER);
+            watermarkCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            watermarkCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            pkgTable.addCell(watermarkCell);
+            watermarkIndex = endIndex;
+        } else {
+            addEmptyCellNoBorder(pkgTable);
+            addEmptyCellNoBorder(pkgTable);
+        }
 
         // Row 14: Value Rs. | [value] | N. Wt. | [value] | [empty] | Total | [freight no border] | [freight no border]
         addLabelCell(pkgTable, "Value Rs.", Element.ALIGN_RIGHT);
@@ -451,8 +501,22 @@ public class LorryReceiptPDFGenerator {
         addDataCellWeight(pkgTable, s(lr.getNetWeight()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
         addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "Total", Element.ALIGN_RIGHT);
-        addEmptyCellNoBorder(pkgTable);
-        addEmptyCellNoBorder(pkgTable);
+        // Freight cols - continue watermark text if remaining
+        if (watermarkText != null && !watermarkText.isEmpty() && watermarkIndex < watermarkText.length()) {
+            int endIndex = Math.min(watermarkIndex + charsPerRow, watermarkText.length());
+            String chunk = watermarkText.substring(watermarkIndex, endIndex);
+            PdfPCell watermarkCell = new PdfPCell(new Phrase(chunk, F_BOLD_10));
+            watermarkCell.setFixedHeight(18);
+            watermarkCell.setColspan(2);
+            watermarkCell.setBorder(Rectangle.NO_BORDER);
+            watermarkCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            watermarkCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            pkgTable.addCell(watermarkCell);
+            watermarkIndex = endIndex;
+        } else {
+            addEmptyCellNoBorder(pkgTable);
+            addEmptyCellNoBorder(pkgTable);
+        }
 
         mainCell.addElement(pkgTable);
         mainTable.addCell(mainCell);
