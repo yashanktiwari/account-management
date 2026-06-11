@@ -222,15 +222,18 @@ public class PrintPreviewDialog {
 
                     // Extract the base timestamp pattern (everything before the copy label)
                     // For LR: LR_123_20240611_103000_CONSIGNEE_COPY.pdf -> base = LR_123_20240611_103000
-                    String basePattern = originalName.replace(".pdf", "");
-                    if (basePattern.contains("_CONSIGNEE_COPY")) {
-                        basePattern = basePattern.substring(0, basePattern.indexOf("_CONSIGNEE_COPY"));
-                    } else if (basePattern.contains("_CONSIGNOR_COPY")) {
-                        basePattern = basePattern.substring(0, basePattern.indexOf("_CONSIGNOR_COPY"));
-                    } else if (basePattern.contains("_ACCOUNT_COPY")) {
-                        basePattern = basePattern.substring(0, basePattern.indexOf("_ACCOUNT_COPY"));
-                    } else if (basePattern.contains("_DRIVER_COPY")) {
-                        basePattern = basePattern.substring(0, basePattern.indexOf("_DRIVER_COPY"));
+                    String tempPattern = originalName.replace(".pdf", "");
+                    String basePattern;
+                    if (tempPattern.contains("_CONSIGNEE_COPY")) {
+                        basePattern = tempPattern.substring(0, tempPattern.indexOf("_CONSIGNEE_COPY"));
+                    } else if (tempPattern.contains("_CONSIGNOR_COPY")) {
+                        basePattern = tempPattern.substring(0, tempPattern.indexOf("_CONSIGNOR_COPY"));
+                    } else if (tempPattern.contains("_ACCOUNT_COPY")) {
+                        basePattern = tempPattern.substring(0, tempPattern.indexOf("_ACCOUNT_COPY"));
+                    } else if (tempPattern.contains("_DRIVER_COPY")) {
+                        basePattern = tempPattern.substring(0, tempPattern.indexOf("_DRIVER_COPY"));
+                    } else {
+                        basePattern = tempPattern;
                     }
 
                     // Find all PDFs with the same base pattern and copy them
