@@ -235,7 +235,7 @@ public class LorryReceiptDialog {
         GridPane basicGrid = sectionGrid();
         lrNoField = new TextField();
         lrNoField.setPromptText("Auto-generated");
-        lrNoField.setDisable(true);
+        lrNoField.setDisable(false);
         basicGrid.add(label("LR No"), 0, 0);
         basicGrid.add(lrNoField, 1, 0);
 

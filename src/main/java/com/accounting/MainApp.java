@@ -202,7 +202,6 @@ public class MainApp extends Application {
         settingsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
 
         Button dbBtn = sidebarButton("Database Setup", () -> DatabaseSetupDialog.show(primaryStage, () -> {}));
-        Button companyBtn = sidebarButton("Company Settings", this::showCompanySettings);
         Button invoiceBtn = sidebarButton("Invoice Settings", this::showInvoiceSettings);
 
         sidebar.getChildren().addAll(
@@ -212,7 +211,7 @@ public class MainApp extends Application {
                 receiptsTitle, purchaseReceiptBtn, saleReceiptBtn,
                 slipsTitle, loadingSlipBtn, lorryReceiptBtn,
                 reportsTitle, reportsBtn,
-                settingsTitle, dbBtn, companyBtn, invoiceBtn
+                settingsTitle, dbBtn, invoiceBtn
         );
 
         setActiveSidebarButton(dashBtn);

@@ -260,7 +260,7 @@ public class SaleInvoiceDialog {
 
         invoiceNoField = new TextField();
         invoiceNoField.setPromptText("Auto-generated");
-        invoiceNoField.setDisable(true);
+        invoiceNoField.setDisable(false);
         grid.add(label("Invoice No"), 0, 0);
         grid.add(invoiceNoField, 1, 0);
 

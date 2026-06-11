@@ -147,7 +147,7 @@ public class LoadingSlipDialog {
 
         slipNoField = new TextField();
         slipNoField.setPromptText("Auto-generated");
-        slipNoField.setDisable(true);
+        slipNoField.setDisable(false);
         grid.add(label("Slip No"), 0, 0);
         grid.add(slipNoField, 1, 0);
 
