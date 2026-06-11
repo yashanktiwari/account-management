@@ -381,7 +381,7 @@ public class SaleReceiptDialog {
             receipt.setReceiptNo(receiptNo);
             receipt.setReceiptDate(receiptDatePicker.getValue());
 
-            // Find party by name or use custom name
+            // Find party by name or create new party
             String partyName = partyField.getText().trim();
             Party matchedParty = null;
             if (allParties != null && !allParties.isEmpty()) {
@@ -395,7 +395,13 @@ public class SaleReceiptDialog {
                 receipt.setPartyId(matchedParty.getId());
                 receipt.setPartyName(matchedParty.getName());
             } else {
-                receipt.setPartyId(0);
+                // Create new party entry
+                Party newParty = new Party();
+                newParty.setName(partyName);
+                newParty.setType("CUSTOMER");
+                PartyDAO partyDAO = new PartyDAO();
+                int newPartyId = partyDAO.save(newParty);
+                receipt.setPartyId(newPartyId);
                 receipt.setPartyName(partyName);
             }
             receipt.setAmount(Double.parseDouble(amountField.getText()));
