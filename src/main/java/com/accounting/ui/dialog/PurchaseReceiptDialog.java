@@ -303,6 +303,9 @@ public class PurchaseReceiptDialog {
             try {
                 List<Party> suppliers = new PartyDAO().findByType("SUPPLIER");
                 log.info("Loaded {} suppliers", suppliers.size());
+                for (Party supplier : suppliers) {
+                    log.info("Supplier: {} (type: {})", supplier.getName(), supplier.getType());
+                }
                 Platform.runLater(() -> {
                     allParties.setAll(suppliers);
                     log.info("allParties now has {} items", allParties.size());
