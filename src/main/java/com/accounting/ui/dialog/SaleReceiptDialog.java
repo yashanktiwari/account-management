@@ -183,6 +183,7 @@ public class SaleReceiptDialog {
 
         partyListView = new ListView<>();
         partyListView.setFocusTraversable(false);
+        partyListView.setStyle("-fx-background-color: white; -fx-border-color: #ccc; -fx-border-width: 1;");
         partyListView.setCellFactory(param -> new ListCell<Party>() {
             @Override
             protected void updateItem(Party party, boolean empty) {
