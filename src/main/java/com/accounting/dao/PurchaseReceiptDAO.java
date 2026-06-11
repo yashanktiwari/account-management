@@ -135,6 +135,16 @@ public class PurchaseReceiptDAO {
         return receipts;
     }
 
+    public String getLastReceiptNumber() throws Exception {
+        String sql = "SELECT receipt_no FROM purchase_receipts ORDER BY id DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) return rs.getString("receipt_no");
+        }
+        return null;
+    }
+
     private PurchaseReceipt mapReceipt(ResultSet rs) throws SQLException {
         PurchaseReceipt r = new PurchaseReceipt();
         r.setId(rs.getInt("id"));

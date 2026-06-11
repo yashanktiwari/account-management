@@ -583,9 +583,21 @@ public class MainApp extends Application {
                     currentLrNumber = "1";
                 }
 
+                String currentPurchaseReceiptNumber = settingsDAO.getSetting("purchase_receipt_starting_number");
+                if (currentPurchaseReceiptNumber == null) {
+                    currentPurchaseReceiptNumber = "1";
+                }
+
+                String currentSaleReceiptNumber = settingsDAO.getSetting("sale_receipt_starting_number");
+                if (currentSaleReceiptNumber == null) {
+                    currentSaleReceiptNumber = "1";
+                }
+
                 String finalCurrentStartingNumber = currentStartingNumber;
                 String finalCurrentSlipNumber = currentSlipNumber;
                 String finalCurrentLrNumber = currentLrNumber;
+                String finalCurrentPurchaseReceiptNumber = currentPurchaseReceiptNumber;
+                String finalCurrentSaleReceiptNumber = currentSaleReceiptNumber;
                 Platform.runLater(() -> {
                     Dialog<ButtonType> dialog = new Dialog<>();
                     dialog.setTitle("Invoice & Slip Settings");
@@ -599,6 +611,12 @@ public class MainApp extends Application {
 
                     TextField lrStartingNumberField = new TextField(finalCurrentLrNumber);
                     lrStartingNumberField.setPrefWidth(200);
+
+                    TextField purchaseReceiptStartingNumberField = new TextField(finalCurrentPurchaseReceiptNumber);
+                    purchaseReceiptStartingNumberField.setPrefWidth(200);
+
+                    TextField saleReceiptStartingNumberField = new TextField(finalCurrentSaleReceiptNumber);
+                    saleReceiptStartingNumberField.setPrefWidth(200);
 
                     GridPane grid = new GridPane();
                     grid.setHgap(10);
@@ -619,6 +637,16 @@ public class MainApp extends Application {
                     grid.add(new Label("This number will be used for lorry receipts."), 0, 5);
                     GridPane.setColumnSpan(grid.getChildren().get(8), 2);
 
+                    grid.add(new Label("Purchase Receipt Starting Number:"), 0, 6);
+                    grid.add(purchaseReceiptStartingNumberField, 1, 6);
+                    grid.add(new Label("This number will be used for purchase receipts."), 0, 7);
+                    GridPane.setColumnSpan(grid.getChildren().get(11), 2);
+
+                    grid.add(new Label("Sale Receipt Starting Number:"), 0, 8);
+                    grid.add(saleReceiptStartingNumberField, 1, 8);
+                    grid.add(new Label("This number will be used for sale receipts."), 0, 9);
+                    GridPane.setColumnSpan(grid.getChildren().get(14), 2);
+
                     dialog.getDialogPane().setContent(grid);
                     dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
@@ -628,14 +656,18 @@ public class MainApp extends Application {
                                 int num = Integer.parseInt(startingNumberField.getText().trim());
                                 int slipNum = Integer.parseInt(slipStartingNumberField.getText().trim());
                                 int lrNum = Integer.parseInt(lrStartingNumberField.getText().trim());
-                                if (num >= 0 && slipNum >= 0 && lrNum >= 0) {
+                                int purchaseReceiptNum = Integer.parseInt(purchaseReceiptStartingNumberField.getText().trim());
+                                int saleReceiptNum = Integer.parseInt(saleReceiptStartingNumberField.getText().trim());
+                                if (num >= 0 && slipNum >= 0 && lrNum >= 0 && purchaseReceiptNum >= 0 && saleReceiptNum >= 0) {
                                     AppExecutor.submit(() -> {
                                         try {
                                             settingsDAO.saveSetting("global_invoice_starting_number", String.valueOf(num));
                                             settingsDAO.saveSetting("loading_slip_starting_number", String.valueOf(slipNum));
                                             settingsDAO.saveSetting("lr_starting_number", String.valueOf(lrNum));
+                                            settingsDAO.saveSetting("purchase_receipt_starting_number", String.valueOf(purchaseReceiptNum));
+                                            settingsDAO.saveSetting("sale_receipt_starting_number", String.valueOf(saleReceiptNum));
                                             Platform.runLater(() -> {
-                                                AlertUtil.showInfo("Success", "Settings updated.\nInvoice: " + num + "  |  Loading Slip: " + slipNum + "  |  LR: " + lrNum);
+                                                AlertUtil.showInfo("Success", "Settings updated.\nInvoice: " + num + "  |  Loading Slip: " + slipNum + "  |  LR: " + lrNum + "  |  Purchase Receipt: " + purchaseReceiptNum + "  |  Sale Receipt: " + saleReceiptNum);
                                             });
                                         } catch (Exception e) {
                                             log.error("Failed to save setting", e);

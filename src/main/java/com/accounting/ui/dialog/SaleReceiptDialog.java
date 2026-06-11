@@ -2,6 +2,7 @@ package com.accounting.ui.dialog;
 
 import com.accounting.dao.PartyDAO;
 import com.accounting.dao.SaleReceiptDAO;
+import com.accounting.dao.SettingsDAO;
 import com.accounting.model.Party;
 import com.accounting.model.SaleReceipt;
 import com.accounting.util.AlertUtil;
@@ -93,7 +94,6 @@ public class SaleReceiptDialog {
 
         receiptNoField = new TextField();
         receiptNoField.setPromptText("Auto-generated");
-        receiptNoField.setDisable(true);
         grid.add(label("Receipt No"), 0, 0);
         grid.add(receiptNoField, 1, 0);
 
@@ -180,11 +180,36 @@ public class SaleReceiptDialog {
                     // After loading parties, load receipt data if editing
                     if (receipt.getId() > 0) {
                         loadReceiptData();
+                    } else {
+                        // New receipt - auto-generate receipt number
+                        generateNextReceiptNumber();
                     }
                 });
             } catch (Exception e) {
                 log.error("Failed to load customers", e);
                 Platform.runLater(() -> AlertUtil.showError("Error", "Failed to load customers"));
+            }
+        });
+    }
+
+    private void generateNextReceiptNumber() {
+        AppExecutor.submit(() -> {
+            try {
+                SettingsDAO settingsDAO = new SettingsDAO();
+                String startingNumberStr = settingsDAO.getSetting("sale_receipt_starting_number");
+                int startingNumber = startingNumberStr != null ? Integer.parseInt(startingNumberStr) : 1;
+
+                SaleReceiptDAO dao = new SaleReceiptDAO();
+                String lastReceiptNo = dao.getLastReceiptNumber();
+                int lastNumber = lastReceiptNo != null && !lastReceiptNo.isEmpty() ? Integer.parseInt(lastReceiptNo) : 0;
+
+                int nextNumber = Math.max(startingNumber, lastNumber + 1);
+                final String receiptNo = String.valueOf(nextNumber);
+
+                Platform.runLater(() -> receiptNoField.setText(receiptNo));
+            } catch (Exception e) {
+                log.error("Failed to generate receipt number", e);
+                Platform.runLater(() -> AlertUtil.showError("Error", "Failed to generate receipt number"));
             }
         });
     }
@@ -237,6 +262,14 @@ public class SaleReceiptDialog {
                         dao.update(receipt);
                     } else {
                         dao.save(receipt);
+
+                        // Update the next receipt number in settings only for new receipts
+                        try {
+                            int currentReceiptNo = Integer.parseInt(receipt.getReceiptNo());
+                            new SettingsDAO().saveSetting("sale_receipt_starting_number", String.valueOf(currentReceiptNo + 1));
+                        } catch (Exception e) {
+                            log.error("Failed to update receipt number in settings", e);
+                        }
                     }
                     Platform.runLater(() -> {
                         NotificationUtil.showSuccess("Success", "Receipt saved successfully");
