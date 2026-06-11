@@ -237,7 +237,7 @@ public class PrintPreviewDialog {
                     File[] matchingFiles = originalDir.listFiles((dir, name) ->
                             name.startsWith(basePattern) && name.endsWith(".pdf"));
 
-                    int additionalCopies = 0;
+                    final int[] additionalCopies = {0};
                     if (matchingFiles != null) {
                         for (File sourceFile : matchingFiles) {
                             if (!sourceFile.equals(originalFile)) {
@@ -246,15 +246,15 @@ public class PrintPreviewDialog {
                                 File destFile = new File(selectedFile.getParentFile(), selectedBaseName + suffix);
                                 java.nio.file.Files.copy(sourceFile.toPath(), destFile.toPath(),
                                         java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                                additionalCopies++;
+                                additionalCopies[0]++;
                             }
                         }
                     }
 
                     Platform.runLater(() -> {
                         String copyInfo = "Saved: " + selectedFile.getAbsolutePath();
-                        if (additionalCopies > 0) {
-                            copyInfo += "\n" + additionalCopies + " additional copy/copies saved in same directory.";
+                        if (additionalCopies[0] > 0) {
+                            copyInfo += "\n" + additionalCopies[0] + " additional copy/copies saved in same directory.";
                         }
                         AlertUtil.showInfo("Success", "PDF saved successfully.\n" + copyInfo);
                     });
