@@ -6,7 +6,6 @@ import com.accounting.dao.SettingsDAO;
 import com.accounting.model.Party;
 import com.accounting.model.SaleReceipt;
 import javafx.collections.ObservableList;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.stage.Popup;
 import javafx.stage.Window;
@@ -39,7 +38,7 @@ public class SaleReceiptDialog {
     private TextField partyField;
     private ObservableList<Party> allParties = FXCollections.observableArrayList();
     private Popup partyPopup;
-    private ListView<Party> partyListView;
+    private ListView<String> partyListView;
     private TextField receiptNoField;
     private DatePicker receiptDatePicker;
     private TextField amountField;
@@ -185,18 +184,6 @@ public class SaleReceiptDialog {
         partyListView = new ListView<>();
         partyListView.setFocusTraversable(false);
         partyListView.setStyle("-fx-background-color: white; -fx-border-color: #ccc; -fx-border-width: 1;");
-        partyListView.setCellFactory(param -> new ListCell<Party>() {
-            @Override
-            protected void updateItem(Party party, boolean empty) {
-                super.updateItem(party, empty);
-                if (empty || party == null) {
-                    setText("");
-                } else {
-                    setText(party.getName());
-                    log.debug("Displaying party: {}", party.getName());
-                }
-            }
-        });
 
         partyPopup.getContent().add(partyListView);
 
@@ -206,9 +193,10 @@ public class SaleReceiptDialog {
                 return;
             }
 
-            List<Party> filtered = allParties.stream()
+            List<String> filtered = allParties.stream()
                     .filter(p -> p.getName() != null && p.getName().toLowerCase().contains(newVal.toLowerCase()))
-                    .sorted((p1, p2) -> p1.getName().compareToIgnoreCase(p2.getName()))
+                    .map(Party::getName)
+                    .sorted(String::compareToIgnoreCase)
                     .collect(java.util.stream.Collectors.toList());
 
             if (filtered.isEmpty()) {
@@ -236,9 +224,9 @@ public class SaleReceiptDialog {
 
         // Mouse selection
         partyListView.setOnMouseClicked(e -> {
-            Party selected = partyListView.getSelectionModel().getSelectedItem();
+            String selected = partyListView.getSelectionModel().getSelectedItem();
             if (selected != null) {
-                partyField.setText(selected.getName());
+                partyField.setText(selected);
                 partyPopup.hide();
             }
         });
@@ -257,22 +245,19 @@ public class SaleReceiptDialog {
                 case ESCAPE -> partyPopup.hide();
                 case TAB -> {
                     if (partyPopup.isShowing() && !partyListView.getItems().isEmpty()) {
-                        Party first = partyListView.getItems().get(0);
-                        partyField.setText(first.getName());
+                        partyField.setText(partyListView.getItems().get(0));
                         partyPopup.hide();
                     }
                 }
                 case ENTER -> {
                     if (partyPopup.isShowing() && !partyListView.getItems().isEmpty()) {
-                        Party selected = partyListView.getSelectionModel().getSelectedItem();
+                        String selected = partyListView.getSelectionModel().getSelectedItem();
                         if (selected != null) {
-                            partyField.setText(selected.getName());
-                            partyPopup.hide();
+                            partyField.setText(selected);
                         } else {
-                            Party first = partyListView.getItems().get(0);
-                            partyField.setText(first.getName());
-                            partyPopup.hide();
+                            partyField.setText(partyListView.getItems().get(0));
                         }
+                        partyPopup.hide();
                     }
                 }
             }
@@ -281,9 +266,9 @@ public class SaleReceiptDialog {
         partyListView.setOnKeyPressed(event -> {
             switch (event.getCode()) {
                 case ENTER -> {
-                    Party selected = partyListView.getSelectionModel().getSelectedItem();
+                    String selected = partyListView.getSelectionModel().getSelectedItem();
                     if (selected != null) {
-                        partyField.setText(selected.getName());
+                        partyField.setText(selected);
                         partyField.requestFocus();
                     }
                     partyPopup.hide();
