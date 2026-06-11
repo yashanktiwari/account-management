@@ -189,7 +189,12 @@ public class SaleReceiptDialog {
             @Override
             protected void updateItem(Party party, boolean empty) {
                 super.updateItem(party, empty);
-                setText(empty || party == null ? "" : party.getName());
+                if (empty || party == null) {
+                    setText("");
+                } else {
+                    setText(party.getName());
+                    log.debug("Displaying party: {}", party.getName());
+                }
             }
         });
 
@@ -211,7 +216,8 @@ public class SaleReceiptDialog {
                 return;
             }
 
-            partyListView.getItems().setAll(filtered);
+            partyListView.getItems().clear();
+            partyListView.getItems().addAll(filtered);
 
             int visibleRows = Math.min(filtered.size(), 10);
             partyListView.setPrefHeight(visibleRows * 26 + 2);
