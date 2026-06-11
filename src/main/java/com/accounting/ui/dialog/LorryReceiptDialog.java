@@ -55,10 +55,12 @@ public class LorryReceiptDialog {
 
     // Amounts
     private TextField freightField;
-    private TextField freightWatermarkField;
     private TextField advanceField;
     private Label balanceLabel;
     private TextField aocField;
+
+    // Freight watermark
+    private TextField freightWatermarkField;
     private TextField stChargeField;
     private Label totalLabel;
 
@@ -341,10 +343,6 @@ public class LorryReceiptDialog {
         amountGrid.add(label("Balance"), 0, 1);
         amountGrid.add(balanceLabel, 1, 1);
 
-        freightWatermarkField = tf();
-        amountGrid.add(label("Freight Watermark"), 2, 2);
-        amountGrid.add(freightWatermarkField, 3, 2);
-
         aocField = numField();
         aocField.textProperty().addListener((o, ov, nv) -> updateTotals());
         amountGrid.add(label("A.O.C."), 2, 1);
@@ -426,6 +424,15 @@ public class LorryReceiptDialog {
         footerGrid.add(label("Inv. Date"), 2, 1);
         footerGrid.add(invDatePicker, 3, 1);
 
+        // ── Section 8: Freight Watermark (simple text field) ──
+        HBox watermarkBox = new HBox(10);
+        watermarkBox.setAlignment(Pos.CENTER_LEFT);
+        watermarkBox.setPadding(new Insets(8, 0, 8, 0));
+        watermarkBox.getChildren().add(label("Freight Watermark:"));
+        freightWatermarkField = tf();
+        freightWatermarkField.setPrefWidth(300);
+        watermarkBox.getChildren().add(freightWatermarkField);
+
         // ── Buttons ──
         Button saveBtn = new Button("Save");
         saveBtn.setStyle("-fx-padding: 8 20; -fx-font-size: 12px; -fx-background-color: #16a34a; -fx-text-fill: white;");
@@ -458,7 +465,8 @@ public class LorryReceiptDialog {
                 sectionLabel("Freight Amounts"), amountGrid,
                 sectionLabel("S.T. / S.H. / Weights"), weightsGrid,
                 sectionLabel("Insurance Details"), insGrid,
-                sectionLabel("Invoice / Payment"), footerGrid
+                sectionLabel("Invoice / Payment"), footerGrid,
+                watermarkBox
         );
 
         // Two-column layout
