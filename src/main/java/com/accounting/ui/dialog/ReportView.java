@@ -46,6 +46,8 @@ public class ReportView {
 
         root.getChildren().addAll(title, filterSection, tableSection);
 
+        // Load initial data
+        Platform.runLater(this::generateReport);
 
         return root;
     }
@@ -76,41 +78,46 @@ public class ReportView {
         toDate.setPrefWidth(150);
         toDate.setValue(LocalDate.now());
 
-        // Party Filter
-                Label searchLabel = new Label("Search:");
-                searchLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #64748b;");
-                searchField = new TextField();
-                searchField.setPromptText("Search by Invoice, Receipt, Slip, LR, Party, Vehicle, etc.");
-                searchField.setPrefWidth(400);
-                searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
-        // Vehicle Filter
+        Label searchLabel = new Label("Search:");
+        searchLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #64748b;");
+        searchField = new TextField();
+        searchField.setPromptText("Search by Invoice, Receipt, Slip, LR, Party, Vehicle, etc.");
+        searchField.setPrefWidth(400);
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+
         // Add to grid
-        grid.add(fromDate, 3, 0);
-        grid.add(toDateLabel, 4, 0);
-        grid.add(toDate, 5, 0);
+        grid.add(fromDateLabel, 0, 0);
+        grid.add(fromDate, 1, 0);
+        grid.add(toDateLabel, 2, 0);
+        grid.add(toDate, 3, 0);
 
         grid.add(searchLabel, 0, 1);
                 grid.add(searchField, 1, 1, 3, 1);
         Button generateBtn = new Button("Generate Report");
         generateBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
+        generateBtn.setOnAction(e -> generateReport());
+
         Button exportBtn = new Button("Export to CSV");
         exportBtn.setStyle("-fx-background-color: #64748b; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
+        exportBtn.setOnAction(e -> exportReport());
 
         Button clearBtn = new Button("Clear Search");
-                clearBtn.setStyle("-fx-background-color: #94a3b8; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
-                clearBtn.setOnAction(e -> {
-                    searchField.clear();
-                    applyFilters();
-                });
+        clearBtn.setStyle("-fx-background-color: #94a3b8; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
+        clearBtn.setOnAction(e -> {
+            searchField.clear();
+            applyFilters();
+        });
 
         HBox buttonBox = new HBox(10, generateBtn, exportBtn, clearBtn);
         buttonBox.setAlignment(Pos.CENTER_LEFT);
 
         grid.add(buttonBox, 0, 2, 4, 1);
 
-                resultCountLabel = new Label("No results");
-                resultCountLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
-                grid.add(resultCountLabel, 0, 3, 4, 1);
+        resultCountLabel = new Label("No results");
+        resultCountLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
+        grid.add(resultCountLabel, 0, 3, 4, 1);
+
+        section.getChildren().addAll(sectionTitle, grid);
         return section;
     }
 
@@ -124,7 +131,7 @@ public class ReportView {
         sectionTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
 
         resultTable = new TableView<>();
-        resultTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
+        resultTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
 
     filteredTransactions = new FilteredList<>(allTransactions);
     resultTable.setItems(filteredTransactions);
@@ -143,13 +150,14 @@ public class ReportView {
             // Serial No
             TableColumn<ReportDAO.ReportRow, Integer> serialCol = new TableColumn<>("S.No");
             serialCol.setCellValueFactory(new PropertyValueFactory<>("serialNo"));
-            serialCol.setPrefWidth(50);
+            serialCol.setMinWidth(50);
+            serialCol.setMaxWidth(70);
             serialCol.setStyle("-fx-alignment: CENTER;");
 
             // Transaction Type
             TableColumn<ReportDAO.ReportRow, String> typeCol = new TableColumn<>("Type");
             typeCol.setCellValueFactory(new PropertyValueFactory<>("transactionType"));
-            typeCol.setPrefWidth(120);
+            typeCol.setMinWidth(150);
             typeCol.setCellFactory(col -> new TableCell<>() {
                 @Override
                 protected void updateItem(String item, boolean empty) {
@@ -166,120 +174,120 @@ public class ReportView {
             // Transaction No
             TableColumn<ReportDAO.ReportRow, String> noCol = new TableColumn<>("Transaction No");
             noCol.setCellValueFactory(new PropertyValueFactory<>("transactionNo"));
-            noCol.setPrefWidth(120);
+            noCol.setMinWidth(130);
 
             // Date
             TableColumn<ReportDAO.ReportRow, String> dateCol = new TableColumn<>("Date");
             dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
-            dateCol.setPrefWidth(100);
+            dateCol.setMinWidth(110);
 
             // Party Name
             TableColumn<ReportDAO.ReportRow, String> partyCol = new TableColumn<>("Party");
             partyCol.setCellValueFactory(new PropertyValueFactory<>("party"));
-            partyCol.setPrefWidth(150);
+            partyCol.setMinWidth(150);
 
             // Vehicle No
             TableColumn<ReportDAO.ReportRow, String> vehicleCol = new TableColumn<>("Vehicle No");
             vehicleCol.setCellValueFactory(new PropertyValueFactory<>("vehicle"));
-            vehicleCol.setPrefWidth(120);
+            vehicleCol.setMinWidth(120);
 
             // From Location
             TableColumn<ReportDAO.ReportRow, String> fromLocCol = new TableColumn<>("From Location");
             fromLocCol.setCellValueFactory(new PropertyValueFactory<>("fromLocation"));
-            fromLocCol.setPrefWidth(120);
+            fromLocCol.setMinWidth(130);
 
             // To Location
             TableColumn<ReportDAO.ReportRow, String> toLocCol = new TableColumn<>("To Location");
             toLocCol.setCellValueFactory(new PropertyValueFactory<>("toLocation"));
-            toLocCol.setPrefWidth(120);
+            toLocCol.setMinWidth(130);
 
             // Description
             TableColumn<ReportDAO.ReportRow, String> descCol = new TableColumn<>("Description");
             descCol.setCellValueFactory(new PropertyValueFactory<>("description"));
-            descCol.setPrefWidth(150);
+            descCol.setMinWidth(180);
 
             // GST
             TableColumn<ReportDAO.ReportRow, String> gstCol = new TableColumn<>("GST %");
             gstCol.setCellValueFactory(new PropertyValueFactory<>("gst"));
-            gstCol.setPrefWidth(80);
+            gstCol.setMinWidth(80);
 
             // Taxable Amount
             TableColumn<ReportDAO.ReportRow, Double> taxableCol = new TableColumn<>("Taxable Amount");
             taxableCol.setCellValueFactory(new PropertyValueFactory<>("taxableAmount"));
             taxableCol.setCellFactory(col -> formatCurrencyCell());
-            taxableCol.setPrefWidth(120);
+            taxableCol.setMinWidth(130);
 
             // SGST
             TableColumn<ReportDAO.ReportRow, Double> sgstCol = new TableColumn<>("SGST");
             sgstCol.setCellValueFactory(new PropertyValueFactory<>("sgst"));
             sgstCol.setCellFactory(col -> formatCurrencyCell());
-            sgstCol.setPrefWidth(100);
+            sgstCol.setMinWidth(100);
 
             // CGST
             TableColumn<ReportDAO.ReportRow, Double> cgstCol = new TableColumn<>("CGST");
             cgstCol.setCellValueFactory(new PropertyValueFactory<>("cgst"));
             cgstCol.setCellFactory(col -> formatCurrencyCell());
-            cgstCol.setPrefWidth(100);
+            cgstCol.setMinWidth(100);
 
             // IGST
             TableColumn<ReportDAO.ReportRow, Double> igstCol = new TableColumn<>("IGST");
             igstCol.setCellValueFactory(new PropertyValueFactory<>("igst"));
             igstCol.setCellFactory(col -> formatCurrencyCell());
-            igstCol.setPrefWidth(100);
+            igstCol.setMinWidth(100);
 
             // Total GST
             TableColumn<ReportDAO.ReportRow, Double> totalGstCol = new TableColumn<>("Total GST");
             totalGstCol.setCellValueFactory(new PropertyValueFactory<>("totalGst"));
             totalGstCol.setCellFactory(col -> formatCurrencyCell());
-            totalGstCol.setPrefWidth(100);
+            totalGstCol.setMinWidth(110);
 
             // Amount
             TableColumn<ReportDAO.ReportRow, Double> amountCol = new TableColumn<>("Amount");
             amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
             amountCol.setCellFactory(col -> formatCurrencyCell());
-            amountCol.setPrefWidth(120);
+            amountCol.setMinWidth(120);
 
             // Advance
             TableColumn<ReportDAO.ReportRow, Double> advanceCol = new TableColumn<>("Advance");
             advanceCol.setCellValueFactory(new PropertyValueFactory<>("advance"));
             advanceCol.setCellFactory(col -> formatCurrencyCell());
-            advanceCol.setPrefWidth(100);
+            advanceCol.setMinWidth(100);
 
             // Balance
             TableColumn<ReportDAO.ReportRow, Double> balanceCol = new TableColumn<>("Balance");
             balanceCol.setCellValueFactory(new PropertyValueFactory<>("balance"));
             balanceCol.setCellFactory(col -> formatCurrencyCell());
-            balanceCol.setPrefWidth(100);
+            balanceCol.setMinWidth(100);
 
             // Payment Mode
             TableColumn<ReportDAO.ReportRow, String> paymentModeCol = new TableColumn<>("Payment Mode");
             paymentModeCol.setCellValueFactory(new PropertyValueFactory<>("paymentMode"));
-            paymentModeCol.setPrefWidth(100);
+            paymentModeCol.setMinWidth(120);
 
             // Cheque No
             TableColumn<ReportDAO.ReportRow, String> chequeNoCol = new TableColumn<>("Cheque No");
             chequeNoCol.setCellValueFactory(new PropertyValueFactory<>("chequeNo"));
-            chequeNoCol.setPrefWidth(100);
+            chequeNoCol.setMinWidth(110);
 
             // Cheque Date
             TableColumn<ReportDAO.ReportRow, String> chequeDateCol = new TableColumn<>("Cheque Date");
             chequeDateCol.setCellValueFactory(new PropertyValueFactory<>("chequeDate"));
-            chequeDateCol.setPrefWidth(100);
+            chequeDateCol.setMinWidth(110);
 
             // Bank Name
             TableColumn<ReportDAO.ReportRow, String> bankCol = new TableColumn<>("Bank Name");
             bankCol.setCellValueFactory(new PropertyValueFactory<>("bankName"));
-            bankCol.setPrefWidth(120);
+            bankCol.setMinWidth(130);
 
             // Remarks
             TableColumn<ReportDAO.ReportRow, String> remarksCol = new TableColumn<>("Remarks");
             remarksCol.setCellValueFactory(new PropertyValueFactory<>("remarks"));
-            remarksCol.setPrefWidth(150);
+            remarksCol.setMinWidth(180);
 
             // Status
             TableColumn<ReportDAO.ReportRow, String> statusCol = new TableColumn<>("Status");
             statusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
-            statusCol.setPrefWidth(80);
+            statusCol.setMinWidth(90);
 
             resultTable.getColumns().addAll(
                 serialCol, typeCol, noCol, dateCol, partyCol, vehicleCol, fromLocCol, toLocCol,
