@@ -44,6 +44,8 @@ public class ReportDAO {
 
     public ReportResult generateReport(String reportType, LocalDate fromDate, LocalDate toDate, String party, String vehicle) throws Exception {
         switch (reportType) {
+            case "All Transactions":
+                return generateAllTransactionsReport(fromDate, toDate);
             case "Party Transactions":
                 return generatePartyTransactionsReport(fromDate, toDate, party);
             case "Vehicle Transactions":
@@ -497,6 +499,22 @@ public class ReportDAO {
         private String reference;
         private String description;
         private String gstin;
+            private int serialNo;
+            private String transactionType;
+            private String transactionNo;
+            private String fromLocation;
+            private String toLocation;
+            private String gst;
+            private Double sgst = 0.0;
+            private Double cgst = 0.0;
+            private Double igst = 0.0;
+            private Double totalGst = 0.0;
+            private Double advance = 0.0;
+            private String paymentMode;
+            private String chequeNo;
+            private String chequeDate;
+            private String bankName;
+            private String remarks;
         private Double debit = 0.0;
         private Double credit = 0.0;
         private Double balance = 0.0;
@@ -505,6 +523,38 @@ public class ReportDAO {
         private Double gstPaid = 0.0;
 
         // Getters and Setters
+    public int getSerialNo() { return serialNo; }
+    public void setSerialNo(int serialNo) { this.serialNo = serialNo; }
+    public String getTransactionType() { return transactionType; }
+    public void setTransactionType(String transactionType) { this.transactionType = transactionType; }
+    public String getTransactionNo() { return transactionNo; }
+    public void setTransactionNo(String transactionNo) { this.transactionNo = transactionNo; }
+    public String getFromLocation() { return fromLocation; }
+    public void setFromLocation(String fromLocation) { this.fromLocation = fromLocation; }
+    public String getToLocation() { return toLocation; }
+    public void setToLocation(String toLocation) { this.toLocation = toLocation; }
+    public String getGst() { return gst; }
+    public void setGst(String gst) { this.gst = gst; }
+    public Double getSgst() { return sgst; }
+    public void setSgst(Double sgst) { this.sgst = sgst; }
+    public Double getCgst() { return cgst; }
+    public void setCgst(Double cgst) { this.cgst = cgst; }
+    public Double getIgst() { return igst; }
+    public void setIgst(Double igst) { this.igst = igst; }
+    public Double getTotalGst() { return totalGst; }
+    public void setTotalGst(Double totalGst) { this.totalGst = totalGst; }
+    public Double getAdvance() { return advance; }
+    public void setAdvance(Double advance) { this.advance = advance; }
+    public String getPaymentMode() { return paymentMode; }
+    public void setPaymentMode(String paymentMode) { this.paymentMode = paymentMode; }
+    public String getChequeNo() { return chequeNo; }
+    public void setChequeNo(String chequeNo) { this.chequeNo = chequeNo; }
+    public String getChequeDate() { return chequeDate; }
+    public void setChequeDate(String chequeDate) { this.chequeDate = chequeDate; }
+    public String getBankName() { return bankName; }
+    public void setBankName(String bankName) { this.bankName = bankName; }
+    public String getRemarks() { return remarks; }
+    public void setRemarks(String remarks) { this.remarks = remarks; }
         public String getDate() { return date; }
         public void setDate(String date) { this.date = date; }
         public String getParty() { return party; }
