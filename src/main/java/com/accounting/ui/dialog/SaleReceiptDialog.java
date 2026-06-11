@@ -5,6 +5,7 @@ import com.accounting.dao.SaleReceiptDAO;
 import com.accounting.dao.SettingsDAO;
 import com.accounting.model.Party;
 import com.accounting.model.SaleReceipt;
+import javafx.util.StringConverter;
 import com.accounting.util.AlertUtil;
 import com.accounting.util.AppExecutor;
 import com.accounting.util.AppLogger;
@@ -103,6 +104,29 @@ public class SaleReceiptDialog {
 
         partyCombo = new ComboBox<>();
         partyCombo.setPrefWidth(250);
+        partyCombo.setEditable(true);
+        partyCombo.setConverter(new StringConverter<Party>() {
+            @Override
+            public String toString(Party party) {
+                return party == null ? "" : party.getName();
+            }
+
+            @Override
+            public Party fromString(String string) {
+                if (string == null || string.trim().isEmpty()) return null;
+                // Try to find matching party
+                for (Party party : partyCombo.getItems()) {
+                    if (party.getName().equalsIgnoreCase(string.trim())) {
+                        return party;
+                    }
+                }
+                // If not found, create a temporary party with the custom name
+                Party customParty = new Party();
+                customParty.setName(string.trim());
+                customParty.setId(0); // 0 indicates custom/not in database
+                return customParty;
+            }
+        });
         grid.add(label("Customer"), 0, 2);
         grid.add(partyCombo, 1, 2);
 
@@ -224,18 +248,23 @@ public class SaleReceiptDialog {
         bankNameField.setText(receipt.getBankName());
         remarksField.setText(receipt.getRemarks());
 
-        // Select the party by ID
-        for (Party party : partyCombo.getItems()) {
-            if (party.getId() == receipt.getPartyId()) {
-                partyCombo.setValue(party);
-                break;
+        // Select the party by ID or set custom name
+        if (receipt.getPartyId() > 0) {
+            for (Party party : partyCombo.getItems()) {
+                if (party.getId() == receipt.getPartyId()) {
+                    partyCombo.setValue(party);
+                    break;
+                }
             }
+        } else {
+            // Custom party name
+            partyCombo.getEditor().setText(receipt.getPartyName());
         }
     }
 
     private void saveReceipt() {
-        if (partyCombo.getValue() == null) {
-            AlertUtil.showWarning("Validation", "Please select a customer");
+        if (partyCombo.getValue() == null && partyCombo.getEditor().getText().trim().isEmpty()) {
+            AlertUtil.showWarning("Validation", "Please select a customer or enter a name");
             return;
         }
         if (amountField.getText().isEmpty()) {
@@ -268,8 +297,14 @@ public class SaleReceiptDialog {
 
             receipt.setReceiptNo(receiptNo);
             receipt.setReceiptDate(receiptDatePicker.getValue());
-            receipt.setPartyId(partyCombo.getValue().getId());
-            receipt.setPartyName(partyCombo.getValue().getName());
+            Party selectedParty = partyCombo.getValue();
+            if (selectedParty != null) {
+                receipt.setPartyId(selectedParty.getId());
+                receipt.setPartyName(selectedParty.getName());
+            } else {
+                receipt.setPartyId(0);
+                receipt.setPartyName(partyCombo.getEditor().getText().trim());
+            }
             receipt.setAmount(Double.parseDouble(amountField.getText()));
             receipt.setPaymentMode(paymentModeCombo.getValue());
             receipt.setChequeNo(chequeNoField.getText());
