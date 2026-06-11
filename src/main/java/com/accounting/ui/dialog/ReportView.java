@@ -17,6 +17,8 @@ import javafx.scene.layout.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class ReportView {
 
@@ -30,6 +32,12 @@ public class ReportView {
     private DatePicker toDate;
     private TextField searchField;
     private Label resultCountLabel;
+    private final Set<String> searchTerms = new HashSet<>();
+    private final ObservableList<String> searchTagsList = FXCollections.observableArrayList();
+    private HBox tagsContainer;
+    private Timer debounceTimer;
+    private static final int DEBOUNCE_DELAY = 500;
+    private static final int MAX_SEARCH_TERMS = 5;
 
     public Parent createContent() {
         VBox root = new VBox(16);
@@ -81,9 +89,57 @@ public class ReportView {
         Label searchLabel = new Label("Search:");
         searchLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #64748b;");
         searchField = new TextField();
-        searchField.setPromptText("Search by Invoice, Receipt, Slip, LR, Party, Vehicle, etc.");
-        searchField.setPrefWidth(400);
-        searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        searchField.setPromptText("Type and press Enter to add search term...");
+        searchField.setPrefWidth(300);
+        searchField.setOnKeyPressed(e -> {
+            if (e.getCode().toString().equals("ENTER")) {
+                addSearchTerm();
+                e.consume();
+            }
+        });
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (debounceTimer != null) {
+                debounceTimer.cancel();
+            }
+            debounceTimer = new Timer();
+            debounceTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    Platform.runLater(ReportView.this::applyFilters);
+                }
+            }, DEBOUNCE_DELAY);
+        });
+
+        Button clearBtn = new Button("Clear");
+        clearBtn.setStyle("-fx-background-color: #94a3b8; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
+        clearBtn.setOnAction(e -> {
+            searchField.clear();
+            searchTerms.clear();
+            searchTagsList.clear();
+            applyFilters();
+        });
+
+        HBox searchControls = new HBox(10, searchLabel, searchField, clearBtn);
+        searchControls.setAlignment(Pos.CENTER_LEFT);
+
+        tagsContainer = new HBox(8);
+        tagsContainer.setAlignment(Pos.CENTER_LEFT);
+        tagsContainer.setPrefHeight(32);
+        searchTagsList.addListener((javafx.collections.ListChangeListener<String>) change -> {
+            tagsContainer.getChildren().clear();
+            for (String term : searchTagsList) {
+                HBox tag = new HBox(5);
+                tag.setStyle("-fx-padding: 4px 8px; -fx-background-color: #e3f2fd; -fx-border-color: #1976d2; -fx-border-radius: 4; -fx-alignment: CENTER;");
+                Label label = new Label(term);
+                Button removeBtn = new Button("✕");
+                removeBtn.setStyle("-fx-padding: 0; -fx-font-size: 12px;");
+                removeBtn.setOnAction(e -> removeSearchTerm(term));
+                tag.getChildren().addAll(label, removeBtn);
+                tagsContainer.getChildren().add(tag);
+            }
+        });
+
+        VBox searchRow = new VBox(8, searchControls, tagsContainer);
 
         // Add to grid
         grid.add(fromDateLabel, 0, 0);
@@ -91,8 +147,7 @@ public class ReportView {
         grid.add(toDateLabel, 2, 0);
         grid.add(toDate, 3, 0);
 
-        grid.add(searchLabel, 0, 1);
-                grid.add(searchField, 1, 1, 3, 1);
+        grid.add(searchRow, 0, 1, 4, 1);
         Button generateBtn = new Button("Generate Report");
         generateBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
         generateBtn.setOnAction(e -> generateReport());
@@ -101,14 +156,7 @@ public class ReportView {
         exportBtn.setStyle("-fx-background-color: #64748b; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
         exportBtn.setOnAction(e -> exportReport());
 
-        Button clearBtn = new Button("Clear Search");
-        clearBtn.setStyle("-fx-background-color: #94a3b8; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
-        clearBtn.setOnAction(e -> {
-            searchField.clear();
-            applyFilters();
-        });
-
-        HBox buttonBox = new HBox(10, generateBtn, exportBtn, clearBtn);
+        HBox buttonBox = new HBox(10, generateBtn, exportBtn);
         buttonBox.setAlignment(Pos.CENTER_LEFT);
 
         grid.add(buttonBox, 0, 2, 4, 1);
@@ -355,71 +403,106 @@ public class ReportView {
     }
 
             private void applyFilters() {
-                String searchText = searchField.getText().toLowerCase().trim();
+                String liveSearchText = searchField.getText().trim().toLowerCase();
 
-                if (searchText.isEmpty()) {
+                if (searchTerms.isEmpty() && liveSearchText.isEmpty()) {
                     filteredTransactions.setPredicate(null);
                 } else {
                     filteredTransactions.setPredicate(row -> {
-                        // Match transaction number (invoice no, receipt no, etc.)
-                        if (row.getTransactionNo() != null && row.getTransactionNo().toLowerCase().contains(searchText)) {
-                            return true;
+                        // Check all search terms (AND logic)
+                        for (String term : searchTerms) {
+                            if (!matchesSearchTerm(row, term.toLowerCase())) {
+                                return false;
+                            }
                         }
 
-                        // Match transaction type (e.g., "Invoice", "Receipt", "LR", "Slip")
-                        String typeFormatted = formatTransactionType(row.getTransactionType()).toLowerCase();
-                        if (typeFormatted.contains(searchText)) {
-                            return true;
+                        // Check live search text if present
+                        if (!liveSearchText.isEmpty() && !matchesSearchTerm(row, liveSearchText)) {
+                            return false;
                         }
 
-                        // Match party name
-                        if (row.getParty() != null && row.getParty().toLowerCase().contains(searchText)) {
-                            return true;
-                        }
-
-                        // Match vehicle number
-                        if (row.getVehicle() != null && row.getVehicle().toLowerCase().contains(searchText)) {
-                            return true;
-                        }
-
-                        // Match from/to locations
-                        if (row.getFromLocation() != null && row.getFromLocation().toLowerCase().contains(searchText)) {
-                            return true;
-                        }
-                        if (row.getToLocation() != null && row.getToLocation().toLowerCase().contains(searchText)) {
-                            return true;
-                        }
-
-                        // Match description
-                        if (row.getDescription() != null && row.getDescription().toLowerCase().contains(searchText)) {
-                            return true;
-                        }
-
-                        // Match remarks
-                        if (row.getRemarks() != null && row.getRemarks().toLowerCase().contains(searchText)) {
-                            return true;
-                        }
-
-                        // Match payment mode
-                        if (row.getPaymentMode() != null && row.getPaymentMode().toLowerCase().contains(searchText)) {
-                            return true;
-                        }
-
-                        // Match cheque number
-                        if (row.getChequeNo() != null && row.getChequeNo().toLowerCase().contains(searchText)) {
-                            return true;
-                        }
-
-                        // Match bank name
-                        if (row.getBankName() != null && row.getBankName().toLowerCase().contains(searchText)) {
-                            return true;
-                        }
-
-                        return false;
+                        return true;
                     });
                 }
 
                 updateResultCount();
+            }
+
+            private boolean matchesSearchTerm(ReportDAO.ReportRow row, String searchText) {
+                // Match transaction number (invoice no, receipt no, etc.)
+                if (row.getTransactionNo() != null && row.getTransactionNo().toLowerCase().contains(searchText)) {
+                    return true;
+                }
+
+                // Match transaction type (e.g., "Invoice", "Receipt", "LR", "Slip")
+                String typeFormatted = formatTransactionType(row.getTransactionType()).toLowerCase();
+                if (typeFormatted.contains(searchText)) {
+                    return true;
+                }
+
+                // Match party name
+                if (row.getParty() != null && row.getParty().toLowerCase().contains(searchText)) {
+                    return true;
+                }
+
+                // Match vehicle number
+                if (row.getVehicle() != null && row.getVehicle().toLowerCase().contains(searchText)) {
+                    return true;
+                }
+
+                // Match from/to locations
+                if (row.getFromLocation() != null && row.getFromLocation().toLowerCase().contains(searchText)) {
+                    return true;
+                }
+                if (row.getToLocation() != null && row.getToLocation().toLowerCase().contains(searchText)) {
+                    return true;
+                }
+
+                // Match description
+                if (row.getDescription() != null && row.getDescription().toLowerCase().contains(searchText)) {
+                    return true;
+                }
+
+                // Match remarks
+                if (row.getRemarks() != null && row.getRemarks().toLowerCase().contains(searchText)) {
+                    return true;
+                }
+
+                // Match payment mode
+                if (row.getPaymentMode() != null && row.getPaymentMode().toLowerCase().contains(searchText)) {
+                    return true;
+                }
+
+                // Match cheque number
+                if (row.getChequeNo() != null && row.getChequeNo().toLowerCase().contains(searchText)) {
+                    return true;
+                }
+
+                // Match bank name
+                if (row.getBankName() != null && row.getBankName().toLowerCase().contains(searchText)) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            private void addSearchTerm() {
+                String term = searchField.getText().trim();
+                if (term.isEmpty() || searchTerms.size() >= MAX_SEARCH_TERMS) {
+                    return;
+                }
+                if (!searchTerms.contains(term)) {
+                    searchTerms.add(term);
+                    searchTagsList.add(term);
+                    searchField.clear();
+                    applyFilters();
+                }
+            }
+
+            private void removeSearchTerm(String term) {
+                searchTerms.remove(term);
+                searchTagsList.remove(term);
+                applyFilters();
             }
 
             private void updateResultCount() {
