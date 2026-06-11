@@ -218,12 +218,12 @@ public class PrintPreviewDialog {
                     // Also copy any other files that were generated alongside (for LR 4-copy flow)
                     File originalDir = originalFile.getParentFile();
                     String originalName = originalFile.getName();
-                    String selectedBaseName = selectedFile.getName().replace(".pdf", "");
+                    File selectedDir = selectedFile.getParentFile();
 
                     // Extract the base timestamp pattern (everything before the copy label)
                     // For LR: LR_123_20240611_103000_CONSIGNEE_COPY.pdf -> base = LR_123_20240611_103000
                     String tempPattern = originalName.replace(".pdf", "");
-                    String basePattern;
+                    final String basePattern;
                     if (tempPattern.contains("_CONSIGNEE_COPY")) {
                         basePattern = tempPattern.substring(0, tempPattern.indexOf("_CONSIGNEE_COPY"));
                     } else if (tempPattern.contains("_CONSIGNOR_COPY")) {
@@ -236,7 +236,7 @@ public class PrintPreviewDialog {
                         basePattern = tempPattern;
                     }
 
-                    // Find all PDFs with the same base pattern and copy them
+                    // Find all PDFs with the same base pattern and copy them with original names
                     File[] matchingFiles = originalDir.listFiles((dir, name) ->
                             name.startsWith(basePattern) && name.endsWith(".pdf"));
 
@@ -244,9 +244,8 @@ public class PrintPreviewDialog {
                     if (matchingFiles != null) {
                         for (File sourceFile : matchingFiles) {
                             if (!sourceFile.equals(originalFile)) {
-                                // Extract the suffix from the source file name (everything after base pattern)
-                                String suffix = sourceFile.getName().substring(basePattern.length());
-                                File destFile = new File(selectedFile.getParentFile(), selectedBaseName + suffix);
+                                // Copy with original name (not renaming based on user selection)
+                                File destFile = new File(selectedDir, sourceFile.getName());
                                 java.nio.file.Files.copy(sourceFile.toPath(), destFile.toPath(),
                                         java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                                 additionalCopies[0]++;
