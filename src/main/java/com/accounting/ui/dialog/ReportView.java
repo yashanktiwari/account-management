@@ -229,6 +229,23 @@ public class ReportView {
             TableColumn<ReportDAO.ReportRow, String> dateCol = new TableColumn<>("Date");
             dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
             dateCol.setMinWidth(110);
+            dateCol.setCellFactory(col -> new TableCell<>() {
+                @Override
+                protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText(null);
+                    } else {
+                        try {
+                            // Parse the date from database format and format as dd-mm-yyyy
+                            LocalDate date = LocalDate.parse(item);
+                            setText(date.format(DATE_FORMATTER));
+                        } catch (Exception e) {
+                            setText(item); // If parsing fails, show as-is
+                        }
+                    }
+                }
+            });
 
             // Party Name
             TableColumn<ReportDAO.ReportRow, String> partyCol = new TableColumn<>("Party");

@@ -162,7 +162,7 @@ public class ReportDAO {
             WHERE lr_date BETWEEN ? AND ?
             """);
         
-        sqlBuilder.append(") combined ORDER BY date");
+        sqlBuilder.append(") combined ORDER BY date DESC");
         
         String sql = sqlBuilder.toString();
 
