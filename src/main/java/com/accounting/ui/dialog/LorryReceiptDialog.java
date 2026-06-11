@@ -55,6 +55,7 @@ public class LorryReceiptDialog {
 
     // Amounts
     private TextField freightField;
+    private TextField freightWatermarkField;
     private TextField advanceField;
     private Label balanceLabel;
     private TextField aocField;
@@ -191,6 +192,7 @@ public class LorryReceiptDialog {
         freightToPayField.setText(fmt(lr.getFreightToPay()));
         freightPaidField.setText(fmt(lr.getFreightPaid()));
         freightField.setText(fmt(lr.getFreight()));
+        freightWatermarkField.setText(lr.getFreightWatermark());
         advanceField.setText(fmt(lr.getAdvance()));
         aocField.setText(fmt(lr.getAoc()));
         stChargeField.setText(fmt(lr.getStCharge()));
@@ -338,6 +340,10 @@ public class LorryReceiptDialog {
         balanceLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #dc2626;");
         amountGrid.add(label("Balance"), 0, 1);
         amountGrid.add(balanceLabel, 1, 1);
+
+        freightWatermarkField = tf();
+        amountGrid.add(label("Freight Watermark"), 2, 2);
+        amountGrid.add(freightWatermarkField, 3, 2);
 
         aocField = numField();
         aocField.textProperty().addListener((o, ov, nv) -> updateTotals());
@@ -551,6 +557,7 @@ public class LorryReceiptDialog {
         lr.setFreightToPay(parseNum(freightToPayField));
         lr.setFreightPaid(parseNum(freightPaidField));
         lr.setFreight(parseNum(freightField));
+        lr.setFreightWatermark(freightWatermarkField.getText().trim());
         lr.setAdvance(parseNum(advanceField));
         lr.setBalance(parseNum(freightField) - parseNum(advanceField));
         lr.setAoc(parseNum(aocField));

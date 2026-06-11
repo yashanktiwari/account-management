@@ -383,14 +383,14 @@ public class LorryReceiptPDFGenerator {
                 addDataCellWeight(pkgTable, s(lr.getWeightActual()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
                 addDataCellWeight(pkgTable, s(lr.getWeightCharged()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
                 addDataCell(pkgTable, s(lr.getRate()), 18, Element.ALIGN_RIGHT);
-                // Freight columns - show freight text in TO PAY column without borders, empty in PAID
-                PdfPCell freightCell = new PdfPCell(new Phrase(s(lr.getFreight() > 0 ? String.valueOf(lr.getFreight()) : ""), F_NORM_9));
-                freightCell.setFixedHeight(18);
-                freightCell.setBorder(Rectangle.NO_BORDER);
-                freightCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                freightCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-                pkgTable.addCell(freightCell);
-                addEmptyCellNoBorder(pkgTable);
+                // Freight columns - show watermark text spanning both columns
+                PdfPCell watermarkCell = new PdfPCell(new Phrase(s(lr.getFreightWatermark()), F_BOLD_10));
+                watermarkCell.setFixedHeight(18);
+                watermarkCell.setColspan(2);
+                watermarkCell.setBorder(Rectangle.NO_BORDER);
+                watermarkCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                watermarkCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                pkgTable.addCell(watermarkCell);
             } else {
                 addEmptyCellWeight(pkgTable);
                 addEmptyCellWeight(pkgTable);

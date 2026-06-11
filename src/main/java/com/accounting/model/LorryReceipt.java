@@ -24,6 +24,7 @@ public class LorryReceipt {
     private double freightToPay;
     private double freightPaid;
     private double freight;
+    private String freightWatermark;
     private double advance;
     private double balance;
     private double aoc;
@@ -110,6 +111,9 @@ public class LorryReceipt {
 
     public double getFreight() { return freight; }
     public void setFreight(double freight) { this.freight = freight; }
+
+    public String getFreightWatermark() { return freightWatermark; }
+    public void setFreightWatermark(String freightWatermark) { this.freightWatermark = freightWatermark; }
 
     public double getAdvance() { return advance; }
     public void setAdvance(double advance) { this.advance = advance; }
