@@ -89,29 +89,24 @@ public class ReportView {
         grid.add(toDateLabel, 4, 0);
         grid.add(toDate, 5, 0);
 
-        grid.add(partyLabel, 0, 1);
-        // Generate Button
-                grid.add(searchLabel, 0, 1);
+        grid.add(searchLabel, 0, 1);
                 grid.add(searchField, 1, 1, 3, 1);
         Button generateBtn = new Button("Generate Report");
         generateBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
-                generateBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
-        Button exportBtn = new Button("Export");
+        Button exportBtn = new Button("Export to CSV");
         exportBtn.setStyle("-fx-background-color: #64748b; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
-                Button exportBtn = new Button("Export to CSV");
 
-        HBox buttonBox = new HBox(10, generateBtn, exportBtn);
-        buttonBox.setAlignment(Pos.CENTER_LEFT);
-                Button clearBtn = new Button("Clear Search");
+        Button clearBtn = new Button("Clear Search");
                 clearBtn.setStyle("-fx-background-color: #94a3b8; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
                 clearBtn.setOnAction(e -> {
                     searchField.clear();
                     applyFilters();
                 });
 
-                HBox buttonBox = new HBox(10, generateBtn, exportBtn, clearBtn);
+        HBox buttonBox = new HBox(10, generateBtn, exportBtn, clearBtn);
+        buttonBox.setAlignment(Pos.CENTER_LEFT);
 
-                grid.add(buttonBox, 0, 2, 4, 1);
+        grid.add(buttonBox, 0, 2, 4, 1);
 
                 resultCountLabel = new Label("No results");
                 resultCountLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
@@ -134,7 +129,7 @@ public class ReportView {
     filteredTransactions = new FilteredList<>(allTransactions);
     resultTable.setItems(filteredTransactions);
 
-    setupTableColumns();
+    setupTableColumns("All Transactions");
 
         VBox.setVgrow(resultTable, Priority.ALWAYS);
 
@@ -464,8 +459,7 @@ public class ReportView {
                     csv.append(row.getChequeNo()).append(",");
                     csv.append(row.getChequeDate()).append(",");
                     csv.append(row.getBankName()).append(",");
-                    csv.append(escapeCSV(row.getRemarks())).append(",");
-                    csv.append(row.getStatus()).append("\n");
+                    csv.append(escapeCSV(row.getRemarks())).append("\n");
                 }
 
                 AlertUtil.showInfo("Export", "CSV export:\n\n" + csv.toString().substring(0, Math.min(500, csv.length())) + "...\n\n(Export to CSV feature would save to file)");

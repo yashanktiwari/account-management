@@ -65,6 +65,90 @@ public class ReportDAO {
         }
     }
 
+    private ReportResult generateAllTransactionsReport(LocalDate fromDate, LocalDate toDate) throws Exception {
+        List<ReportRow> rows = new ArrayList<>();
+        double totalAmount = 0.0;
+
+        // Combine all transactions from invoices, receipts, payments, loading slips, and lorry receipts
+        String sql = """
+            SELECT * FROM (
+                SELECT 'Purchase Invoice' as transaction_type, invoice_no as transaction_no, invoice_date as date,
+                       party_name as party, total_amount as amount, 'INVOICE' as type
+                FROM purchase_invoices
+                WHERE invoice_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT 'Sale Invoice' as transaction_type, invoice_no as transaction_no, invoice_date as date,
+                       party_name as party, total_amount as amount, 'INVOICE' as type
+                FROM sale_invoices
+                WHERE invoice_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT 'Purchase Receipt' as transaction_type, receipt_no as transaction_no, receipt_date as date,
+                       party_name as party, amount as amount, 'RECEIPT' as type
+                FROM purchase_receipts
+                WHERE receipt_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT 'Sale Receipt' as transaction_type, receipt_no as transaction_no, receipt_date as date,
+                       party_name as party, amount as amount, 'RECEIPT' as type
+                FROM sale_receipts
+                WHERE receipt_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT 'Payment' as transaction_type, voucher_no as transaction_no, payment_date as date,
+                       account_name as party, amount as amount, 'PAYMENT' as type
+                FROM payments
+                WHERE payment_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT 'Loading Slip' as transaction_type, slip_no as transaction_no, slip_date as date,
+                       party_name as party, freight as amount, 'SLIP' as type
+                FROM loading_slips
+                WHERE slip_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT 'Lorry Receipt' as transaction_type, lr_no as transaction_no, lr_date as date,
+                       party_name as party, freight as amount, 'LR' as type
+                FROM lorry_receipts
+                WHERE lr_date BETWEEN ? AND ?
+            ) combined
+            ORDER BY date
+            """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setDate(1, Date.valueOf(fromDate));
+            pstmt.setDate(2, Date.valueOf(toDate));
+            pstmt.setDate(3, Date.valueOf(fromDate));
+            pstmt.setDate(4, Date.valueOf(toDate));
+            pstmt.setDate(5, Date.valueOf(fromDate));
+            pstmt.setDate(6, Date.valueOf(toDate));
+            pstmt.setDate(7, Date.valueOf(fromDate));
+            pstmt.setDate(8, Date.valueOf(toDate));
+            pstmt.setDate(9, Date.valueOf(fromDate));
+            pstmt.setDate(10, Date.valueOf(toDate));
+            pstmt.setDate(11, Date.valueOf(fromDate));
+            pstmt.setDate(12, Date.valueOf(toDate));
+            pstmt.setDate(13, Date.valueOf(fromDate));
+            pstmt.setDate(14, Date.valueOf(toDate));
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                int serialNo = 1;
+                while (rs.next()) {
+                    double amount = rs.getDouble("amount");
+                    totalAmount += amount;
+
+                    ReportRow row = new ReportRow();
+                    row.setSerialNo(serialNo++);
+                    row.setTransactionType(rs.getString("transaction_type"));
+                    row.setTransactionNo(rs.getString("transaction_no"));
+                    row.setDate(rs.getDate("date").toLocalDate().toString());
+                    row.setParty(rs.getString("party"));
+                    row.setAmount(amount);
+                    row.setType(rs.getString("type"));
+                    rows.add(row);
+                }
+            }
+        }
+
+        return new ReportResult(rows, 0.0, totalAmount);
+    }
+
     private ReportResult generatePartyTransactionsReport(LocalDate fromDate, LocalDate toDate, String party) throws Exception {
         List<ReportRow> rows = new ArrayList<>();
         double openingBalance = 0.0;
