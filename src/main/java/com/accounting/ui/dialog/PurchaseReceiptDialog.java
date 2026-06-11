@@ -284,14 +284,9 @@ public class PurchaseReceiptDialog {
     private void loadParties() {
         AppExecutor.submit(() -> {
             try {
-                List<Party> suppliers = new PartyDAO().findByType("SUPPLIER");
-                log.info("Loaded {} suppliers", suppliers.size());
-                for (Party supplier : suppliers) {
-                    log.info("Supplier: {} (type: {})", supplier.getName(), supplier.getType());
-                }
+                List<Party> parties = new PartyDAO().getAll();
                 Platform.runLater(() -> {
-                    allParties.setAll(suppliers);
-                    log.info("allParties now has {} items", allParties.size());
+                    allParties.setAll(parties);
                     // After loading parties, load receipt data if editing
                     if (receipt.getId() > 0) {
                         loadReceiptData();
@@ -301,8 +296,8 @@ public class PurchaseReceiptDialog {
                     }
                 });
             } catch (Exception e) {
-                log.error("Failed to load suppliers", e);
-                Platform.runLater(() -> AlertUtil.showError("Error", "Failed to load suppliers"));
+                log.error("Failed to load parties", e);
+                Platform.runLater(() -> AlertUtil.showError("Error", "Failed to load parties"));
             }
         });
     }
