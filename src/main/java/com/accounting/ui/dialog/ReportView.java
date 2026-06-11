@@ -14,6 +14,9 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -610,39 +613,78 @@ public class ReportView {
                     return;
                 }
 
-                // Simple CSV export
-                StringBuilder csv = new StringBuilder();
-                csv.append("S.No,Type,Transaction No,Date,Party,Vehicle No,From Location,To Location,");
-                csv.append("Description,GST %,Taxable Amount,SGST,CGST,IGST,Total GST,Amount,");
-                csv.append("Advance,Balance,Payment Mode,Cheque No,Cheque Date,Bank Name,Remarks,Status\n");
+                // Create file chooser
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setTitle("Export to CSV");
+                fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("CSV Files", "*.csv")
+                );
+                fileChooser.setInitialFileName("All_Transactions_" + LocalDate.now().format(DATE_FORMATTER) + ".csv");
 
-                for (ReportDAO.ReportRow row : filteredTransactions) {
-                    csv.append(row.getSerialNo()).append(",");
-                    csv.append(formatTransactionType(row.getTransactionType())).append(",");
-                    csv.append(row.getTransactionNo()).append(",");
-                    csv.append(row.getDate()).append(",");
-                    csv.append(escapeCSV(row.getParty())).append(",");
-                    csv.append(row.getVehicle()).append(",");
-                    csv.append(row.getFromLocation()).append(",");
-                    csv.append(row.getToLocation()).append(",");
-                    csv.append(escapeCSV(row.getDescription())).append(",");
-                    csv.append(row.getGst()).append(",");
-                    csv.append(row.getTaxableAmount() != null ? row.getTaxableAmount() : "").append(",");
-                    csv.append(row.getSgst() != null ? row.getSgst() : "").append(",");
-                    csv.append(row.getCgst() != null ? row.getCgst() : "").append(",");
-                    csv.append(row.getIgst() != null ? row.getIgst() : "").append(",");
-                    csv.append(row.getTotalGst() != null ? row.getTotalGst() : "").append(",");
-                    csv.append(row.getAmount() != null ? row.getAmount() : "").append(",");
-                    csv.append(row.getAdvance() != null ? row.getAdvance() : "").append(",");
-                    csv.append(row.getBalance() != null ? row.getBalance() : "").append(",");
-                    csv.append(row.getPaymentMode()).append(",");
-                    csv.append(row.getChequeNo()).append(",");
-                    csv.append(row.getChequeDate()).append(",");
-                    csv.append(row.getBankName()).append(",");
-                    csv.append(escapeCSV(row.getRemarks())).append("\n");
+                // Show save dialog
+                File file = fileChooser.showSaveDialog(resultTable.getScene().getWindow());
+                if (file == null) {
+                    return; // User cancelled
                 }
 
-                AlertUtil.showInfo("Export", "CSV export:\n\n" + csv.toString().substring(0, Math.min(500, csv.length())) + "...\n\n(Export to CSV feature would save to file)");
+                // Export in background thread
+                AppExecutor.submit(() -> {
+                    try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+                        // Write header row with visible column names in order
+                        StringBuilder header = new StringBuilder();
+                        for (TableColumn<ReportDAO.ReportRow, ?> col : resultTable.getColumns()) {
+                            if (col.isVisible()) {
+                                if (header.length() > 0) header.append(",");
+                                header.append(escapeCSV(col.getText()));
+                            }
+                        }
+                        writer.write(header.toString());
+                        writer.newLine();
+
+                        // Write data rows
+                        for (ReportDAO.ReportRow row : filteredTransactions) {
+                            StringBuilder line = new StringBuilder();
+                            for (TableColumn<ReportDAO.ReportRow, ?> col : resultTable.getColumns()) {
+                                if (col.isVisible()) {
+                                    if (line.length() > 0) line.append(",");
+                                    Object value = col.getCellData(row);
+                                    String stringValue = value != null ? value.toString() : "";
+                                    
+                                    // Format date if this is the date column
+                                    if (col.getText().equals("Date") && stringValue != null && !stringValue.isEmpty()) {
+                                        try {
+                                            LocalDate date = LocalDate.parse(stringValue);
+                                            stringValue = date.format(DATE_FORMATTER);
+                                        } catch (Exception e) {
+                                            // Keep original if parsing fails
+                                        }
+                                    }
+                                    
+                                    // Format transaction type
+                                    if (col.getText().equals("Type") && stringValue != null) {
+                                        stringValue = formatTransactionType(stringValue);
+                                    }
+                                    
+                                    line.append(escapeCSV(stringValue));
+                                }
+                            }
+                            writer.write(line.toString());
+                            writer.newLine();
+                        }
+
+                        writer.flush();
+                        
+                        // Show success message on UI thread
+                        Platform.runLater(() -> {
+                            AlertUtil.showInfo("Export Successful", 
+                                "Exported " + filteredTransactions.size() + " transactions to:\n" + file.getAbsolutePath());
+                        });
+                    } catch (Exception e) {
+                        Platform.runLater(() -> {
+                            AlertUtil.showError("Export Failed", "Failed to export data: " + e.getMessage());
+                        });
+                    }
+                });
             }
 
             private String escapeCSV(String value) {
