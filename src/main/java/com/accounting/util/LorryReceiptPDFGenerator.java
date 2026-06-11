@@ -383,15 +383,17 @@ public class LorryReceiptPDFGenerator {
                 addDataCellWeight(pkgTable, s(lr.getWeightActual()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
                 addDataCellWeight(pkgTable, s(lr.getWeightCharged()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
                 addDataCell(pkgTable, s(lr.getRate()), 18, Element.ALIGN_RIGHT);
+                // Freight columns - show freight value in TO PAY column, empty in PAID
+                addDataCell(pkgTable, s(lr.getFreight() > 0 ? String.format("%.2f", lr.getFreight()) : ""), 18, Element.ALIGN_CENTER);
+                addEmptyCell(pkgTable);
             } else {
                 addEmptyCellWeight(pkgTable);
                 addEmptyCellWeight(pkgTable);
                 addEmptyCell(pkgTable);
+                // Freight columns - empty
+                addEmptyCell(pkgTable);
+                addEmptyCell(pkgTable);
             }
-
-            // Freight columns - empty with vertical borders only
-            addDataCellWeight(pkgTable, "", 18, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
-            addDataCellWeight(pkgTable, "", 18, Element.ALIGN_RIGHT, Rectangle.LEFT | Rectangle.RIGHT);
         }
 
         // Rows 4-6 overflow into Freight/Advance/Balance label rows
@@ -412,8 +414,8 @@ public class LorryReceiptPDFGenerator {
             // Rate col: label (Freight/Advance/Balance)
             addLabelCell(pkgTable, rateLabels[j], Element.ALIGN_RIGHT);
             // Freight cols: empty
-            addEmptyCellWeight(pkgTable);
-            addEmptyCellWeight(pkgTable);
+            addEmptyCell(pkgTable);
+            addEmptyCell(pkgTable);
         }
 
         // Row 12: S.H. No. | [value] | G. Wt. | [value] | [empty] | A.O.C. | [freight vert] | [freight vert]
@@ -423,8 +425,8 @@ public class LorryReceiptPDFGenerator {
         addDataCellWeight(pkgTable, s(lr.getGrossWeight()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
         addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "A.O.C.", Element.ALIGN_RIGHT);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
 
         // Row 13: S.T. No. | [value] | T. Wt. | [value] | [empty] | S.T. Charge | [freight vert] | [freight vert]
         addLabelCell(pkgTable, "S.T. No.", Element.ALIGN_RIGHT);
@@ -433,8 +435,8 @@ public class LorryReceiptPDFGenerator {
         addDataCellWeight(pkgTable, s(lr.getTareWeight()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
         addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "S.T. Charge", Element.ALIGN_RIGHT);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
 
         // Row 14: Value Rs. | [value] | N. Wt. | [value] | [empty] | Total | [freight vert] | [freight vert]
         addLabelCell(pkgTable, "Value Rs.", Element.ALIGN_RIGHT);
@@ -443,8 +445,8 @@ public class LorryReceiptPDFGenerator {
         addDataCellWeight(pkgTable, s(lr.getNetWeight()), 18, Element.ALIGN_CENTER, Rectangle.LEFT | Rectangle.RIGHT);
         addEmptyCellWeight(pkgTable);
         addLabelCell(pkgTable, "Total", Element.ALIGN_RIGHT);
-        addEmptyCellWeight(pkgTable);
-        addEmptyCellWeight(pkgTable);
+        addEmptyCell(pkgTable);
+        addEmptyCell(pkgTable);
 
         mainCell.addElement(pkgTable);
         mainTable.addCell(mainCell);
