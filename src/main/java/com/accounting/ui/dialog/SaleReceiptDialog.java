@@ -1,6 +1,7 @@
 package com.accounting.ui.dialog;
 
 import com.accounting.dao.PartyDAO;
+import com.accounting.dao.PurchaseReceiptDAO;
 import com.accounting.dao.SaleReceiptDAO;
 import com.accounting.dao.SettingsDAO;
 import com.accounting.model.Party;
@@ -305,15 +306,7 @@ public class SaleReceiptDialog {
     private void generateNextReceiptNumber() {
         AppExecutor.submit(() -> {
             try {
-                SettingsDAO settingsDAO = new SettingsDAO();
-                String startingNumberStr = settingsDAO.getSetting("sale_receipt_starting_number");
-                int startingNumber = startingNumberStr != null ? Integer.parseInt(startingNumberStr) : 1;
-
-                SaleReceiptDAO dao = new SaleReceiptDAO();
-                String lastReceiptNo = dao.getLastReceiptNumber();
-                int lastNumber = lastReceiptNo != null && !lastReceiptNo.isEmpty() ? Integer.parseInt(lastReceiptNo) : 0;
-
-                int nextNumber = Math.max(startingNumber, lastNumber + 1);
+                int nextNumber = getNextGlobalReceiptNumber();
                 final String receiptNo = String.valueOf(nextNumber);
 
                 Platform.runLater(() -> receiptNoField.setText(receiptNo));
@@ -351,16 +344,7 @@ public class SaleReceiptDialog {
             String receiptNo = receiptNoField.getText().trim();
             if (receiptNo.isEmpty()) {
                 try {
-                    SettingsDAO settingsDAO = new SettingsDAO();
-                    String startingNumberStr = settingsDAO.getSetting("sale_receipt_starting_number");
-                    int startingNumber = startingNumberStr != null ? Integer.parseInt(startingNumberStr) : 1;
-
-                    SaleReceiptDAO dao = new SaleReceiptDAO();
-                    String lastReceiptNo = dao.getLastReceiptNumber();
-                    int lastNumber = lastReceiptNo != null && !lastReceiptNo.isEmpty() ? Integer.parseInt(lastReceiptNo) : 0;
-
-                    int nextNumber = Math.max(startingNumber, lastNumber + 1);
-                    receiptNo = String.valueOf(nextNumber);
+                    receiptNo = String.valueOf(getNextGlobalReceiptNumber());
                     receiptNoField.setText(receiptNo);
                 } catch (Exception e) {
                     log.error("Failed to generate receipt number", e);
@@ -408,7 +392,7 @@ public class SaleReceiptDialog {
                         // Update the next receipt number in settings only for new receipts
                         try {
                             int currentReceiptNo = Integer.parseInt(receipt.getReceiptNo());
-                            new SettingsDAO().saveSetting("sale_receipt_starting_number", String.valueOf(currentReceiptNo + 1));
+                            updateGlobalReceiptStartingNumber(currentReceiptNo + 1);
                         } catch (Exception e) {
                             log.error("Failed to update receipt number in settings", e);
                         }
@@ -425,6 +409,37 @@ public class SaleReceiptDialog {
             });
         } catch (NumberFormatException e) {
             AlertUtil.showWarning("Validation", "Please enter a valid amount");
+        }
+    }
+
+    private int getNextGlobalReceiptNumber() throws Exception {
+        SettingsDAO settingsDAO = new SettingsDAO();
+        int purchaseStart = parseIntOrDefault(settingsDAO.getSetting("purchase_receipt_starting_number"), 1);
+        int saleStart = parseIntOrDefault(settingsDAO.getSetting("sale_receipt_starting_number"), 1);
+        int startingNumber = Math.max(purchaseStart, saleStart);
+
+        int purchaseLast = parseIntOrDefault(new PurchaseReceiptDAO().getLastReceiptNumber(), 0);
+        int saleLast = parseIntOrDefault(new SaleReceiptDAO().getLastReceiptNumber(), 0);
+        int lastNumber = Math.max(purchaseLast, saleLast);
+
+        return Math.max(startingNumber, lastNumber + 1);
+    }
+
+    private void updateGlobalReceiptStartingNumber(int nextNumber) throws Exception {
+        SettingsDAO settingsDAO = new SettingsDAO();
+        String value = String.valueOf(nextNumber);
+        settingsDAO.saveSetting("purchase_receipt_starting_number", value);
+        settingsDAO.saveSetting("sale_receipt_starting_number", value);
+    }
+
+    private int parseIntOrDefault(String value, int defaultValue) {
+        if (value == null || value.isBlank()) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            return defaultValue;
         }
     }
 
