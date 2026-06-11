@@ -114,6 +114,27 @@ public class PurchaseReceiptDAO {
         return receipts;
     }
 
+    public List<PurchaseReceipt> searchAllColumns(String keyword) throws Exception {
+        String sql = """
+                SELECT * FROM purchase_receipts
+                WHERE CONCAT_WS(' ',
+                    IFNULL(CAST(id AS CHAR),''), IFNULL(receipt_no,''), IFNULL(CAST(receipt_date AS CHAR),''),
+                    IFNULL(CAST(party_id AS CHAR),''), IFNULL(party_name,''), IFNULL(CAST(amount AS CHAR),''),
+                    IFNULL(payment_mode,''), IFNULL(cheque_no,''), IFNULL(bank_name,''), IFNULL(remarks,'')
+                ) LIKE ?
+                ORDER BY receipt_date DESC
+                """;
+        List<PurchaseReceipt> receipts = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, "%" + keyword + "%");
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) receipts.add(mapReceipt(rs));
+            }
+        }
+        return receipts;
+    }
+
     private PurchaseReceipt mapReceipt(ResultSet rs) throws SQLException {
         PurchaseReceipt r = new PurchaseReceipt();
         r.setId(rs.getInt("id"));

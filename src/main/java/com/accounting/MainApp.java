@@ -268,11 +268,11 @@ public class MainApp extends Application {
     }
 
     private void showPurchaseReceipt() {
-        new PurchaseReceiptDialog().show(primaryStage, this::refreshDashboard);
+        showContent(new PurchaseReceiptListView().createContent());
     }
 
     private void showSaleReceipt() {
-        new SaleReceiptDialog().show(primaryStage, this::refreshDashboard);
+        showContent(new SaleReceiptListView().createContent());
     }
 
     private void showLoadingSlips() {

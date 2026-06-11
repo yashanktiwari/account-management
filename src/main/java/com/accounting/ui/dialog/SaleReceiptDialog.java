@@ -45,6 +45,10 @@ public class SaleReceiptDialog {
         this.receipt = new SaleReceipt();
     }
 
+    public SaleReceiptDialog(SaleReceipt receipt) {
+        this.receipt = receipt;
+    }
+
     public void show(Window owner, Runnable onClose) {
         this.onClose = onClose;
         stage = new Stage();
@@ -55,7 +59,7 @@ public class SaleReceiptDialog {
             stage.setOnHidden(e -> onClose.run());
         }
 
-        Scene scene = new Scene(createContent(), 600, 500);
+        Scene scene = new Scene(createContent(), 600, 600);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );
@@ -173,12 +177,35 @@ public class SaleReceiptDialog {
                     if (!customers.isEmpty()) {
                         partyCombo.setValue(customers.get(0));
                     }
+                    // After loading parties, load receipt data if editing
+                    if (receipt.getId() > 0) {
+                        loadReceiptData();
+                    }
                 });
             } catch (Exception e) {
                 log.error("Failed to load customers", e);
                 Platform.runLater(() -> AlertUtil.showError("Error", "Failed to load customers"));
             }
         });
+    }
+
+    private void loadReceiptData() {
+        receiptNoField.setText(receipt.getReceiptNo());
+        receiptDatePicker.setValue(receipt.getReceiptDate());
+        amountField.setText(String.valueOf(receipt.getAmount()));
+        paymentModeCombo.setValue(receipt.getPaymentMode());
+        chequeNoField.setText(receipt.getChequeNo());
+        chequeDatePicker.setValue(receipt.getChequeDate());
+        bankNameField.setText(receipt.getBankName());
+        remarksField.setText(receipt.getRemarks());
+
+        // Select the party by ID
+        for (Party party : partyCombo.getItems()) {
+            if (party.getId() == receipt.getPartyId()) {
+                partyCombo.setValue(party);
+                break;
+            }
+        }
     }
 
     private void saveReceipt() {
@@ -205,10 +232,16 @@ public class SaleReceiptDialog {
 
             AppExecutor.submit(() -> {
                 try {
-                    new SaleReceiptDAO().save(receipt);
+                    SaleReceiptDAO dao = new SaleReceiptDAO();
+                    if (receipt.getId() > 0) {
+                        dao.update(receipt);
+                    } else {
+                        dao.save(receipt);
+                    }
                     Platform.runLater(() -> {
                         NotificationUtil.showSuccess("Success", "Receipt saved successfully");
                         stage.close();
+                        if (onClose != null) onClose.run();
                     });
                 } catch (Exception e) {
                     log.error("Failed to save receipt", e);
