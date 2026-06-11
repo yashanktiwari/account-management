@@ -372,7 +372,7 @@ public class SaleReceiptDialog {
             receipt.setReceiptNo(receiptNo);
             receipt.setReceiptDate(receiptDatePicker.getValue());
 
-            // Find party by name or create new party
+            // Find party by name; do not create from receipt screen
             String partyName = partyField.getText().trim();
             Party matchedParty = null;
             if (allParties != null && !allParties.isEmpty()) {
@@ -386,20 +386,8 @@ public class SaleReceiptDialog {
                 receipt.setPartyId(matchedParty.getId());
                 receipt.setPartyName(matchedParty.getName());
             } else {
-                // Create new party entry
-                try {
-                    Party newParty = new Party();
-                    newParty.setName(partyName);
-                    newParty.setType("CUSTOMER");
-                    PartyDAO partyDAO = new PartyDAO();
-                    partyDAO.save(newParty);
-                    receipt.setPartyId(newParty.getId());
-                    receipt.setPartyName(partyName);
-                } catch (Exception e) {
-                    log.error("Failed to create new party", e);
-                    AlertUtil.showError("Error", "Failed to create new party: " + e.getMessage());
-                    return;
-                }
+                AlertUtil.showWarning("Validation", "Please select an existing customer from Party Master");
+                return;
             }
             receipt.setAmount(Double.parseDouble(amountField.getText()));
             receipt.setPaymentMode(paymentModeCombo.getValue());
