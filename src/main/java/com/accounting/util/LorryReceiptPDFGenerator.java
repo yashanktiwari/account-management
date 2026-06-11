@@ -355,8 +355,8 @@ public class LorryReceiptPDFGenerator {
         // Row 2 sub-headers (only 4 cells needed — under WEIGHT and FREIGHT)
         addSubHeader(pkgTable, "Actual");
         addSubHeader(pkgTable, "Charged");
-        addSubHeaderTwoLine(pkgTable, "TO PAY");
-        addSubHeaderTwoLine(pkgTable, "PAID");
+        addSubHeader(pkgTable, "TO PAY");
+        addSubHeader(pkgTable, "PAID");
 
         // Row 3+: Data rows - split by separator and use fixed 3 rows
         String noPkgData = s(lr.getNoOfPackages());
