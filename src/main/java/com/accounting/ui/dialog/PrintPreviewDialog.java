@@ -215,24 +215,31 @@ public class PrintPreviewDialog {
                     java.nio.file.Files.copy(originalFile.toPath(), selectedFile.toPath(),
                             java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
-                    // Generate additional copies if needed
-                    if (numberOfCopies > 1 && pdfGenerator != null) {
-                        String basePath = selectedFile.getAbsolutePath().replace(".pdf", "");
-                        for (int i = 2; i <= numberOfCopies; i++) {
-                            String copyLabel = (i == 2) ? "Duplicate" : "Triplicate";
-                            String duplicatePath = basePath + "_" + copyLabel + "_" + i + ".pdf";
-                            try {
-                                pdfGenerator.accept(copyLabel, duplicatePath);
-                            } catch (Exception e) {
-                                log.error("Failed to generate " + copyLabel + " copy " + i, e);
+                    // Also copy any other files that were generated alongside (for LR 4-copy flow)
+                    File originalDir = originalFile.getParentFile();
+                    String originalBaseName = originalFile.getName().replace(".pdf", "");
+                    String selectedBaseName = selectedFile.getName().replace(".pdf", "");
+
+                    // Find all PDFs with the same base name pattern and copy them
+                    File[] matchingFiles = originalDir.listFiles((dir, name) ->
+                            name.startsWith(originalBaseName) && name.endsWith(".pdf"));
+
+                    if (matchingFiles != null) {
+                        for (File sourceFile : matchingFiles) {
+                            if (!sourceFile.equals(originalFile)) {
+                                // Extract the suffix from the source file name
+                                String suffix = sourceFile.getName().substring(originalBaseName.length());
+                                File destFile = new File(selectedFile.getParentFile(), selectedBaseName + suffix);
+                                java.nio.file.Files.copy(sourceFile.toPath(), destFile.toPath(),
+                                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                             }
                         }
                     }
 
                     Platform.runLater(() -> {
                         String copyInfo = "Saved: " + selectedFile.getAbsolutePath();
-                        if (numberOfCopies > 1) {
-                            copyInfo += "\nAdditional copies generated in same directory.";
+                        if (matchingFiles != null && matchingFiles.length > 1) {
+                            copyInfo += "\n" + (matchingFiles.length - 1) + " additional copy/copies saved in same directory.";
                         }
                         AlertUtil.showInfo("Success", "PDF saved successfully.\n" + copyInfo);
                     });
