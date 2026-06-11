@@ -72,7 +72,6 @@ public class LorryReceiptDialog {
     // Footer
     private TextField toPayRsField;
     private TextField advPaidRsField;
-    private TextField freightField;
     private TextField invNoField;
     private DatePicker invDatePicker;
 
@@ -204,7 +203,6 @@ public class LorryReceiptDialog {
         valueRsField.setText(lr.getValueRs());
         toPayRsField.setText(fmt(lr.getToPayRs()));
         advPaidRsField.setText(fmt(lr.getAdvPaidRs()));
-        freightField.setText(fmt(lr.getFreight()));
         invNoField.setText(lr.getInvNo());
         invDatePicker.setValue(lr.getInvDate());
         insuranceCompanyField.setText(lr.getInsuranceCompany());
@@ -414,10 +412,6 @@ public class LorryReceiptDialog {
         footerGrid.add(label("Adv. Paid Rs."), 2, 0);
         footerGrid.add(advPaidRsField, 3, 0);
 
-        freightField = numField();
-        footerGrid.add(label("Freight"), 0, 2);
-        footerGrid.add(freightField, 1, 2);
-
         invNoField = tf();
         footerGrid.add(label("Inv. No"), 0, 1);
         footerGrid.add(invNoField, 1, 1);
@@ -570,7 +564,6 @@ public class LorryReceiptDialog {
         lr.setValueRs(valueRsField.getText().trim());
         lr.setToPayRs(parseNum(toPayRsField));
         lr.setAdvPaidRs(parseNum(advPaidRsField));
-        lr.setFreight(parseNum(freightField));
         lr.setInvNo(invNoField.getText().trim());
         lr.setInvDate(invDatePicker.getValue());
         lr.setInsuranceCompany(insuranceCompanyField.getText().trim());
