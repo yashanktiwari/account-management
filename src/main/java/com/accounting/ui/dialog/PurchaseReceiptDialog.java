@@ -206,6 +206,8 @@ public class PurchaseReceiptDialog {
                     .sorted((p1, p2) -> p1.getName().compareToIgnoreCase(p2.getName()))
                     .collect(java.util.stream.Collectors.toList());
 
+            log.info("Filtering for '{}': found {} matching parties", newVal, filtered.size());
+
             if (filtered.isEmpty()) {
                 partyPopup.hide();
                 return;
@@ -294,8 +296,10 @@ public class PurchaseReceiptDialog {
         AppExecutor.submit(() -> {
             try {
                 List<Party> suppliers = new PartyDAO().findByType("SUPPLIER");
+                log.info("Loaded {} suppliers", suppliers.size());
                 Platform.runLater(() -> {
                     allParties.setAll(suppliers);
+                    log.info("allParties now has {} items", allParties.size());
                     // After loading parties, load receipt data if editing
                     if (receipt.getId() > 0) {
                         loadReceiptData();
