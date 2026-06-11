@@ -396,13 +396,19 @@ public class SaleReceiptDialog {
                 receipt.setPartyName(matchedParty.getName());
             } else {
                 // Create new party entry
-                Party newParty = new Party();
-                newParty.setName(partyName);
-                newParty.setType("CUSTOMER");
-                PartyDAO partyDAO = new PartyDAO();
-                partyDAO.save(newParty);
-                receipt.setPartyId(newParty.getId());
-                receipt.setPartyName(partyName);
+                try {
+                    Party newParty = new Party();
+                    newParty.setName(partyName);
+                    newParty.setType("CUSTOMER");
+                    PartyDAO partyDAO = new PartyDAO();
+                    partyDAO.save(newParty);
+                    receipt.setPartyId(newParty.getId());
+                    receipt.setPartyName(partyName);
+                } catch (Exception e) {
+                    log.error("Failed to create new party", e);
+                    AlertUtil.showError("Error", "Failed to create new party: " + e.getMessage());
+                    return;
+                }
             }
             receipt.setAmount(Double.parseDouble(amountField.getText()));
             receipt.setPaymentMode(paymentModeCombo.getValue());
