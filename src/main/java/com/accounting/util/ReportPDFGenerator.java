@@ -38,7 +38,7 @@ public class ReportPDFGenerator {
             PdfPCell outerCell = new PdfPCell();
             outerCell.setBorder(Rectangle.BOX);
             outerCell.setBorderWidth(1.5f);
-            outerCell.setPadding(10);
+            outerCell.setPadding(5);
 
             // Add header image
             Image headerImg = loadImage("REPORT_HEADER");
@@ -49,18 +49,17 @@ public class ReportPDFGenerator {
             }
 
             // Add horizontal line
-            outerCell.addElement(Chunk.NEWLINE);
             LineSeparator line = new LineSeparator();
             line.setLineWidth(1f);
             line.setLineColor(Color.GRAY);
             outerCell.addElement(line);
-            outerCell.addElement(Chunk.NEWLINE);
 
             // Add title
             Paragraph title = new Paragraph("Account Statement", F_BOLD_14);
             title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingBefore(5);
+            title.setSpacingAfter(3);
             outerCell.addElement(title);
-            outerCell.addElement(Chunk.NEWLINE);
 
             // Add date range with separate From and To
             PdfPTable dateTable = new PdfPTable(2);
@@ -71,29 +70,34 @@ public class ReportPDFGenerator {
             fromCell.setBorder(Rectangle.NO_BORDER);
             fromCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
             fromCell.setPaddingRight(10);
+            fromCell.setPaddingTop(2);
+            fromCell.setPaddingBottom(2);
 
             PdfPCell toCell = new PdfPCell(new Phrase("To: " + toDate.format(DATE_FORMATTER), F_BOLD_12));
             toCell.setBorder(Rectangle.NO_BORDER);
             toCell.setHorizontalAlignment(Element.ALIGN_LEFT);
             toCell.setPaddingLeft(10);
+            toCell.setPaddingTop(2);
+            toCell.setPaddingBottom(2);
 
             dateTable.addCell(fromCell);
             dateTable.addCell(toCell);
+            dateTable.setSpacingAfter(3);
             outerCell.addElement(dateTable);
-            outerCell.addElement(Chunk.NEWLINE);
 
             // Add record count
             String count = "Total Records: " + rows.size();
             Paragraph countPara = new Paragraph(count, F_NORM_10);
             countPara.setAlignment(Element.ALIGN_CENTER);
+            countPara.setSpacingAfter(5);
             outerCell.addElement(countPara);
-            outerCell.addElement(Chunk.NEWLINE);
 
             // Create table
             if (!rows.isEmpty()) {
                 PdfPTable table = new PdfPTable(8); // 8 columns
                 table.setWidthPercentage(100);
                 table.setWidths(new float[]{0.5f, 1.5f, 1.2f, 1.0f, 1.2f, 0.8f, 0.8f, 1.5f});
+                table.setSpacingBefore(0);
 
                 // Header row
                 addTableCell(table, "S.No", F_BOLD_10, Color.LIGHT_GRAY, Element.ALIGN_CENTER);
