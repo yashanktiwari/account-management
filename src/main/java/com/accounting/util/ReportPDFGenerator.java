@@ -3,6 +3,7 @@ package com.accounting.util;
 import com.accounting.dao.ReportDAO;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.*;
+import com.lowagie.text.pdf.draw.LineSeparator;
 import org.slf4j.Logger;
 
 import java.awt.Color;
