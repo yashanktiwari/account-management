@@ -3,6 +3,7 @@ package com.accounting.ui.dialog;
 import com.accounting.dao.ReportDAO;
 import com.accounting.util.AlertUtil;
 import com.accounting.util.AppExecutor;
+import com.accounting.util.ReportPDFGenerator;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -160,7 +161,11 @@ public class ReportView {
         exportBtn.setStyle("-fx-background-color: #64748b; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
         exportBtn.setOnAction(e -> exportReport());
 
-        HBox buttonBox = new HBox(10, generateBtn, exportBtn);
+        Button printPdfBtn = new Button("Print to PDF");
+        printPdfBtn.setStyle("-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
+        printPdfBtn.setOnAction(e -> printToPDF());
+
+        HBox buttonBox = new HBox(10, generateBtn, exportBtn, printPdfBtn);
         buttonBox.setAlignment(Pos.CENTER_LEFT);
 
         grid.add(buttonBox, 0, 2, 4, 1);
@@ -517,6 +522,42 @@ public class ReportView {
                     } catch (Exception e) {
                         Platform.runLater(() -> {
                             AlertUtil.showError("Export Failed", "Failed to export data: " + e.getMessage());
+                        });
+                    }
+                });
+            }
+
+            private void printToPDF() {
+                if (allTransactions.isEmpty()) {
+                    AlertUtil.showWarning("Print to PDF", "No data to print");
+                    return;
+                }
+
+                // Create file chooser
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setTitle("Print to PDF");
+                fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("PDF Files", "*.pdf")
+                );
+                fileChooser.setInitialFileName("All_Transactions_Report_" + LocalDate.now().format(DATE_FORMATTER) + ".pdf");
+
+                // Show save dialog
+                File file = fileChooser.showSaveDialog(resultTable.getScene().getWindow());
+                if (file == null) {
+                    return; // User cancelled
+                }
+
+                // Generate PDF in background thread
+                AppExecutor.submit(() -> {
+                    try {
+                        ReportPDFGenerator.generateReportPDF(allTransactions, fromDate.getValue(), toDate.getValue(), file.getAbsolutePath());
+                        Platform.runLater(() -> {
+                            AlertUtil.showInfo("PDF Generated", 
+                                "Successfully generated PDF with " + allTransactions.size() + " transactions:\n" + file.getAbsolutePath());
+                        });
+                    } catch (Exception e) {
+                        Platform.runLater(() -> {
+                            AlertUtil.showError("PDF Generation Failed", "Failed to generate PDF: " + e.getMessage());
                         });
                     }
                 });
