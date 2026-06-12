@@ -46,10 +46,10 @@ public class ReportDAO {
         return generateReport(reportType, fromDate, toDate, party, vehicle, null);
     }
 
-    public ReportResult generateReport(String reportType, LocalDate fromDate, LocalDate toDate, String party, String vehicle, String searchTerm) throws Exception {
+    public ReportResult generateReport(String reportType, LocalDate fromDate, LocalDate toDate, String party, String vehicle, java.util.List<String> searchTerms) throws Exception {
         switch (reportType) {
             case "All Transactions":
-                return generateAllTransactionsReport(fromDate, toDate, searchTerm);
+                return generateAllTransactionsReport(fromDate, toDate, searchTerms);
             case "Party Transactions":
                 return generatePartyTransactionsReport(fromDate, toDate, party);
             case "Vehicle Transactions":
@@ -73,12 +73,35 @@ public class ReportDAO {
         return generateAllTransactionsReport(fromDate, toDate, null);
     }
 
-    private ReportResult generateAllTransactionsReport(LocalDate fromDate, LocalDate toDate, String searchTerm) throws Exception {
+    private ReportResult generateAllTransactionsReport(LocalDate fromDate, LocalDate toDate, java.util.List<String> searchTerms) throws Exception {
         List<ReportRow> rows = new ArrayList<>();
         double totalAmount = 0.0;
 
         // Build dynamic SQL with error handling for missing columns
         StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM (");
+        
+        // Helper to build search condition for specific columns
+        java.util.function.Function<String[], String> buildSearchCondition = (columns) -> {
+            if (searchTerms == null || searchTerms.isEmpty()) {
+                return "";
+            }
+            StringBuilder sb = new StringBuilder(" AND (");
+            for (int i = 0; i < searchTerms.size(); i++) {
+                if (i > 0) {
+                    sb.append(" OR ");
+                }
+                sb.append("(");
+                for (int j = 0; j < columns.length; j++) {
+                    if (j > 0) {
+                        sb.append(" OR ");
+                    }
+                    sb.append(columns[j]).append(" LIKE ?");
+                }
+                sb.append(")");
+            }
+            sb.append(")");
+            return sb.toString();
+        };
         
         // Purchase Invoices
         sqlBuilder.append("""
@@ -94,9 +117,7 @@ public class ReportDAO {
             FROM purchase_invoices
             WHERE invoice_date BETWEEN ? AND ?
             """);
-        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            sqlBuilder.append(" AND (invoice_no LIKE ? OR party_name LIKE ? OR remarks LIKE ?)");
-        }
+        sqlBuilder.append(buildSearchCondition.apply(new String[]{"invoice_no", "party_name", "remarks"}));
         
         // Sale Invoices
         sqlBuilder.append("""
@@ -113,9 +134,7 @@ public class ReportDAO {
             FROM sale_invoices
             WHERE invoice_date BETWEEN ? AND ?
             """);
-        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            sqlBuilder.append(" AND (invoice_no LIKE ? OR party_name LIKE ? OR remarks LIKE ?)");
-        }
+        sqlBuilder.append(buildSearchCondition.apply(new String[]{"invoice_no", "party_name", "remarks"}));
         
         // Purchase Receipts
         sqlBuilder.append("""
@@ -132,9 +151,7 @@ public class ReportDAO {
             FROM purchase_receipts
             WHERE receipt_date BETWEEN ? AND ?
             """);
-        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            sqlBuilder.append(" AND (receipt_no LIKE ? OR party_name LIKE ? OR remarks LIKE ?)");
-        }
+        sqlBuilder.append(buildSearchCondition.apply(new String[]{"receipt_no", "party_name", "remarks"}));
         
         // Sale Receipts
         sqlBuilder.append("""
@@ -151,9 +168,7 @@ public class ReportDAO {
             FROM sale_receipts
             WHERE receipt_date BETWEEN ? AND ?
             """);
-        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            sqlBuilder.append(" AND (receipt_no LIKE ? OR party_name LIKE ? OR remarks LIKE ?)");
-        }
+        sqlBuilder.append(buildSearchCondition.apply(new String[]{"receipt_no", "party_name", "remarks"}));
         
         // Payments (assume payments are debits - outgoing)
         sqlBuilder.append("""
@@ -170,9 +185,7 @@ public class ReportDAO {
             FROM payments
             WHERE payment_date BETWEEN ? AND ?
             """);
-        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            sqlBuilder.append(" AND (voucher_no LIKE ? OR account_name LIKE ? OR remarks LIKE ?)");
-        }
+        sqlBuilder.append(buildSearchCondition.apply(new String[]{"voucher_no", "account_name", "remarks"}));
         
         // Loading Slips - use freight_amount instead of freight (assume debits - expense)
         sqlBuilder.append("""
@@ -189,9 +202,7 @@ public class ReportDAO {
             FROM loading_slips
             WHERE slip_date BETWEEN ? AND ?
             """);
-        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            sqlBuilder.append(" AND (slip_no LIKE ? OR party_name LIKE ? OR remarks LIKE ?)");
-        }
+        sqlBuilder.append(buildSearchCondition.apply(new String[]{"slip_no", "party_name", "remarks"}));
         
         // Lorry Receipts - use total instead of freight (assume debits - expense)
         sqlBuilder.append("""
@@ -208,9 +219,7 @@ public class ReportDAO {
             FROM lorry_receipts
             WHERE lr_date BETWEEN ? AND ?
             """);
-        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            sqlBuilder.append(" AND (lr_no LIKE ? OR consignor_name LIKE ? OR remarks LIKE ?)");
-        }
+        sqlBuilder.append(buildSearchCondition.apply(new String[]{"lr_no", "consignor_name", "remarks"}));
         
         sqlBuilder.append(") combined ORDER BY date DESC");
         
@@ -219,71 +228,42 @@ public class ReportDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
-            String searchPattern = searchTerm != null && !searchTerm.trim().isEmpty() ? "%" + searchTerm.trim() + "%" : null;
             int paramIndex = 1;
             
+            // Helper to set search parameters
+            java.util.function.Consumer<String[]> setSearchParams = (columns) -> {
+                pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
+                pstmt.setDate(paramIndex++, Date.valueOf(toDate));
+                if (searchTerms != null && !searchTerms.isEmpty()) {
+                    for (String term : searchTerms) {
+                        for (int j = 0; j < columns.length; j++) {
+                            String pattern = "%" + term.trim() + "%";
+                            pstmt.setString(paramIndex++, pattern);
+                        }
+                    }
+                }
+            };
+            
             // Purchase Invoices
-            pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
-            pstmt.setDate(paramIndex++, Date.valueOf(toDate));
-            if (searchPattern != null) {
-                pstmt.setString(paramIndex++, searchPattern);
-                pstmt.setString(paramIndex++, searchPattern);
-                pstmt.setString(paramIndex++, searchPattern);
-            }
+            setSearchParams.accept(new String[]{"invoice_no", "party_name", "remarks"});
             
             // Sale Invoices
-            pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
-            pstmt.setDate(paramIndex++, Date.valueOf(toDate));
-            if (searchPattern != null) {
-                pstmt.setString(paramIndex++, searchPattern);
-                pstmt.setString(paramIndex++, searchPattern);
-                pstmt.setString(paramIndex++, searchPattern);
-            }
+            setSearchParams.accept(new String[]{"invoice_no", "party_name", "remarks"});
             
             // Purchase Receipts
-            pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
-            pstmt.setDate(paramIndex++, Date.valueOf(toDate));
-            if (searchPattern != null) {
-                pstmt.setString(paramIndex++, searchPattern);
-                pstmt.setString(paramIndex++, searchPattern);
-                pstmt.setString(paramIndex++, searchPattern);
-            }
+            setSearchParams.accept(new String[]{"receipt_no", "party_name", "remarks"});
             
             // Sale Receipts
-            pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
-            pstmt.setDate(paramIndex++, Date.valueOf(toDate));
-            if (searchPattern != null) {
-                pstmt.setString(paramIndex++, searchPattern);
-                pstmt.setString(paramIndex++, searchPattern);
-                pstmt.setString(paramIndex++, searchPattern);
-            }
+            setSearchParams.accept(new String[]{"receipt_no", "party_name", "remarks"});
             
             // Payments
-            pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
-            pstmt.setDate(paramIndex++, Date.valueOf(toDate));
-            if (searchPattern != null) {
-                pstmt.setString(paramIndex++, searchPattern);
-                pstmt.setString(paramIndex++, searchPattern);
-                pstmt.setString(paramIndex++, searchPattern);
-            }
+            setSearchParams.accept(new String[]{"voucher_no", "account_name", "remarks"});
             
             // Loading Slips
-            pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
-            pstmt.setDate(paramIndex++, Date.valueOf(toDate));
-            if (searchPattern != null) {
-                pstmt.setString(paramIndex++, searchPattern);
-                pstmt.setString(paramIndex++, searchPattern);
-                pstmt.setString(paramIndex++, searchPattern);
-            }
+            setSearchParams.accept(new String[]{"slip_no", "party_name", "remarks"});
             
             // Lorry Receipts
-            pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
-            pstmt.setDate(paramIndex++, Date.valueOf(toDate));
-            if (searchPattern != null) {
-                pstmt.setString(paramIndex++, searchPattern);
-                pstmt.setString(paramIndex++, searchPattern);
-                pstmt.setString(paramIndex++, searchPattern);
-            }
+            setSearchParams.accept(new String[]{"lr_no", "consignor_name", "remarks"});
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 int serialNo = 1;

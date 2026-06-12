@@ -330,20 +330,17 @@ public class ReportView {
             return;
         }
 
-        // Combine search terms into a single search string
-        String combinedSearch = "";
-        if (!searchTerms.isEmpty() || !searchField.getText().trim().isEmpty()) {
-            combinedSearch = String.join(" ", searchTerms);
-            if (!searchField.getText().trim().isEmpty()) {
-                combinedSearch = combinedSearch.isEmpty() ? searchField.getText().trim() : combinedSearch + " " + searchField.getText().trim();
-            }
+        // Combine search terms into a list
+        java.util.List<String> searchTermsList = new java.util.ArrayList<>(searchTerms);
+        if (!searchField.getText().trim().isEmpty()) {
+            searchTermsList.add(searchField.getText().trim());
         }
 
-        final String searchTerm = combinedSearch.isEmpty() ? null : combinedSearch;
+        final java.util.List<String> searchTermsToUse = searchTermsList.isEmpty() ? null : searchTermsList;
 
         AppExecutor.submit(() -> {
             try {
-                ReportDAO.ReportResult result = reportDAO.generateReport("All Transactions", from, to, null, null, searchTerm);
+                ReportDAO.ReportResult result = reportDAO.generateReport("All Transactions", from, to, null, null, searchTermsToUse);
 
                 Platform.runLater(() -> {
                     allTransactions.clear();
