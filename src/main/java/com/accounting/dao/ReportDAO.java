@@ -80,11 +80,6 @@ public class ReportDAO {
         // Build dynamic SQL with error handling for missing columns
         StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM (");
         
-        String searchCondition = "";
-        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            searchCondition = " AND (transaction_no LIKE ? OR party LIKE ? OR remarks LIKE ?)";
-        }
-        
         // Purchase Invoices
         sqlBuilder.append("""
             SELECT 'Purchase Invoice' as transaction_type, 
@@ -99,7 +94,9 @@ public class ReportDAO {
             FROM purchase_invoices
             WHERE invoice_date BETWEEN ? AND ?
             """);
-        sqlBuilder.append(searchCondition);
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            sqlBuilder.append(" AND (invoice_no LIKE ? OR party_name LIKE ? OR remarks LIKE ?)");
+        }
         
         // Sale Invoices
         sqlBuilder.append("""
@@ -116,7 +113,9 @@ public class ReportDAO {
             FROM sale_invoices
             WHERE invoice_date BETWEEN ? AND ?
             """);
-        sqlBuilder.append(searchCondition);
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            sqlBuilder.append(" AND (invoice_no LIKE ? OR party_name LIKE ? OR remarks LIKE ?)");
+        }
         
         // Purchase Receipts
         sqlBuilder.append("""
@@ -133,7 +132,9 @@ public class ReportDAO {
             FROM purchase_receipts
             WHERE receipt_date BETWEEN ? AND ?
             """);
-        sqlBuilder.append(searchCondition);
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            sqlBuilder.append(" AND (receipt_no LIKE ? OR party_name LIKE ? OR remarks LIKE ?)");
+        }
         
         // Sale Receipts
         sqlBuilder.append("""
@@ -150,7 +151,9 @@ public class ReportDAO {
             FROM sale_receipts
             WHERE receipt_date BETWEEN ? AND ?
             """);
-        sqlBuilder.append(searchCondition);
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            sqlBuilder.append(" AND (receipt_no LIKE ? OR party_name LIKE ? OR remarks LIKE ?)");
+        }
         
         // Payments (assume payments are debits - outgoing)
         sqlBuilder.append("""
@@ -167,7 +170,9 @@ public class ReportDAO {
             FROM payments
             WHERE payment_date BETWEEN ? AND ?
             """);
-        sqlBuilder.append(searchCondition);
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            sqlBuilder.append(" AND (voucher_no LIKE ? OR account_name LIKE ? OR remarks LIKE ?)");
+        }
         
         // Loading Slips - use freight_amount instead of freight (assume debits - expense)
         sqlBuilder.append("""
@@ -184,7 +189,9 @@ public class ReportDAO {
             FROM loading_slips
             WHERE slip_date BETWEEN ? AND ?
             """);
-        sqlBuilder.append(searchCondition);
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            sqlBuilder.append(" AND (slip_no LIKE ? OR party_name LIKE ? OR remarks LIKE ?)");
+        }
         
         // Lorry Receipts - use total instead of freight (assume debits - expense)
         sqlBuilder.append("""
@@ -201,7 +208,9 @@ public class ReportDAO {
             FROM lorry_receipts
             WHERE lr_date BETWEEN ? AND ?
             """);
-        sqlBuilder.append(searchCondition);
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            sqlBuilder.append(" AND (lr_no LIKE ? OR consignor_name LIKE ? OR remarks LIKE ?)");
+        }
         
         sqlBuilder.append(") combined ORDER BY date DESC");
         
