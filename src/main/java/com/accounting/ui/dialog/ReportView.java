@@ -31,6 +31,7 @@ public class ReportView {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy_HH-mm-ss");
+    private static final DateTimeFormatter EXCEL_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private final ReportDAO reportDAO = new ReportDAO();
     private final ObservableList<ReportDAO.ReportRow> allTransactions = FXCollections.observableArrayList();
 
@@ -586,7 +587,8 @@ public class ReportView {
                 if (dateStr == null || dateStr.isEmpty()) return "";
                 try {
                     LocalDate date = LocalDate.parse(dateStr);
-                    return date.format(DATE_FORMATTER);
+                    // Use dd/MM/yyyy format which Excel recognizes better
+                    return date.format(EXCEL_DATE_FORMATTER);
                 } catch (Exception e) {
                     return dateStr;
                 }
