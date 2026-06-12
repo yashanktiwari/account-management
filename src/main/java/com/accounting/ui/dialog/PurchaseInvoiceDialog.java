@@ -1083,14 +1083,9 @@ public class PurchaseInvoiceDialog {
         }
 
         try {
-            // Create invoices directory if it doesn't exist
-            java.io.File invoicesDir = new java.io.File("invoices");
-            if (!invoicesDir.exists()) {
-                invoicesDir.mkdirs();
-            }
-
-            // Generate PDF file name
-            String fileName = "invoices/Purchase_Invoice_" + invoice.getInvoiceNo() + "_" + 
+            // Use system temp directory for initial preview (not saved to app folder)
+            java.io.File tempDir = new java.io.File(System.getProperty("java.io.tmpdir"));
+            String fileName = tempDir.getAbsolutePath() + "/Purchase_Invoice_" + invoice.getInvoiceNo() + "_" +
                             java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".pdf";
 
             // Generate Original PDF

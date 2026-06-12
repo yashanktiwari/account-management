@@ -304,12 +304,9 @@ public class LoadingSlipListView {
 
     private void printSlip(LoadingSlip slip) {
         try {
-            java.io.File slipsDir = new java.io.File("loading_slips");
-            if (!slipsDir.exists()) {
-                slipsDir.mkdirs();
-            }
-
-            String fileName = "loading_slips/Loading_Slip_" + slip.getSlipNo() + "_" +
+            // Use system temp directory for initial preview (not saved to app folder)
+            java.io.File tempDir = new java.io.File(System.getProperty("java.io.tmpdir"));
+            String fileName = tempDir.getAbsolutePath() + "/Loading_Slip_" + slip.getSlipNo() + "_" +
                     java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".pdf";
 
             LoadingSlipPDFGenerator.generateLoadingSlipPDF(slip, fileName, "Original");
