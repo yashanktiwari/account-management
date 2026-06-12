@@ -79,6 +79,8 @@ public class ReportDAO {
                    invoice_date as date,
                    COALESCE(party_name, '') as party, 
                    COALESCE(net_amount, 0) as amount, 
+                   COALESCE(net_amount, 0) as debit,
+                   0 as credit,
                    'INVOICE' as type
             FROM purchase_invoices
             WHERE invoice_date BETWEEN ? AND ?
@@ -92,6 +94,8 @@ public class ReportDAO {
                    invoice_date as date,
                    COALESCE(party_name, '') as party, 
                    COALESCE(net_amount, 0) as amount, 
+                   0 as debit,
+                   COALESCE(net_amount, 0) as credit,
                    'INVOICE' as type
             FROM sale_invoices
             WHERE invoice_date BETWEEN ? AND ?
@@ -105,6 +109,8 @@ public class ReportDAO {
                    receipt_date as date,
                    COALESCE(party_name, '') as party, 
                    COALESCE(amount, 0) as amount, 
+                   COALESCE(amount, 0) as debit,
+                   0 as credit,
                    'RECEIPT' as type
             FROM purchase_receipts
             WHERE receipt_date BETWEEN ? AND ?
@@ -118,12 +124,14 @@ public class ReportDAO {
                    receipt_date as date,
                    COALESCE(party_name, '') as party, 
                    COALESCE(amount, 0) as amount, 
+                   0 as debit,
+                   COALESCE(amount, 0) as credit,
                    'RECEIPT' as type
             FROM sale_receipts
             WHERE receipt_date BETWEEN ? AND ?
             """);
         
-        // Payments
+        // Payments (assume payments are debits - outgoing)
         sqlBuilder.append("""
             UNION ALL
             SELECT 'Payment' as transaction_type, 
@@ -131,12 +139,14 @@ public class ReportDAO {
                    payment_date as date,
                    COALESCE(account_name, '') as party, 
                    COALESCE(amount, 0) as amount, 
+                   COALESCE(amount, 0) as debit,
+                   0 as credit,
                    'PAYMENT' as type
             FROM payments
             WHERE payment_date BETWEEN ? AND ?
             """);
         
-        // Loading Slips - use freight_amount instead of freight
+        // Loading Slips - use freight_amount instead of freight (assume debits - expense)
         sqlBuilder.append("""
             UNION ALL
             SELECT 'Loading Slip' as transaction_type, 
@@ -144,12 +154,14 @@ public class ReportDAO {
                    slip_date as date,
                    COALESCE(party_name, '') as party, 
                    COALESCE(freight_amount, 0) as amount, 
+                   COALESCE(freight_amount, 0) as debit,
+                   0 as credit,
                    'SLIP' as type
             FROM loading_slips
             WHERE slip_date BETWEEN ? AND ?
             """);
         
-        // Lorry Receipts - use total instead of freight
+        // Lorry Receipts - use total instead of freight (assume debits - expense)
         sqlBuilder.append("""
             UNION ALL
             SELECT 'Lorry Receipt' as transaction_type, 
@@ -157,6 +169,8 @@ public class ReportDAO {
                    lr_date as date,
                    COALESCE(consignor_name, '') as party, 
                    COALESCE(total, 0) as amount, 
+                   COALESCE(total, 0) as debit,
+                   0 as credit,
                    'LR' as type
             FROM lorry_receipts
             WHERE lr_date BETWEEN ? AND ?
@@ -196,6 +210,8 @@ public class ReportDAO {
                     row.setDate(rs.getDate("date").toLocalDate().toString());
                     row.setParty(rs.getString("party"));
                     row.setAmount(amount);
+                    row.setDebit(rs.getDouble("debit"));
+                    row.setCredit(rs.getDouble("credit"));
                     row.setType(rs.getString("type"));
                     rows.add(row);
                 }

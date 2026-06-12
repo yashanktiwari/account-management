@@ -317,6 +317,18 @@ public class ReportView {
             amountCol.setCellFactory(col -> formatCurrencyCell());
             amountCol.setMinWidth(120);
 
+            // Debit
+            TableColumn<ReportDAO.ReportRow, Double> debitCol = new TableColumn<>("Debit");
+            debitCol.setCellValueFactory(new PropertyValueFactory<>("debit"));
+            debitCol.setCellFactory(col -> formatCurrencyCell());
+            debitCol.setMinWidth(100);
+
+            // Credit
+            TableColumn<ReportDAO.ReportRow, Double> creditCol = new TableColumn<>("Credit");
+            creditCol.setCellValueFactory(new PropertyValueFactory<>("credit"));
+            creditCol.setCellFactory(col -> formatCurrencyCell());
+            creditCol.setMinWidth(100);
+
             // Advance
             TableColumn<ReportDAO.ReportRow, Double> advanceCol = new TableColumn<>("Advance");
             advanceCol.setCellValueFactory(new PropertyValueFactory<>("advance"));
@@ -362,7 +374,7 @@ public class ReportView {
             resultTable.getColumns().addAll(
                 serialCol, typeCol, noCol, dateCol, partyCol, vehicleCol, fromLocCol, toLocCol,
                 descCol, gstCol, taxableCol, sgstCol, cgstCol, igstCol, totalGstCol, amountCol,
-                advanceCol, balanceCol, paymentModeCol, chequeNoCol, chequeDateCol, bankCol,
+                debitCol, creditCol, advanceCol, balanceCol, paymentModeCol, chequeNoCol, chequeDateCol, bankCol,
                 remarksCol, statusCol
             );
 
