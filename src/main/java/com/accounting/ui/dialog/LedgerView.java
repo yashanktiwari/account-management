@@ -6,6 +6,8 @@ import com.accounting.model.Party;
 import com.accounting.util.AlertUtil;
 import com.accounting.util.AppExecutor;
 import com.accounting.util.AppLogger;
+import com.accounting.util.LedgerPDFGenerator;
+import javafx.stage.FileChooser;
 import org.slf4j.Logger;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -41,6 +43,11 @@ public class LedgerView {
     private Label closingBalanceLabel;
     private Label totalDebitLabel;
     private Label totalCreditLabel;
+    
+    private LedgerDAO.LedgerResult currentLedgerResult;
+    private Party currentParty;
+    private LocalDate currentFromDate;
+    private LocalDate currentToDate;
 
     public Parent createContent() {
         VBox root = new VBox(12);
@@ -107,6 +114,11 @@ public class LedgerView {
         Button generateBtn = new Button("Generate Ledger");
         generateBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
         generateBtn.setOnAction(e -> generateLedger());
+        
+        // Print PDF button
+        Button printBtn = new Button("Print PDF");
+        printBtn.setStyle("-fx-background-color: #16a34a; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
+        printBtn.setOnAction(e -> exportToPDF());
 
         GridPane grid = new GridPane();
         grid.setHgap(12);
@@ -118,6 +130,7 @@ public class LedgerView {
         grid.add(toLabel, 2, 1);
         grid.add(toDate, 3, 1);
         grid.add(generateBtn, 4, 1);
+        grid.add(printBtn, 5, 1);
 
         section.getChildren().add(grid);
         return section;
@@ -305,6 +318,12 @@ public class LedgerView {
                     result.getEntries().size(), result.getOpeningBalance(), result.getClosingBalance());
 
                 Platform.runLater(() -> {
+                    // Store current ledger data for PDF export
+                    currentLedgerResult = result;
+                    currentParty = selectedParty;
+                    currentFromDate = fromDate.getValue();
+                    currentToDate = toDate.getValue();
+                    
                     ledgerEntries.setAll(result.getEntries());
 
                     // Update summary cards
@@ -336,5 +355,37 @@ public class LedgerView {
     private void styleBalanceLabel(Label label, double balance) {
         String color = balance >= 0 ? "#16a34a" : "#dc2626";
         label.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: " + color + ";");
+    }
+    
+    private void exportToPDF() {
+        if (currentLedgerResult == null || currentParty == null) {
+            AlertUtil.showWarning("Export PDF", "Please generate a ledger first.");
+            return;
+        }
+        
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Ledger PDF");
+        fileChooser.setInitialFileName("Ledger_" + currentParty.getName().replaceAll("[^a-zA-Z0-9]", "_") + 
+            "_" + currentFromDate.format(DATE_FORMATTER).replace("-", "") + ".pdf");
+        fileChooser.getExtensionFilters().add(
+            new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
+        
+        java.io.File file = fileChooser.showSaveDialog(null);
+        if (file != null) {
+            AppExecutor.submit(() -> {
+                try {
+                    LedgerPDFGenerator.generateLedgerPDF(
+                        currentParty, currentLedgerResult, currentFromDate, currentToDate, 
+                        file.getAbsolutePath());
+                    
+                    Platform.runLater(() -> 
+                        AlertUtil.showInfo("Success", "Ledger PDF exported successfully!"));
+                } catch (Exception e) {
+                    log.error("Failed to export ledger PDF", e);
+                    Platform.runLater(() -> 
+                        AlertUtil.showError("Error", "Failed to export PDF: " + e.getMessage()));
+                }
+            });
+        }
     }
 }
