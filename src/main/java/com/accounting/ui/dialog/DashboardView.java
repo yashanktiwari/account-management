@@ -30,8 +30,8 @@ public class DashboardView {
     private static final Logger log = AppLogger.get(DashboardView.class);
     private static final String SETTINGS_KEY = "dashboard_active_widgets";
     private static final String[] CHART_COLORS = {
-        "#3b82f6", "#ef4444", "#22c55e", "#f59e0b", "#8b5cf6", "#ec4899",
-        "#14b8a6", "#f97316", "#6366f1", "#84cc16", "#06b6d4", "#e11d48"
+        "#4a7a94", "#7a5565", "#4a7a60", "#8a7a4a", "#6b5a8a", "#8a5a6a",
+        "#4a8a7a", "#8a6a4a", "#5a5a8a", "#6a8a5a", "#4a7a8a", "#8a4a6a"
     };
 
     private final WidgetDAO widgetDAO = new WidgetDAO();
@@ -78,33 +78,33 @@ public class DashboardView {
     private void registerWidgets() {
         // ── Table Widgets ───────────────────────────────────────────────────
         // Recent Activity
-        allWidgets.add(WidgetDef.table("latest_purchase_inv", "Latest Purchase Invoices", "Recent Activity", "\uD83D\uDCE6", "#16a34a", "#059669", () -> widgetDAO.getLatestPurchaseInvoices(5)));
-        allWidgets.add(WidgetDef.table("latest_sale_inv", "Latest Sale Invoices", "Recent Activity", "\uD83D\uDCB0", "#2563eb", "#1d4ed8", () -> widgetDAO.getLatestSaleInvoices(5)));
-        allWidgets.add(WidgetDef.table("latest_purchase_rec", "Latest Purchase Receipts", "Recent Activity", "\uD83D\uDCB3", "#dc2626", "#b91c1c", () -> widgetDAO.getLatestPurchaseReceipts(5)));
-        allWidgets.add(WidgetDef.table("latest_sale_rec", "Latest Sale Receipts", "Recent Activity", "\uD83D\uDCB5", "#0891b2", "#0e7490", () -> widgetDAO.getLatestSaleReceipts(5)));
-        allWidgets.add(WidgetDef.table("latest_lr", "Latest Lorry Receipts", "Recent Activity", "\uD83D\uDE9A", "#7c3aed", "#6d28d9", () -> widgetDAO.getLatestLorryReceipts(5)));
-        allWidgets.add(WidgetDef.table("latest_ls", "Latest Loading Slips", "Recent Activity", "\uD83D\uDCCB", "#d97706", "#b45309", () -> widgetDAO.getLatestLoadingSlips(5)));
+        allWidgets.add(WidgetDef.table("latest_purchase_inv", "Latest Purchase Invoices", "Recent Activity", "\uD83D\uDCE6", "#476b8a", "#35546e", () -> widgetDAO.getLatestPurchaseInvoices(5)));
+        allWidgets.add(WidgetDef.table("latest_sale_inv", "Latest Sale Invoices", "Recent Activity", "\uD83D\uDCB0", "#4a5680", "#384268", () -> widgetDAO.getLatestSaleInvoices(5)));
+        allWidgets.add(WidgetDef.table("latest_purchase_rec", "Latest Purchase Receipts", "Recent Activity", "\uD83D\uDCB3", "#7a5565", "#5e414e", () -> widgetDAO.getLatestPurchaseReceipts(5)));
+        allWidgets.add(WidgetDef.table("latest_sale_rec", "Latest Sale Receipts", "Recent Activity", "\uD83D\uDCB5", "#457b7b", "#335e5e", () -> widgetDAO.getLatestSaleReceipts(5)));
+        allWidgets.add(WidgetDef.table("latest_lr", "Latest Lorry Receipts", "Recent Activity", "\uD83D\uDE9A", "#6b5080", "#533d66", () -> widgetDAO.getLatestLorryReceipts(5)));
+        allWidgets.add(WidgetDef.table("latest_ls", "Latest Loading Slips", "Recent Activity", "\uD83D\uDCCB", "#6b6050", "#534a3c", () -> widgetDAO.getLatestLoadingSlips(5)));
 
         // Top Performers
-        allWidgets.add(WidgetDef.table("top_purchase_parties", "Top Parties by Purchase", "Top Performers", "\uD83C\uDFC6", "#16a34a", "#059669", () -> widgetDAO.getTopPartiesByPurchase(5)));
-        allWidgets.add(WidgetDef.table("top_sale_parties", "Top Parties by Sale", "Top Performers", "\u2B50", "#2563eb", "#1d4ed8", () -> widgetDAO.getTopPartiesBySale(5)));
-        allWidgets.add(WidgetDef.table("top_vehicles", "Top Vehicles by Revenue", "Top Performers", "\uD83D\uDE9B", "#7c3aed", "#6d28d9", () -> widgetDAO.getTopVehiclesByRevenue(5)));
+        allWidgets.add(WidgetDef.table("top_purchase_parties", "Top Parties by Purchase", "Top Performers", "\uD83C\uDFC6", "#476b8a", "#35546e", () -> widgetDAO.getTopPartiesByPurchase(5)));
+        allWidgets.add(WidgetDef.table("top_sale_parties", "Top Parties by Sale", "Top Performers", "\u2B50", "#4a5680", "#384268", () -> widgetDAO.getTopPartiesBySale(5)));
+        allWidgets.add(WidgetDef.table("top_vehicles", "Top Vehicles by Revenue", "Top Performers", "\uD83D\uDE9B", "#6b5080", "#533d66", () -> widgetDAO.getTopVehiclesByRevenue(5)));
 
         // Party Insights
-        allWidgets.add(WidgetDef.table("least_interacted", "Least Interacted Parties", "Party Insights", "\uD83D\uDCA4", "#ea580c", "#c2410c", () -> widgetDAO.getLeastInteractedParties(5)));
-        allWidgets.add(WidgetDef.table("longest_inactive", "Longest Inactive Parties", "Party Insights", "\u23F0", "#dc2626", "#b91c1c", () -> widgetDAO.getLongestInactiveParties(5)));
-        allWidgets.add(WidgetDef.table("purchase_gst", "Purchase GST Summary", "Financial Summary", "\uD83D\uDCC4", "#16a34a", "#059669", () -> widgetDAO.getPurchaseGSTSummary()));
-        allWidgets.add(WidgetDef.table("sale_gst", "Sale GST Summary", "Financial Summary", "\uD83D\uDCC4", "#2563eb", "#1d4ed8", () -> widgetDAO.getSaleGSTSummary()));
+        allWidgets.add(WidgetDef.table("least_interacted", "Least Interacted Parties", "Party Insights", "\uD83D\uDCA4", "#7a6050", "#5e4a3c", () -> widgetDAO.getLeastInteractedParties(5)));
+        allWidgets.add(WidgetDef.table("longest_inactive", "Longest Inactive Parties", "Party Insights", "\u23F0", "#7a5565", "#5e414e", () -> widgetDAO.getLongestInactiveParties(5)));
+        allWidgets.add(WidgetDef.table("purchase_gst", "Purchase GST Summary", "Financial Summary", "\uD83D\uDCC4", "#4a7a60", "#385e4a", () -> widgetDAO.getPurchaseGSTSummary()));
+        allWidgets.add(WidgetDef.table("sale_gst", "Sale GST Summary", "Financial Summary", "\uD83D\uDCC4", "#4a5680", "#384268", () -> widgetDAO.getSaleGSTSummary()));
 
         // ── Chart Widgets ───────────────────────────────────────────────────
-        allWidgets.add(WidgetDef.chart("purchase_gst_chart", "Purchase GST Breakdown", "Charts", "\uD83E\uDD67", "#16a34a", "#059669", RenderType.PIE_CHART, 0, 1, () -> widgetDAO.getPurchaseGSTSummary()));
-        allWidgets.add(WidgetDef.chart("sale_gst_chart", "Sale GST Breakdown", "Charts", "\uD83E\uDD67", "#2563eb", "#1d4ed8", RenderType.PIE_CHART, 0, 1, () -> widgetDAO.getSaleGSTSummary()));
-        allWidgets.add(WidgetDef.chart("party_type_chart", "Party Distribution", "Charts", "\uD83C\uDF69", "#7c3aed", "#6d28d9", RenderType.PIE_CHART, 0, 1, () -> widgetDAO.getPartyCountByType()));
-        allWidgets.add(WidgetDef.chart("top_vehicles_chart", "Vehicle Revenue Chart", "Charts", "\uD83D\uDCCA", "#0891b2", "#0e7490", RenderType.BAR_CHART, 0, 2, () -> widgetDAO.getTopVehiclesByRevenue(5)));
-        allWidgets.add(WidgetDef.chart("top_purchase_chart", "Top Purchase Parties Chart", "Charts", "\uD83D\uDCCA", "#16a34a", "#059669", RenderType.BAR_CHART, 0, 2, () -> widgetDAO.getTopPartiesByPurchase(5)));
-        allWidgets.add(WidgetDef.chart("top_sale_chart", "Top Sale Parties Chart", "Charts", "\uD83D\uDCCA", "#2563eb", "#1d4ed8", RenderType.BAR_CHART, 0, 2, () -> widgetDAO.getTopPartiesBySale(5)));
-        allWidgets.add(WidgetDef.chart("monthly_purchase_chart", "Monthly Purchase Trend", "Charts", "\uD83D\uDCC8", "#d97706", "#b45309", RenderType.LINE_CHART, 0, 2, () -> widgetDAO.getMonthlyPurchaseSummary()));
-        allWidgets.add(WidgetDef.chart("monthly_sale_chart", "Monthly Sale Trend", "Charts", "\uD83D\uDCC8", "#0891b2", "#0e7490", RenderType.LINE_CHART, 0, 2, () -> widgetDAO.getMonthlySaleSummary()));
+        allWidgets.add(WidgetDef.chart("purchase_gst_chart", "Purchase GST Breakdown", "Charts", "\uD83E\uDD67", "#4a7a60", "#385e4a", RenderType.PIE_CHART, 0, 1, () -> widgetDAO.getPurchaseGSTSummary()));
+        allWidgets.add(WidgetDef.chart("sale_gst_chart", "Sale GST Breakdown", "Charts", "\uD83E\uDD67", "#4a5680", "#384268", RenderType.PIE_CHART, 0, 1, () -> widgetDAO.getSaleGSTSummary()));
+        allWidgets.add(WidgetDef.chart("party_type_chart", "Party Distribution", "Charts", "\uD83C\uDF69", "#6b5080", "#533d66", RenderType.PIE_CHART, 0, 1, () -> widgetDAO.getPartyCountByType()));
+        allWidgets.add(WidgetDef.chart("top_vehicles_chart", "Vehicle Revenue Chart", "Charts", "\uD83D\uDCCA", "#457b7b", "#335e5e", RenderType.BAR_CHART, 0, 2, () -> widgetDAO.getTopVehiclesByRevenue(5)));
+        allWidgets.add(WidgetDef.chart("top_purchase_chart", "Top Purchase Parties Chart", "Charts", "\uD83D\uDCCA", "#476b8a", "#35546e", RenderType.BAR_CHART, 0, 2, () -> widgetDAO.getTopPartiesByPurchase(5)));
+        allWidgets.add(WidgetDef.chart("top_sale_chart", "Top Sale Parties Chart", "Charts", "\uD83D\uDCCA", "#4a5680", "#384268", RenderType.BAR_CHART, 0, 2, () -> widgetDAO.getTopPartiesBySale(5)));
+        allWidgets.add(WidgetDef.chart("monthly_purchase_chart", "Monthly Purchase Trend", "Charts", "\uD83D\uDCC8", "#6b6050", "#534a3c", RenderType.LINE_CHART, 0, 2, () -> widgetDAO.getMonthlyPurchaseSummary()));
+        allWidgets.add(WidgetDef.chart("monthly_sale_chart", "Monthly Sale Trend", "Charts", "\uD83D\uDCC8", "#457b7b", "#335e5e", RenderType.LINE_CHART, 0, 2, () -> widgetDAO.getMonthlySaleSummary()));
     }
 
     private void loadActiveWidgets() {
@@ -286,8 +286,8 @@ public class DashboardView {
         // Card container
         VBox card = new VBox(0, titleBar, contentBox, resizeCorner);
         boolean isChart = def.renderType != RenderType.TABLE;
-        card.setPrefWidth(isChart ? 420 : 380);
-        card.setMinWidth(280);
+        card.setPrefWidth(isChart ? 440 : 420);
+        card.setMinWidth(300);
         card.setStyle("-fx-background-color: white; -fx-background-radius: 10; " +
                 "-fx-border-color: #e2e8f0; -fx-border-radius: 10; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 10, 0, 0, 3);");
@@ -310,7 +310,7 @@ public class DashboardView {
     private GridPane buildDataGrid(WidgetData data) {
         GridPane grid = new GridPane();
         grid.setHgap(14);
-        grid.setVgap(6);
+        grid.setVgap(4);
         grid.setPadding(new Insets(4));
 
         List<String> headers = data.getHeaders();
@@ -318,25 +318,24 @@ public class DashboardView {
 
         for (int c = 0; c < headers.size(); c++) {
             Label h = new Label(headers.get(c).toUpperCase());
-            h.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8; -fx-padding: 0 0 4 0;");
+            h.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #8094a8; -fx-padding: 2 4 6 4; " +
+                       "-fx-border-color: transparent transparent #e2e8f0 transparent; -fx-border-width: 0 0 1 0;");
             h.setMaxWidth(Double.MAX_VALUE);
             GridPane.setHgrow(h, Priority.ALWAYS);
             grid.add(h, c, 0);
         }
 
-        Separator sep = new Separator();
-        sep.setStyle("-fx-background-color: #e2e8f0;");
-        grid.add(sep, 0, 1, headers.size(), 1);
-
         for (int r = 0; r < rows.size(); r++) {
             List<String> row = rows.get(r);
-            String rowBg = r % 2 == 0 ? "-fx-background-color: #f8fafc; -fx-background-radius: 4;" : "";
+            String rowBg = r % 2 == 0 ? "-fx-background-color: #f4f7fa; -fx-background-radius: 3;" : "";
             for (int c = 0; c < row.size() && c < headers.size(); c++) {
                 String val = row.get(c);
                 Label cell = new Label(val);
                 cell.setMaxWidth(Double.MAX_VALUE);
+                cell.setWrapText(true);
                 GridPane.setHgrow(cell, Priority.ALWAYS);
-                cell.setPadding(new Insets(3, 4, 3, 4));
+                cell.setPadding(new Insets(4, 4, 4, 4));
+                if (val != null && !val.isEmpty()) cell.setTooltip(new Tooltip(val));
 
                 if (val.matches("^[\\d,.-]+$")) {
                     cell.setStyle("-fx-font-size: 13px; -fx-text-fill: #0f172a; -fx-font-weight: bold; " + rowBg);
@@ -344,14 +343,13 @@ public class DashboardView {
                 } else {
                     cell.setStyle("-fx-font-size: 13px; -fx-text-fill: #334155; " + rowBg);
                 }
-                grid.add(cell, c, r + 2);
+                grid.add(cell, c, r + 1);
             }
         }
 
         for (int c = 0; c < headers.size(); c++) {
             ColumnConstraints cc = new ColumnConstraints();
             cc.setHgrow(Priority.ALWAYS);
-            if (c == 0) cc.setPercentWidth(38);
             grid.getColumnConstraints().add(cc);
         }
         return grid;
@@ -524,6 +522,9 @@ public class DashboardView {
     private void setupResize(Region handle, VBox card) {
         final double[] dragStart = new double[4];
 
+        // Prevent resize drag from triggering card's drag-and-drop
+        handle.setOnDragDetected(e -> e.consume());
+
         handle.setOnMousePressed(e -> {
             dragStart[0] = e.getScreenX();
             dragStart[1] = e.getScreenY();
@@ -535,8 +536,8 @@ public class DashboardView {
         handle.setOnMouseDragged(e -> {
             double newW = dragStart[2] + (e.getScreenX() - dragStart[0]);
             double newH = dragStart[3] + (e.getScreenY() - dragStart[1]);
-            card.setPrefWidth(Math.max(280, Math.min(800, newW)));
-            card.setPrefHeight(Math.max(180, Math.min(650, newH)));
+            card.setPrefWidth(Math.max(300, Math.min(800, newW)));
+            card.setPrefHeight(Math.max(200, Math.min(650, newH)));
             card.setMaxWidth(Region.USE_PREF_SIZE);
             card.setMinWidth(Region.USE_PREF_SIZE);
             e.consume();
