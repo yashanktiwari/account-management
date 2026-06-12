@@ -57,6 +57,14 @@ public class PartyMasterListView {
         Button refreshBtn = new Button("Refresh");
         refreshBtn.setOnAction(e -> loadRows());
 
+        Button downloadTemplateBtn = new Button("Download Template");
+        downloadTemplateBtn.setStyle("-fx-background-color: #64748b; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
+        downloadTemplateBtn.setOnAction(e -> downloadTemplate());
+ 
+        Button importBtn = new Button("Import from Excel");
+        importBtn.setStyle("-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
+        importBtn.setOnAction(e -> importFromExcel());
+
         searchField = new TextField();
         searchField.setPromptText("Type and press Enter to add search term...");
         searchField.setPrefWidth(250);
@@ -115,7 +123,7 @@ public class PartyMasterListView {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        HBox topBar = new HBox(10, searchRow, spacer, addBtn, refreshBtn);
+        HBox topBar = new HBox(10, searchRow, spacer, addBtn, refreshBtn, downloadTemplateBtn, importBtn);
         topBar.setAlignment(Pos.CENTER_LEFT);
 
         table = new TableView<>();
@@ -373,5 +381,48 @@ public class PartyMasterListView {
             // Ignore if preferences are corrupted
             e.printStackTrace();
         }
+    }
+
+    private void downloadTemplate() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Party Import Template");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Excel Files", "*.xlsx"));
+        fileChooser.setInitialFileName("Party_Import_Template.xlsx");
+        
+        File file = fileChooser.showSaveDialog(table.getScene().getWindow());
+        if (file == null) return;
+        
+        AppExecutor.submit(() -> {
+            try {
+                PartyExcelImporter.downloadTemplate(file);
+                Platform.runLater(() -> AlertUtil.showInfo("Template Downloaded", 
+                    "Template saved to: " + file.getAbsolutePath()));
+            } catch (Exception e) {
+                Platform.runLater(() -> AlertUtil.showError("Error", "Failed to download template: " + e.getMessage()));
+            }
+        });
+    }
+
+    private void importFromExcel() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Import Parties from Excel");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Excel Files", "*.xlsx"));
+        
+        File file = fileChooser.showOpenDialog(table.getScene().getWindow());
+        if (file == null) return;
+        
+        AppExecutor.submit(() -> {
+            PartyExcelImporter.ImportResult result = PartyExcelImporter.importFromExcel(file);
+            Platform.runLater(() -> {
+                if (result.hasErrors()) {
+                    String errorDetails = String.join("\n", result.errorMessages);
+                    AlertUtil.showError("Import Completed with Errors", 
+                        result.getSummary() + "\n\nErrors:\n" + errorDetails);
+                } else {
+                    AlertUtil.showInfo("Import Successful", result.getSummary());
+                }
+                loadRows(); // Refresh the table
+            });
+        });
     }
 }
