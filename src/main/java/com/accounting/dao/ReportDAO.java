@@ -226,6 +226,7 @@ public class ReportDAO {
         String sql = sqlBuilder.toString();
         log.info("Generated SQL for report: {}", sql);
         log.info("Search terms: {}", searchTerms);
+        log.info("Number of search terms: {}", searchTerms != null ? searchTerms.size() : 0);
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
