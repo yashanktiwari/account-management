@@ -16,9 +16,11 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 
-import java.io.BufferedWriter;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -31,7 +33,6 @@ public class ReportView {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy_HH-mm-ss");
-    private static final DateTimeFormatter EXCEL_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private final ReportDAO reportDAO = new ReportDAO();
     private final ObservableList<ReportDAO.ReportRow> allTransactions = FXCollections.observableArrayList();
 
@@ -160,7 +161,7 @@ public class ReportView {
         generateBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
         generateBtn.setOnAction(e -> generateReport());
 
-        Button exportBtn = new Button("Export to CSV");
+        Button exportBtn = new Button("Export to Excel");
         exportBtn.setStyle("-fx-background-color: #64748b; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
         exportBtn.setOnAction(e -> exportReport());
 
@@ -458,11 +459,11 @@ public class ReportView {
 
                 // Create file chooser
                 FileChooser fileChooser = new FileChooser();
-                fileChooser.setTitle("Export to CSV");
+                fileChooser.setTitle("Export to Excel");
                 fileChooser.getExtensionFilters().add(
-                    new FileChooser.ExtensionFilter("CSV Files", "*.csv")
+                    new FileChooser.ExtensionFilter("Excel Files", "*.xlsx")
                 );
-                fileChooser.setInitialFileName("All_Transactions_" + LocalDateTime.now().format(TIMESTAMP_FORMATTER) + ".csv");
+                fileChooser.setInitialFileName("All_Transactions_" + LocalDateTime.now().format(TIMESTAMP_FORMATTER) + ".xlsx");
 
                 // Show save dialog
                 File file = fileChooser.showSaveDialog(resultTable.getScene().getWindow());
@@ -472,75 +473,135 @@ public class ReportView {
 
                 // Export in background thread
                 AppExecutor.submit(() -> {
-                    try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-                        // Define columns to export (exclude Amount as it's redundant with Debit/Credit)
+                    try (Workbook workbook = new XSSFWorkbook();
+                         FileOutputStream outputStream = new FileOutputStream(file)) {
+                        
+                        Sheet sheet = workbook.createSheet("All Transactions");
+                        
+                        // Define column widths
+                        sheet.setColumnWidth(0, 5 * 256);  // S.No - 5 characters
+                        sheet.setColumnWidth(1, 20 * 256); // Type - 20 characters
+                        sheet.setColumnWidth(2, 18 * 256); // Transaction No - 18 characters
+                        sheet.setColumnWidth(3, 15 * 256); // Date - 15 characters
+                        sheet.setColumnWidth(4, 25 * 256); // Party - 25 characters
+                        sheet.setColumnWidth(5, 12 * 256); // Debit - 12 characters
+                        sheet.setColumnWidth(6, 12 * 256); // Credit - 12 characters
+                        sheet.setColumnWidth(7, 30 * 256); // Remarks - 30 characters
+                        
+                        // Create header style
+                        CellStyle headerStyle = workbook.createCellStyle();
+                        Font headerFont = workbook.createFont();
+                        headerFont.setBold(true);
+                        headerStyle.setFont(headerFont);
+                        headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+                        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+                        headerStyle.setBorderBottom(BorderStyle.THIN);
+                        headerStyle.setBorderTop(BorderStyle.THIN);
+                        headerStyle.setBorderLeft(BorderStyle.THIN);
+                        headerStyle.setBorderRight(BorderStyle.THIN);
+                        
+                        // Create data style
+                        CellStyle dataStyle = workbook.createCellStyle();
+                        dataStyle.setBorderBottom(BorderStyle.THIN);
+                        dataStyle.setBorderTop(BorderStyle.THIN);
+                        dataStyle.setBorderLeft(BorderStyle.THIN);
+                        dataStyle.setBorderRight(BorderStyle.THIN);
+                        
+                        // Create date style
+                        CellStyle dateStyle = workbook.createCellStyle();
+                        dateStyle.cloneStyleFrom(dataStyle);
+                        CreationHelper createHelper = workbook.getCreationHelper();
+                        dateStyle.setDataFormat(createHelper.createDataFormat().getFormat("dd/mm/yyyy"));
+                        
+                        // Create number style
+                        CellStyle numberStyle = workbook.createCellStyle();
+                        numberStyle.cloneStyleFrom(dataStyle);
+                        numberStyle.setDataFormat(createHelper.createDataFormat().getFormat("#,##0.00"));
+                        
+                        // Define columns
                         String[] columns = {"S.No", "Type", "Transaction No", "Date", "Party", "Debit", "Credit", "Remarks"};
                         
-                        // Write width hint row to force Excel to auto-size columns properly
-                        // This is a hidden row that forces wider column widths in Excel
-                        String[] widthHints = {"", "", "", "DD/MM/YYYY - WIDER COLUMN", "", "", "", ""};
-                        StringBuilder widthHintLine = new StringBuilder();
-                        for (int i = 0; i < widthHints.length; i++) {
-                            if (i > 0) widthHintLine.append(",");
-                            widthHintLine.append(escapeCSV(widthHints[i]));
-                        }
-                        writer.write(widthHintLine.toString());
-                        writer.newLine();
-                        
-                        // Write header row
-                        StringBuilder header = new StringBuilder();
+                        // Create header row
+                        Row headerRow = sheet.createRow(0);
                         for (int i = 0; i < columns.length; i++) {
-                            if (i > 0) header.append(",");
-                            header.append(escapeCSV(columns[i]));
+                            Cell cell = headerRow.createCell(i);
+                            cell.setCellValue(columns[i]);
+                            cell.setCellStyle(headerStyle);
                         }
-                        writer.write(header.toString());
-                        writer.newLine();
-
+                        
+                        // Create data style for center alignment
+                        CellStyle centerStyle = workbook.createCellStyle();
+                        centerStyle.cloneStyleFrom(dataStyle);
+                        centerStyle.setAlignment(HorizontalAlignment.CENTER);
+                        
+                        // Create data style for right alignment (numbers)
+                        CellStyle rightStyle = workbook.createCellStyle();
+                        rightStyle.cloneStyleFrom(numberStyle);
+                        rightStyle.setAlignment(HorizontalAlignment.RIGHT);
+                        
                         // Write data rows
+                        int rowNum = 1;
                         for (ReportDAO.ReportRow row : allTransactions) {
-                            StringBuilder line = new StringBuilder();
+                            Row dataRow = sheet.createRow(rowNum++);
                             
                             // S.No
-                            line.append(escapeCSV(String.valueOf(row.getSerialNo())));
-                            line.append(",");
+                            Cell cell0 = dataRow.createCell(0);
+                            cell0.setCellValue(row.getSerialNo());
+                            cell0.setCellStyle(centerStyle);
                             
                             // Type
-                            line.append(escapeCSV(formatTransactionType(row.getTransactionType())));
-                            line.append(",");
+                            Cell cell1 = dataRow.createCell(1);
+                            cell1.setCellValue(formatTransactionType(row.getTransactionType()));
+                            cell1.setCellStyle(dataStyle);
                             
                             // Transaction No
-                            line.append(escapeCSV(row.getTransactionNo()));
-                            line.append(",");
+                            Cell cell2 = dataRow.createCell(2);
+                            cell2.setCellValue(row.getTransactionNo());
+                            cell2.setCellStyle(dataStyle);
                             
                             // Date
-                            line.append(escapeCSV(formatDate(row.getDate())));
-                            line.append(",");
+                            Cell cell3 = dataRow.createCell(3);
+                            try {
+                                LocalDate date = LocalDate.parse(row.getDate());
+                                cell3.setCellValue(date);
+                                cell3.setCellStyle(dateStyle);
+                            } catch (Exception e) {
+                                cell3.setCellValue(row.getDate());
+                                cell3.setCellStyle(dataStyle);
+                            }
                             
                             // Party
-                            line.append(escapeCSV(row.getParty()));
-                            line.append(",");
+                            Cell cell4 = dataRow.createCell(4);
+                            cell4.setCellValue(row.getParty());
+                            cell4.setCellStyle(dataStyle);
                             
                             // Debit
-                            line.append(escapeCSV(formatAmount(row.getDebit())));
-                            line.append(",");
+                            Cell cell5 = dataRow.createCell(5);
+                            cell5.setCellValue(row.getDebit());
+                            cell5.setCellStyle(rightStyle);
                             
                             // Credit
-                            line.append(escapeCSV(formatAmount(row.getCredit())));
-                            line.append(",");
+                            Cell cell6 = dataRow.createCell(6);
+                            cell6.setCellValue(row.getCredit());
+                            cell6.setCellStyle(rightStyle);
                             
                             // Remarks
-                            line.append(escapeCSV(row.getRemarks()));
-                            
-                            writer.write(line.toString());
-                            writer.newLine();
+                            Cell cell7 = dataRow.createCell(7);
+                            cell7.setCellValue(row.getRemarks());
+                            cell7.setCellStyle(dataStyle);
                         }
-
-                        writer.flush();
+                        
+                        // Auto-size rows for better readability
+                        for (int i = 0; i <= rowNum; i++) {
+                            sheet.autoSizeRow(i);
+                        }
+                        
+                        workbook.write(outputStream);
                         
                         // Show success message on UI thread
                         Platform.runLater(() -> {
                             AlertUtil.showInfo("Export Successful", 
-                                "Exported " + allTransactions.size() + " transactions to:\n" + file.getAbsolutePath() + "\n\nNote: The first row is a width hint for Excel - you can delete it.");
+                                "Exported " + allTransactions.size() + " transactions to:\n" + file.getAbsolutePath());
                         });
                     } catch (Exception e) {
                         Platform.runLater(() -> {
@@ -586,27 +647,8 @@ public class ReportView {
                 });
             }
 
-            private String escapeCSV(String value) {
-                if (value == null) return "";
-                if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
-                    return "\"" + value.replace("\"", "\"\"") + "\"";
-                }
-                return value;
-            }
-
-            private String formatDate(String dateStr) {
-                if (dateStr == null || dateStr.isEmpty()) return "";
-                try {
-                    LocalDate date = LocalDate.parse(dateStr);
-                    // Use dd/MM/yyyy format which Excel recognizes better
-                    return date.format(EXCEL_DATE_FORMATTER);
-                } catch (Exception e) {
-                    return dateStr;
-                }
-            }
-
-            private String formatAmount(double amount) {
-                if (amount == 0) return "-";
-                return String.format("%.2f", amount);
+            private void updateResultCount() {
+                int total = allTransactions.size();
+                resultCountLabel.setText("Showing " + total + " transaction(s)");
             }
 }
