@@ -103,12 +103,15 @@ public class PrintPreviewDialog {
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         // Copy selector for LR with multiple copies
-        javafx.scene.control.ComboBox<String> copySelector = null;
+        javafx.scene.control.ComboBox<String> copySelector = new javafx.scene.control.ComboBox<>();
+        copySelector.setVisible(false);
+        copySelector.setManaged(false);
         if (hasMultipleCopies) {
-            copySelector = new javafx.scene.control.ComboBox<>();
             copySelector.getItems().addAll(copyLabels);
             copySelector.setValue(copyLabels[0]);
             copySelector.setStyle("-fx-font-size: 13px; -fx-pref-width: 150;");
+            copySelector.setVisible(true);
+            copySelector.setManaged(true);
             copySelector.setOnAction(e -> {
                 int idx = copySelector.getSelectionModel().getSelectedIndex();
                 if (idx >= 0 && idx < pdfFilePaths.length) {
