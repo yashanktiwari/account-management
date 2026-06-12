@@ -88,7 +88,7 @@ public class ReportDAO {
             StringBuilder sb = new StringBuilder(" AND (");
             for (int i = 0; i < searchTerms.size(); i++) {
                 if (i > 0) {
-                    sb.append(" OR ");
+                    sb.append(" AND ");
                 }
                 sb.append("(");
                 for (int j = 0; j < columns.length; j++) {
@@ -230,15 +230,12 @@ public class ReportDAO {
             
             int paramIndex = 1;
             
-            log.info("Setting parameters for {} search terms", searchTerms != null ? searchTerms.size() : 0);
-            
             // Purchase Invoices
             pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
             pstmt.setDate(paramIndex++, Date.valueOf(toDate));
             if (searchTerms != null && !searchTerms.isEmpty()) {
                 for (String term : searchTerms) {
                     String pattern = "%" + term.trim().toLowerCase() + "%";
-                    log.info("Setting Purchase Invoice params for term: {}", pattern);
                     pstmt.setString(paramIndex++, pattern);
                     pstmt.setString(paramIndex++, pattern);
                     pstmt.setString(paramIndex++, pattern);
@@ -319,9 +316,7 @@ public class ReportDAO {
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 int serialNo = 1;
-                int rowCount = 0;
                 while (rs.next()) {
-                    rowCount++;
                     double amount = rs.getDouble("amount");
                     totalAmount += amount;
 
@@ -338,7 +333,6 @@ public class ReportDAO {
                     row.setType(rs.getString("type"));
                     rows.add(row);
                 }
-                log.info("Total rows returned from database: {}", rowCount);
             }
         }
 
