@@ -81,6 +81,7 @@ public class ReportDAO {
                    COALESCE(net_amount, 0) as amount, 
                    COALESCE(net_amount, 0) as debit,
                    0 as credit,
+                   COALESCE(remarks, '') as remarks,
                    'INVOICE' as type
             FROM purchase_invoices
             WHERE invoice_date BETWEEN ? AND ?
@@ -96,6 +97,7 @@ public class ReportDAO {
                    COALESCE(net_amount, 0) as amount, 
                    0 as debit,
                    COALESCE(net_amount, 0) as credit,
+                   COALESCE(remarks, '') as remarks,
                    'INVOICE' as type
             FROM sale_invoices
             WHERE invoice_date BETWEEN ? AND ?
@@ -111,6 +113,7 @@ public class ReportDAO {
                    COALESCE(amount, 0) as amount, 
                    COALESCE(amount, 0) as debit,
                    0 as credit,
+                   COALESCE(remarks, '') as remarks,
                    'RECEIPT' as type
             FROM purchase_receipts
             WHERE receipt_date BETWEEN ? AND ?
@@ -126,6 +129,7 @@ public class ReportDAO {
                    COALESCE(amount, 0) as amount, 
                    0 as debit,
                    COALESCE(amount, 0) as credit,
+                   COALESCE(remarks, '') as remarks,
                    'RECEIPT' as type
             FROM sale_receipts
             WHERE receipt_date BETWEEN ? AND ?
@@ -141,6 +145,7 @@ public class ReportDAO {
                    COALESCE(amount, 0) as amount, 
                    COALESCE(amount, 0) as debit,
                    0 as credit,
+                   COALESCE(remarks, '') as remarks,
                    'PAYMENT' as type
             FROM payments
             WHERE payment_date BETWEEN ? AND ?
@@ -156,6 +161,7 @@ public class ReportDAO {
                    COALESCE(freight_amount, 0) as amount, 
                    COALESCE(freight_amount, 0) as debit,
                    0 as credit,
+                   COALESCE(remarks, '') as remarks,
                    'SLIP' as type
             FROM loading_slips
             WHERE slip_date BETWEEN ? AND ?
@@ -171,6 +177,7 @@ public class ReportDAO {
                    COALESCE(total, 0) as amount, 
                    COALESCE(total, 0) as debit,
                    0 as credit,
+                   COALESCE(remarks, '') as remarks,
                    'LR' as type
             FROM lorry_receipts
             WHERE lr_date BETWEEN ? AND ?
@@ -212,6 +219,7 @@ public class ReportDAO {
                     row.setAmount(amount);
                     row.setDebit(rs.getDouble("debit"));
                     row.setCredit(rs.getDouble("credit"));
+                    row.setRemarks(rs.getString("remarks"));
                     row.setType(rs.getString("type"));
                     rows.add(row);
                 }
