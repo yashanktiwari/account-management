@@ -65,6 +65,7 @@ public class MainApp extends Application {
     private Button loadingSlipBtn;
     private Button lorryReceiptBtn;
     private Button reportsBtn;
+    private Button ledgerBtn;
 
     public static Stage getPrimaryStage() {
         return primaryStage;
@@ -197,6 +198,7 @@ public class MainApp extends Application {
         reportsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
 
         reportsBtn = sidebarButton("Reports", this::showReports);
+        ledgerBtn = sidebarButton("Party Ledger", this::showLedger);
 
         Label settingsTitle = new Label("Settings");
         settingsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
@@ -210,7 +212,7 @@ public class MainApp extends Application {
                 invoicesTitle, purchaseInvoiceBtn, saleInvoiceBtn,
                 receiptsTitle, purchaseReceiptBtn, saleReceiptBtn,
                 slipsTitle, loadingSlipBtn, lorryReceiptBtn,
-                reportsTitle, reportsBtn,
+                reportsTitle, reportsBtn, ledgerBtn,
                 settingsTitle, dbBtn, invoiceBtn
         );
 
@@ -284,6 +286,10 @@ public class MainApp extends Application {
 
     private void showReports() {
         showContent(new ReportView().createContent());
+    }
+
+    private void showLedger() {
+        showContent(new LedgerView().createContent());
     }
 
     private VBox buildDashboard() {
