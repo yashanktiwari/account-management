@@ -31,34 +31,63 @@ public class ReportPDFGenerator {
             PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(outputPath));
             document.open();
 
+            // Create outer table for the box
+            PdfPTable outerTable = new PdfPTable(1);
+            outerTable.setWidthPercentage(100);
+
+            PdfPCell outerCell = new PdfPCell();
+            outerCell.setBorder(Rectangle.BOX);
+            outerCell.setBorderWidth(1.5f);
+            outerCell.setPadding(10);
+
             // Add header image
             Image headerImg = loadImage("REPORT_HEADER");
             if (headerImg != null) {
-                headerImg.scaleToFit(550, 100);
+                headerImg.scaleToFit(530, 100);
                 headerImg.setAlignment(Image.ALIGN_CENTER);
-                document.add(headerImg);
-                document.add(Chunk.NEWLINE);
+                outerCell.addElement(headerImg);
             }
 
-            // Add title
-            Paragraph title = new Paragraph("All Transactions Report", F_BOLD_14);
-            title.setAlignment(Element.ALIGN_CENTER);
-            document.add(title);
-            document.add(Chunk.NEWLINE);
+            // Add horizontal line
+            outerCell.addElement(Chunk.NEWLINE);
+            LineSeparator line = new LineSeparator();
+            line.setLineWidth(1f);
+            line.setLineColor(Color.GRAY);
+            outerCell.addElement(line);
+            outerCell.addElement(Chunk.NEWLINE);
 
-            // Add date range
-            String dateRange = "Period: " + fromDate.format(DATE_FORMATTER) + " to " + toDate.format(DATE_FORMATTER);
-            Paragraph datePara = new Paragraph(dateRange, F_BOLD_12);
-            datePara.setAlignment(Element.ALIGN_CENTER);
-            document.add(datePara);
-            document.add(Chunk.NEWLINE);
+            // Add title
+            Paragraph title = new Paragraph("Account Statement", F_BOLD_14);
+            title.setAlignment(Element.ALIGN_CENTER);
+            outerCell.addElement(title);
+            outerCell.addElement(Chunk.NEWLINE);
+
+            // Add date range with separate From and To
+            PdfPTable dateTable = new PdfPTable(2);
+            dateTable.setWidthPercentage(60);
+            dateTable.setHorizontalAlignment(Element.ALIGN_CENTER);
+
+            PdfPCell fromCell = new PdfPCell(new Phrase("From: " + fromDate.format(DATE_FORMATTER), F_BOLD_12));
+            fromCell.setBorder(Rectangle.NO_BORDER);
+            fromCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            fromCell.setPaddingRight(10);
+
+            PdfPCell toCell = new PdfPCell(new Phrase("To: " + toDate.format(DATE_FORMATTER), F_BOLD_12));
+            toCell.setBorder(Rectangle.NO_BORDER);
+            toCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+            toCell.setPaddingLeft(10);
+
+            dateTable.addCell(fromCell);
+            dateTable.addCell(toCell);
+            outerCell.addElement(dateTable);
+            outerCell.addElement(Chunk.NEWLINE);
 
             // Add record count
             String count = "Total Records: " + rows.size();
             Paragraph countPara = new Paragraph(count, F_NORM_10);
             countPara.setAlignment(Element.ALIGN_CENTER);
-            document.add(countPara);
-            document.add(Chunk.NEWLINE);
+            outerCell.addElement(countPara);
+            outerCell.addElement(Chunk.NEWLINE);
 
             // Create table
             if (!rows.isEmpty()) {
@@ -89,13 +118,15 @@ public class ReportPDFGenerator {
                     addTableCell(table, row.getRemarks(), F_NORM_9, Color.WHITE, Element.ALIGN_LEFT);
                 }
 
-                document.add(table);
+                outerCell.addElement(table);
             } else {
                 Paragraph noData = new Paragraph("No data available for the selected criteria.", F_NORM_10);
                 noData.setAlignment(Element.ALIGN_CENTER);
-                document.add(noData);
+                outerCell.addElement(noData);
             }
 
+            outerTable.addCell(outerCell);
+            document.add(outerTable);
             document.close();
             log.info("Report PDF generated: {}", outputPath);
         } catch (Exception e) {
