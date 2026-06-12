@@ -20,6 +20,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.Timer;
@@ -29,6 +30,7 @@ import java.util.prefs.Preferences;
 public class ReportView {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy_HH-mm-ss");
     private final ReportDAO reportDAO = new ReportDAO();
     private final ObservableList<ReportDAO.ReportRow> allTransactions = FXCollections.observableArrayList();
 
@@ -539,7 +541,7 @@ public class ReportView {
                 fileChooser.getExtensionFilters().add(
                     new FileChooser.ExtensionFilter("PDF Files", "*.pdf")
                 );
-                fileChooser.setInitialFileName("All_Transactions_Report_" + LocalDate.now().format(DATE_FORMATTER) + ".pdf");
+                fileChooser.setInitialFileName("All_Transactions_Report_" + LocalDateTime.now().format(TIMESTAMP_FORMATTER) + ".pdf");
 
                 // Show save dialog
                 File file = fileChooser.showSaveDialog(resultTable.getScene().getWindow());
