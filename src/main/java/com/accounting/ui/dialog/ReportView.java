@@ -336,10 +336,6 @@ public class ReportView {
             searchTermsList.add(searchField.getText().trim());
         }
 
-        System.out.println("Search chips: " + searchTerms);
-        System.out.println("Search field: " + searchField.getText().trim());
-        System.out.println("Combined search terms: " + searchTermsList);
-
         final java.util.List<String> searchTermsToUse = searchTermsList.isEmpty() ? null : searchTermsList;
 
         AppExecutor.submit(() -> {

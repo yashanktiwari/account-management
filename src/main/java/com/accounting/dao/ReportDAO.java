@@ -224,14 +224,13 @@ public class ReportDAO {
         sqlBuilder.append(") combined ORDER BY date DESC");
         
         String sql = sqlBuilder.toString();
-        log.info("Generated SQL for report: {}", sql);
-        log.info("Search terms: {}", searchTerms);
-        log.info("Number of search terms: {}", searchTerms != null ? searchTerms.size() : 0);
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
             int paramIndex = 1;
+            
+            log.info("Setting parameters for {} search terms", searchTerms != null ? searchTerms.size() : 0);
             
             // Purchase Invoices
             pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
@@ -239,6 +238,7 @@ public class ReportDAO {
             if (searchTerms != null && !searchTerms.isEmpty()) {
                 for (String term : searchTerms) {
                     String pattern = "%" + term.trim().toLowerCase() + "%";
+                    log.info("Setting Purchase Invoice params for term: {}", pattern);
                     pstmt.setString(paramIndex++, pattern);
                     pstmt.setString(paramIndex++, pattern);
                     pstmt.setString(paramIndex++, pattern);
@@ -319,7 +319,9 @@ public class ReportDAO {
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 int serialNo = 1;
+                int rowCount = 0;
                 while (rs.next()) {
+                    rowCount++;
                     double amount = rs.getDouble("amount");
                     totalAmount += amount;
 
@@ -336,6 +338,7 @@ public class ReportDAO {
                     row.setType(rs.getString("type"));
                     rows.add(row);
                 }
+                log.info("Total rows returned from database: {}", rowCount);
             }
         }
 
