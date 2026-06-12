@@ -23,6 +23,7 @@ public class LedgerPDFGenerator {
     private static final Font F_BOLD_14 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
     private static final Font F_BOLD_12 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
     private static final Font F_BOLD_10 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
+    private static final Font F_BOLD_9 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9);
     private static final Font F_NORM_10 = FontFactory.getFont(FontFactory.HELVETICA, 10);
     private static final Font F_NORM_9 = FontFactory.getFont(FontFactory.HELVETICA, 9);
     private static final Font F_NORM_8 = FontFactory.getFont(FontFactory.HELVETICA, 8);
