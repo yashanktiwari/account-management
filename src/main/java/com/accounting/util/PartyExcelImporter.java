@@ -85,7 +85,7 @@ public class PartyExcelImporter {
             CellStyle instructionStyle = workbook.createCellStyle();
             Font instructionFont = workbook.createFont();
             instructionFont.setItalic(true);
-            instructionFont.setColor(IndexedColors.GREY.getIndex());
+            instructionFont.setColor(IndexedColors.GREY_50_PERCENT.getIndex());
             instructionStyle.setFont(instructionFont);
             instructionStyle.setWrapText(true);
 
