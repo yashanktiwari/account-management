@@ -30,7 +30,6 @@ public class ReportView {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private final ReportDAO reportDAO = new ReportDAO();
     private final ObservableList<ReportDAO.ReportRow> allTransactions = FXCollections.observableArrayList();
-    private FilteredList<ReportDAO.ReportRow> filteredTransactions;
 
     private TableView<ReportDAO.ReportRow> resultTable;
     private DatePicker fromDate;
@@ -110,7 +109,7 @@ public class ReportView {
             debounceTimer.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    Platform.runLater(ReportView.this::applyFilters);
+                    Platform.runLater(ReportView.this::generateReport);
                 }
             }, DEBOUNCE_DELAY);
         });
@@ -121,7 +120,7 @@ public class ReportView {
             searchField.clear();
             searchTerms.clear();
             searchTagsList.clear();
-            applyFilters();
+            generateReport();
         });
 
         HBox searchControls = new HBox(10, searchLabel, searchField, clearBtn);
@@ -186,10 +185,9 @@ public class ReportView {
         resultTable = new TableView<>();
         resultTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
 
-    filteredTransactions = new FilteredList<>(allTransactions);
-    resultTable.setItems(filteredTransactions);
+        resultTable.setItems(allTransactions);
 
-    setupTableColumns("All Transactions");
+        setupTableColumns("All Transactions");
 
         VBox.setVgrow(resultTable, Priority.ALWAYS);
 
@@ -318,85 +316,45 @@ public class ReportView {
                 }
     }
 
-            private void generateReport() {
-                LocalDate from = fromDate.getValue();
-                LocalDate to = toDate.getValue();
+    private void generateReport() {
+        LocalDate from = fromDate.getValue();
+        LocalDate to = toDate.getValue();
 
-                if (from == null || to == null) {
-                    AlertUtil.showWarning("Validation", "Please select both from and to dates");
-                    return;
-                }
+        if (from == null || to == null) {
+            AlertUtil.showWarning("Validation", "Please select both from and to dates");
+            return;
+        }
 
-                if (from.isAfter(to)) {
-                    AlertUtil.showWarning("Validation", "From date cannot be after to date");
-                    return;
-                }
+        if (from.isAfter(to)) {
+            AlertUtil.showWarning("Validation", "From date cannot be after to date");
+            return;
+        }
 
-                AppExecutor.submit(() -> {
-                    try {
-                        ReportDAO.ReportResult result = reportDAO.generateReport("All Transactions", from, to, null, null);
+        // Combine search terms into a single search string
+        String combinedSearch = "";
+        if (!searchTerms.isEmpty() || !searchField.getText().trim().isEmpty()) {
+            combinedSearch = String.join(" ", searchTerms);
+            if (!searchField.getText().trim().isEmpty()) {
+                combinedSearch = combinedSearch.isEmpty() ? searchField.getText().trim() : combinedSearch + " " + searchField.getText().trim();
+            }
+        }
 
-                        Platform.runLater(() -> {
-                            allTransactions.clear();
-                            allTransactions.addAll(result.getRows());
-                            applyFilters();
-                        });
-                    } catch (Exception e) {
-                        Platform.runLater(() -> AlertUtil.showError("Error", "Failed to generate report: " + e.getMessage()));
-                    }
+        final String searchTerm = combinedSearch.isEmpty() ? null : combinedSearch;
+
+        AppExecutor.submit(() -> {
+            try {
+                ReportDAO.ReportResult result = reportDAO.generateReport("All Transactions", from, to, null, null, searchTerm);
+
+                Platform.runLater(() -> {
+                    allTransactions.clear();
+                    allTransactions.addAll(result.getRows());
+                    updateResultCount();
                 });
+            } catch (Exception e) {
+                Platform.runLater(() -> AlertUtil.showError("Error", "Failed to generate report: " + e.getMessage()));
+            }
+        });
     }
-
-            private void applyFilters() {
-                String liveSearchText = searchField.getText().trim().toLowerCase();
-
-                if (searchTerms.isEmpty() && liveSearchText.isEmpty()) {
-                    filteredTransactions.setPredicate(null);
-                } else {
-                    filteredTransactions.setPredicate(row -> {
-                        // Check all search terms (AND logic)
-                        for (String term : searchTerms) {
-                            if (!matchesSearchTerm(row, term.toLowerCase())) {
-                                return false;
-                            }
-                        }
-
-                        // Check live search text if present
-                        if (!liveSearchText.isEmpty() && !matchesSearchTerm(row, liveSearchText)) {
-                            return false;
-                        }
-
-                        return true;
-                    });
-                }
-
-                updateResultCount();
-            }
-
-            private boolean matchesSearchTerm(ReportDAO.ReportRow row, String searchText) {
-                // Match transaction number (invoice no, receipt no, etc.)
-                if (row.getTransactionNo() != null && row.getTransactionNo().toLowerCase().contains(searchText)) {
-                    return true;
-                }
-
-                // Match transaction type (e.g., "Invoice", "Receipt", "LR", "Slip")
-                String typeFormatted = formatTransactionType(row.getTransactionType()).toLowerCase();
-                if (typeFormatted.contains(searchText)) {
-                    return true;
-                }
-
-                // Match party name
-                if (row.getParty() != null && row.getParty().toLowerCase().contains(searchText)) {
-                    return true;
-                }
-
-                // Match remarks
-                if (row.getRemarks() != null && row.getRemarks().toLowerCase().contains(searchText)) {
-                    return true;
-                }
-
-                return false;
-            }
 
             private void addSearchTerm() {
                 String term = searchField.getText().trim();
@@ -407,14 +365,14 @@ public class ReportView {
                     searchTerms.add(term);
                     searchTagsList.add(term);
                     searchField.clear();
-                    applyFilters();
+                    generateReport();
                 }
             }
 
             private void removeSearchTerm(String term) {
                 searchTerms.remove(term);
                 searchTagsList.remove(term);
-                applyFilters();
+                generateReport();
             }
 
             private void saveColumnState() {
@@ -484,16 +442,11 @@ public class ReportView {
 
             private void updateResultCount() {
                 int total = allTransactions.size();
-                int filtered = filteredTransactions.size();
-                if (filtered == total) {
-                    resultCountLabel.setText("Showing " + total + " transaction(s)");
-                } else {
-                    resultCountLabel.setText("Showing " + filtered + " of " + total + " transaction(s)");
-                }
+                resultCountLabel.setText("Showing " + total + " transaction(s)");
             }
 
             private void exportReport() {
-                if (filteredTransactions.isEmpty()) {
+                if (allTransactions.isEmpty()) {
                     AlertUtil.showWarning("Export", "No data to export");
                     return;
                 }
@@ -527,7 +480,7 @@ public class ReportView {
                         writer.newLine();
 
                         // Write data rows
-                        for (ReportDAO.ReportRow row : filteredTransactions) {
+                        for (ReportDAO.ReportRow row : allTransactions) {
                             StringBuilder line = new StringBuilder();
                             for (TableColumn<ReportDAO.ReportRow, ?> col : resultTable.getColumns()) {
                                 if (col.isVisible()) {
@@ -562,7 +515,7 @@ public class ReportView {
                         // Show success message on UI thread
                         Platform.runLater(() -> {
                             AlertUtil.showInfo("Export Successful", 
-                                "Exported " + filteredTransactions.size() + " transactions to:\n" + file.getAbsolutePath());
+                                "Exported " + allTransactions.size() + " transactions to:\n" + file.getAbsolutePath());
                         });
                     } catch (Exception e) {
                         Platform.runLater(() -> {
