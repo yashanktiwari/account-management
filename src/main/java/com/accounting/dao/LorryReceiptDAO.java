@@ -119,8 +119,8 @@ public class LorryReceiptDAO {
                     freight_to_pay, freight_paid, freight, freight_watermark, advance, balance, aoc, st_charge, total,
                     st_no, sh_no, gross_weight, tare_weight, net_weight, value_rs, to_pay_rs, adv_paid_rs,
                     inv_no, inv_date, insurance_company, policy_no, policy_date, insurance_amount,
-                    insurance_date, risk_type, remarks, status, created_at, updated_at)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())
+                    insurance_date, risk_type, remarks, status)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                     """;
         } else {
             sql = """
@@ -130,8 +130,8 @@ public class LorryReceiptDAO {
                     freight_to_pay, freight_paid, freight, advance, balance, aoc, st_charge, total,
                     st_no, sh_no, gross_weight, tare_weight, net_weight, value_rs, to_pay_rs, adv_paid_rs,
                     inv_no, inv_date, insurance_company, policy_no, policy_date, insurance_amount,
-                    insurance_date, risk_type, remarks, status, created_at, updated_at)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())
+                    insurance_date, risk_type, remarks, status)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                     """;
         }
         try (Connection conn = DBConnection.getConnection();
