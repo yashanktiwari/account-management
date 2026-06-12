@@ -41,9 +41,14 @@ public class PrintPreviewDialog {
 
     private static final Logger log = AppLogger.get(PrintPreviewDialog.class);
     private final String pdfFilePath;
+    private final String[] pdfFilePaths;
+    private final String[] copyLabels;
     private final BiConsumer<String, String> pdfGenerator;
     private final boolean generateCopiesFromSpinner;
+    private final boolean hasMultipleCopies;
+    private int currentCopyIndex = 0;
     private Runnable onClose;
+    private VBox pagesContainer;
 
     public PrintPreviewDialog(String pdfFilePath) {
         this(pdfFilePath, null);
@@ -55,8 +60,20 @@ public class PrintPreviewDialog {
 
     public PrintPreviewDialog(String pdfFilePath, BiConsumer<String, String> pdfGenerator, boolean generateCopiesFromSpinner) {
         this.pdfFilePath = pdfFilePath;
+        this.pdfFilePaths = null;
+        this.copyLabels = null;
         this.pdfGenerator = pdfGenerator;
         this.generateCopiesFromSpinner = generateCopiesFromSpinner;
+        this.hasMultipleCopies = false;
+    }
+
+    public PrintPreviewDialog(String[] pdfFilePaths, String[] copyLabels, BiConsumer<String, String> pdfGenerator) {
+        this.pdfFilePath = pdfFilePaths[0];
+        this.pdfFilePaths = pdfFilePaths;
+        this.copyLabels = copyLabels;
+        this.pdfGenerator = pdfGenerator;
+        this.generateCopiesFromSpinner = false;
+        this.hasMultipleCopies = true;
     }
 
     public void show(Window owner) {
@@ -85,6 +102,22 @@ public class PrintPreviewDialog {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
+        // Copy selector for LR with multiple copies
+        javafx.scene.control.ComboBox<String> copySelector = null;
+        if (hasMultipleCopies) {
+            copySelector = new javafx.scene.control.ComboBox<>();
+            copySelector.getItems().addAll(copyLabels);
+            copySelector.setValue(copyLabels[0]);
+            copySelector.setStyle("-fx-font-size: 13px; -fx-pref-width: 150;");
+            copySelector.setOnAction(e -> {
+                int idx = copySelector.getSelectionModel().getSelectedIndex();
+                if (idx >= 0 && idx < pdfFilePaths.length) {
+                    currentCopyIndex = idx;
+                    renderPDF();
+                }
+            });
+        }
+
         Label copiesLabel = new Label("Copies:");
         copiesLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: white;");
 
@@ -106,7 +139,11 @@ public class PrintPreviewDialog {
             if (onClose != null) onClose.run();
         });
 
-        topBar.getChildren().addAll(titleLabel, spacer, copiesLabel, copiesSpinner, printButton, closeButton);
+        if (hasMultipleCopies) {
+            topBar.getChildren().addAll(titleLabel, copySelector, spacer, copiesLabel, copiesSpinner, printButton, closeButton);
+        } else {
+            topBar.getChildren().addAll(titleLabel, spacer, copiesLabel, copiesSpinner, printButton, closeButton);
+        }
         root.setTop(topBar);
 
         // --- Center: PDF Preview (with loading indicator) ---
@@ -114,7 +151,7 @@ public class PrintPreviewDialog {
         scrollPane.setFitToWidth(true);
         scrollPane.setStyle("-fx-background: #e5e7eb; -fx-background-color: #e5e7eb;");
 
-        VBox pagesContainer = new VBox(15);
+        pagesContainer = new VBox(15);
         pagesContainer.setAlignment(Pos.TOP_CENTER);
         pagesContainer.setPadding(new Insets(10));
 
@@ -127,9 +164,20 @@ public class PrintPreviewDialog {
         root.setCenter(scrollPane);
 
         // Render PDF in background to avoid UI freeze
+        renderPDF();
+    }
+
+    private void renderPDF() {
+        pagesContainer.getChildren().clear();
+        
+        Label loadingLabel = new Label("Loading preview...");
+        loadingLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #64748b;");
+        pagesContainer.getChildren().add(loadingLabel);
+
         AppExecutor.submit(() -> {
             try {
-                File pdfFile = new File(pdfFilePath);
+                String currentFilePath = hasMultipleCopies ? pdfFilePaths[currentCopyIndex] : pdfFilePath;
+                File pdfFile = new File(currentFilePath);
                 if (pdfFile.exists()) {
                     PDDocument document = Loader.loadPDF(pdfFile);
                     PDFRenderer renderer = new PDFRenderer(document);
@@ -162,7 +210,8 @@ public class PrintPreviewDialog {
                 } else {
                     Platform.runLater(() -> {
                         pagesContainer.getChildren().clear();
-                        Label errorLabel = new Label("PDF file not found: " + pdfFilePath);
+                        String errorPath = hasMultipleCopies ? pdfFilePaths[currentCopyIndex] : pdfFilePath;
+                        Label errorLabel = new Label("PDF file not found: " + errorPath);
                         errorLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #ef4444;");
                         pagesContainer.getChildren().add(errorLabel);
                     });
@@ -207,7 +256,8 @@ public class PrintPreviewDialog {
         fileChooser.setTitle("Save PDF As");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
 
-        File originalFile = new File(pdfFilePath);
+        String currentFilePath = hasMultipleCopies ? pdfFilePaths[currentCopyIndex] : pdfFilePath;
+        File originalFile = new File(currentFilePath);
         fileChooser.setInitialFileName(originalFile.getName());
 
         Window window = MainApp.getPrimaryStage();

@@ -634,13 +634,18 @@ public class LorryReceiptDialog {
             String baseFileName = tempDir.getAbsolutePath() + "/LR_" + lr.getLrNo() + "_" +
                     java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
 
-            // Generate only first copy (Consignee Copy) for preview
-            String previewFile = baseFileName + "_CONSIGNEE_COPY.pdf";
-            LorryReceiptPDFGenerator.generateLorryReceiptPDF(lr, previewFile, "CONSIGNEE COPY");
+            // Generate 4 copies with different labels
+            String[] copyLabels = {"CONSIGNEE COPY", "CONSIGNOR COPY", "ACCOUNT COPY", "DRIVER COPY"};
+            String[] fileNames = new String[4];
 
-            // Show preview - user can save to their preferred location
+            for (int i = 0; i < 4; i++) {
+                fileNames[i] = baseFileName + "_" + copyLabels[i].replace(" ", "_") + ".pdf";
+                LorryReceiptPDFGenerator.generateLorryReceiptPDF(lr, fileNames[i], copyLabels[i]);
+            }
+
+            // Show preview with the first copy (Consignee Copy)
             stage.close();
-            new PrintPreviewDialog(previewFile, (copyLabel, outputPath) ->
+            new PrintPreviewDialog(fileNames, copyLabels, (copyLabel, outputPath) ->
                     LorryReceiptPDFGenerator.generateLorryReceiptPDF(lr, outputPath, copyLabel)
             ).showInApp(() -> MainApp.showContentInApp(new LorryReceiptListView().createContent()));
         } catch (Exception e) {
