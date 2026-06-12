@@ -645,7 +645,7 @@ public class LorryReceiptDialog {
 
             // Show preview with the first copy (Consignee Copy)
             stage.close();
-            new PrintPreviewDialog(fileNames, copyLabels, (copyLabel, outputPath) ->
+            new PrintPreviewDialog(fileNames[0], (copyLabel, outputPath) ->
                     LorryReceiptPDFGenerator.generateLorryReceiptPDF(lr, outputPath, copyLabel)
             ).showInApp(() -> MainApp.showContentInApp(new LorryReceiptListView().createContent()));
         } catch (Exception e) {

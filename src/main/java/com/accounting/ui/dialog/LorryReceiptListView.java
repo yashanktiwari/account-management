@@ -296,7 +296,7 @@ public class LorryReceiptListView {
             }
 
             // Show preview with the first copy (Consignee Copy)
-            new PrintPreviewDialog(fileNames, copyLabels, (copyLabel, outputPath) ->
+            new PrintPreviewDialog(fileNames[0], (copyLabel, outputPath) ->
                     LorryReceiptPDFGenerator.generateLorryReceiptPDF(lr, outputPath, copyLabel)
             ).showInApp(() -> MainApp.showContentInApp(createContent()));
         } catch (Exception e) {
