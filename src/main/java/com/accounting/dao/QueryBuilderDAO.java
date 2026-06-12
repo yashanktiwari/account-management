@@ -275,8 +275,8 @@ public class QueryBuilderDAO {
                 case "≤" -> { sb.append(col).append(" <= ?"); params.add(Double.parseDouble(val)); }
 
                 // Date operators
-                case "Before" -> { sb.append(col).append(" < ?"); params.add(Date.valueOf(LocalDate.parse(val, DATE_FMT))); }
-                case "After" -> { sb.append(col).append(" > ?"); params.add(Date.valueOf(LocalDate.parse(val, DATE_FMT))); }
+                case "Before" -> { sb.append(col).append(" < ?"); params.add(java.sql.Date.valueOf(LocalDate.parse(val, DATE_FMT))); }
+                case "After" -> { sb.append(col).append(" > ?"); params.add(java.sql.Date.valueOf(LocalDate.parse(val, DATE_FMT))); }
                 case "This Month" -> sb.append("YEAR(").append(col).append(") = YEAR(CURDATE()) AND MONTH(").append(col).append(") = MONTH(CURDATE())");
                 case "Last Month" -> sb.append(col).append(" >= DATE_SUB(DATE_FORMAT(CURDATE(),'%Y-%m-01'), INTERVAL 1 MONTH) AND ").append(col).append(" < DATE_FORMAT(CURDATE(),'%Y-%m-01')");
                 case "This Year" -> sb.append("YEAR(").append(col).append(") = YEAR(CURDATE())");
@@ -298,7 +298,7 @@ public class QueryBuilderDAO {
             for (int i = 0; i < params.size(); i++) {
                 Object p = params.get(i);
                 if (p instanceof Double) pstmt.setDouble(i + 1, (Double) p);
-                else if (p instanceof Date) pstmt.setDate(i + 1, (Date) p);
+                else if (p instanceof java.sql.Date) pstmt.setDate(i + 1, (java.sql.Date) p);
                 else pstmt.setString(i + 1, p.toString());
             }
 
