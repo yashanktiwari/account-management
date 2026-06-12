@@ -5,6 +5,8 @@ import com.accounting.dao.PartyDAO;
 import com.accounting.model.Party;
 import com.accounting.util.AlertUtil;
 import com.accounting.util.AppExecutor;
+import com.accounting.util.AppLogger;
+import org.slf4j.Logger;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -23,6 +25,7 @@ import java.util.List;
 
 public class LedgerView {
 
+    private static final Logger log = AppLogger.get(LedgerView.class);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
     private final LedgerDAO ledgerDAO = new LedgerDAO();
@@ -72,7 +75,6 @@ public class LedgerView {
         partyComboBox = new ComboBox<>();
         partyComboBox.setPromptText("Select a party...");
         partyComboBox.setPrefWidth(350);
-        partyComboBox.setEditable(true);
 
         // Custom cell factory to show party name
         partyComboBox.setCellFactory(lv -> new ListCell<>() {
@@ -87,22 +89,6 @@ public class LedgerView {
             protected void updateItem(Party item, boolean empty) {
                 super.updateItem(item, empty);
                 setText(empty || item == null ? "" : item.getName());
-            }
-        });
-
-        // Auto-filter as user types
-        partyComboBox.getEditor().textProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal == null || newVal.isEmpty()) return;
-            String filter = newVal.toLowerCase();
-            List<Party> allParties = partyComboBox.getItems();
-            ObservableList<Party> filtered = FXCollections.observableArrayList();
-            for (Party p : allParties) {
-                if (p.getName() != null && p.getName().toLowerCase().contains(filter)) {
-                    filtered.add(p);
-                }
-            }
-            if (!filtered.isEmpty() && !partyComboBox.isShowing()) {
-                partyComboBox.show();
             }
         });
 
@@ -307,10 +293,16 @@ public class LedgerView {
             return;
         }
 
+        log.info("Generating ledger for party: {} (ID: {}), from: {}, to: {}", 
+            selectedParty.getName(), selectedParty.getId(), fromDate.getValue(), toDate.getValue());
+
         AppExecutor.submit(() -> {
             try {
                 LedgerDAO.LedgerResult result = ledgerDAO.generateLedger(
                     selectedParty.getId(), fromDate.getValue(), toDate.getValue());
+
+                log.info("Ledger generated. Entries: {}, Opening: {}, Closing: {}", 
+                    result.getEntries().size(), result.getOpeningBalance(), result.getClosingBalance());
 
                 Platform.runLater(() -> {
                     ledgerEntries.setAll(result.getEntries());
@@ -329,6 +321,7 @@ public class LedgerView {
                     styleBalanceLabel(closingBalanceLabel, result.getClosingBalance());
                 });
             } catch (Exception e) {
+                log.error("Failed to generate ledger", e);
                 Platform.runLater(() ->
                     AlertUtil.showError("Error", "Failed to generate ledger: " + e.getMessage()));
             }
