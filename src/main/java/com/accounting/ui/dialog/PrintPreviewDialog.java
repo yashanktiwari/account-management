@@ -163,8 +163,30 @@ public class PrintPreviewDialog {
         scrollPane.setContent(pagesContainer);
         root.setCenter(scrollPane);
 
+        // --- Bottom bar with file info ---
+        HBox bottomBar = new HBox(10);
+        bottomBar.setAlignment(Pos.CENTER_LEFT);
+        bottomBar.setPadding(new Insets(8, 16, 8, 16));
+        bottomBar.setStyle("-fx-background-color: #f8fafc;");
+
+        Label infoLabel = new Label("File:");
+        infoLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b; -fx-font-weight: bold;");
+
+        Region spacer2 = new Region();
+        HBox.setHgrow(spacer2, Priority.ALWAYS);
+
+        String currentFilePath = hasMultipleCopies ? pdfFilePaths[currentCopyIndex] : pdfFilePath;
+        Label pathLabel = new Label(currentFilePath);
+        pathLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8;");
+        pathLabel.setWrapText(true);
+
+        bottomBar.getChildren().addAll(infoLabel, spacer2, pathLabel);
+        root.setBottom(bottomBar);
+
         // Render PDF in background to avoid UI freeze
         renderPDF();
+
+        return root;
     }
 
     private void renderPDF() {
@@ -227,27 +249,6 @@ public class PrintPreviewDialog {
                 });
             }
         });
-
-        // --- Bottom info bar ---
-        HBox bottomBar = new HBox(10);
-        bottomBar.setAlignment(Pos.CENTER_LEFT);
-        bottomBar.setPadding(new Insets(6, 16, 6, 16));
-        bottomBar.setStyle("-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0; -fx-border-width: 1 0 0 0;");
-
-        Label infoLabel = new Label("Copy 1: Original  |  Copy 2: Duplicate  |  Copies 3+: Triplicate");
-        infoLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
-
-        Region spacer2 = new Region();
-        HBox.setHgrow(spacer2, Priority.ALWAYS);
-
-        Label pathLabel = new Label(pdfFilePath);
-        pathLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8;");
-        pathLabel.setWrapText(true);
-
-        bottomBar.getChildren().addAll(infoLabel, spacer2, pathLabel);
-        root.setBottom(bottomBar);
-
-        return root;
     }
 
     private void showPrintDialog(int numberOfCopies) {
