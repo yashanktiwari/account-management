@@ -95,7 +95,7 @@ public class ReportDAO {
                     if (j > 0) {
                         sb.append(" OR ");
                     }
-                    sb.append(columns[j]).append(" LIKE ?");
+                    sb.append("LOWER(").append(columns[j]).append(") LIKE ?");
                 }
                 sb.append(")");
             }
@@ -224,6 +224,8 @@ public class ReportDAO {
         sqlBuilder.append(") combined ORDER BY date DESC");
         
         String sql = sqlBuilder.toString();
+        log.info("Generated SQL for report: {}", sql);
+        log.info("Search terms: {}", searchTerms);
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -235,7 +237,7 @@ public class ReportDAO {
             pstmt.setDate(paramIndex++, Date.valueOf(toDate));
             if (searchTerms != null && !searchTerms.isEmpty()) {
                 for (String term : searchTerms) {
-                    String pattern = "%" + term.trim() + "%";
+                    String pattern = "%" + term.trim().toLowerCase() + "%";
                     pstmt.setString(paramIndex++, pattern);
                     pstmt.setString(paramIndex++, pattern);
                     pstmt.setString(paramIndex++, pattern);
@@ -247,7 +249,7 @@ public class ReportDAO {
             pstmt.setDate(paramIndex++, Date.valueOf(toDate));
             if (searchTerms != null && !searchTerms.isEmpty()) {
                 for (String term : searchTerms) {
-                    String pattern = "%" + term.trim() + "%";
+                    String pattern = "%" + term.trim().toLowerCase() + "%";
                     pstmt.setString(paramIndex++, pattern);
                     pstmt.setString(paramIndex++, pattern);
                     pstmt.setString(paramIndex++, pattern);
@@ -259,7 +261,7 @@ public class ReportDAO {
             pstmt.setDate(paramIndex++, Date.valueOf(toDate));
             if (searchTerms != null && !searchTerms.isEmpty()) {
                 for (String term : searchTerms) {
-                    String pattern = "%" + term.trim() + "%";
+                    String pattern = "%" + term.trim().toLowerCase() + "%";
                     pstmt.setString(paramIndex++, pattern);
                     pstmt.setString(paramIndex++, pattern);
                     pstmt.setString(paramIndex++, pattern);
@@ -271,7 +273,7 @@ public class ReportDAO {
             pstmt.setDate(paramIndex++, Date.valueOf(toDate));
             if (searchTerms != null && !searchTerms.isEmpty()) {
                 for (String term : searchTerms) {
-                    String pattern = "%" + term.trim() + "%";
+                    String pattern = "%" + term.trim().toLowerCase() + "%";
                     pstmt.setString(paramIndex++, pattern);
                     pstmt.setString(paramIndex++, pattern);
                     pstmt.setString(paramIndex++, pattern);
@@ -283,7 +285,7 @@ public class ReportDAO {
             pstmt.setDate(paramIndex++, Date.valueOf(toDate));
             if (searchTerms != null && !searchTerms.isEmpty()) {
                 for (String term : searchTerms) {
-                    String pattern = "%" + term.trim() + "%";
+                    String pattern = "%" + term.trim().toLowerCase() + "%";
                     pstmt.setString(paramIndex++, pattern);
                     pstmt.setString(paramIndex++, pattern);
                     pstmt.setString(paramIndex++, pattern);
@@ -295,7 +297,7 @@ public class ReportDAO {
             pstmt.setDate(paramIndex++, Date.valueOf(toDate));
             if (searchTerms != null && !searchTerms.isEmpty()) {
                 for (String term : searchTerms) {
-                    String pattern = "%" + term.trim() + "%";
+                    String pattern = "%" + term.trim().toLowerCase() + "%";
                     pstmt.setString(paramIndex++, pattern);
                     pstmt.setString(paramIndex++, pattern);
                     pstmt.setString(paramIndex++, pattern);
@@ -307,7 +309,7 @@ public class ReportDAO {
             pstmt.setDate(paramIndex++, Date.valueOf(toDate));
             if (searchTerms != null && !searchTerms.isEmpty()) {
                 for (String term : searchTerms) {
-                    String pattern = "%" + term.trim() + "%";
+                    String pattern = "%" + term.trim().toLowerCase() + "%";
                     pstmt.setString(paramIndex++, pattern);
                     pstmt.setString(paramIndex++, pattern);
                     pstmt.setString(paramIndex++, pattern);
