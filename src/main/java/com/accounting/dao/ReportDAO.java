@@ -230,40 +230,89 @@ public class ReportDAO {
             
             int paramIndex = 1;
             
-            // Helper to set search parameters
-            java.util.function.Consumer<String[]> setSearchParams = (columns) -> {
-                pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
-                pstmt.setDate(paramIndex++, Date.valueOf(toDate));
-                if (searchTerms != null && !searchTerms.isEmpty()) {
-                    for (String term : searchTerms) {
-                        for (int j = 0; j < columns.length; j++) {
-                            String pattern = "%" + term.trim() + "%";
-                            pstmt.setString(paramIndex++, pattern);
-                        }
-                    }
-                }
-            };
-            
             // Purchase Invoices
-            setSearchParams.accept(new String[]{"invoice_no", "party_name", "remarks"});
+            pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
+            pstmt.setDate(paramIndex++, Date.valueOf(toDate));
+            if (searchTerms != null && !searchTerms.isEmpty()) {
+                for (String term : searchTerms) {
+                    String pattern = "%" + term.trim() + "%";
+                    pstmt.setString(paramIndex++, pattern);
+                    pstmt.setString(paramIndex++, pattern);
+                    pstmt.setString(paramIndex++, pattern);
+                }
+            }
             
             // Sale Invoices
-            setSearchParams.accept(new String[]{"invoice_no", "party_name", "remarks"});
+            pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
+            pstmt.setDate(paramIndex++, Date.valueOf(toDate));
+            if (searchTerms != null && !searchTerms.isEmpty()) {
+                for (String term : searchTerms) {
+                    String pattern = "%" + term.trim() + "%";
+                    pstmt.setString(paramIndex++, pattern);
+                    pstmt.setString(paramIndex++, pattern);
+                    pstmt.setString(paramIndex++, pattern);
+                }
+            }
             
             // Purchase Receipts
-            setSearchParams.accept(new String[]{"receipt_no", "party_name", "remarks"});
+            pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
+            pstmt.setDate(paramIndex++, Date.valueOf(toDate));
+            if (searchTerms != null && !searchTerms.isEmpty()) {
+                for (String term : searchTerms) {
+                    String pattern = "%" + term.trim() + "%";
+                    pstmt.setString(paramIndex++, pattern);
+                    pstmt.setString(paramIndex++, pattern);
+                    pstmt.setString(paramIndex++, pattern);
+                }
+            }
             
             // Sale Receipts
-            setSearchParams.accept(new String[]{"receipt_no", "party_name", "remarks"});
+            pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
+            pstmt.setDate(paramIndex++, Date.valueOf(toDate));
+            if (searchTerms != null && !searchTerms.isEmpty()) {
+                for (String term : searchTerms) {
+                    String pattern = "%" + term.trim() + "%";
+                    pstmt.setString(paramIndex++, pattern);
+                    pstmt.setString(paramIndex++, pattern);
+                    pstmt.setString(paramIndex++, pattern);
+                }
+            }
             
             // Payments
-            setSearchParams.accept(new String[]{"voucher_no", "account_name", "remarks"});
+            pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
+            pstmt.setDate(paramIndex++, Date.valueOf(toDate));
+            if (searchTerms != null && !searchTerms.isEmpty()) {
+                for (String term : searchTerms) {
+                    String pattern = "%" + term.trim() + "%";
+                    pstmt.setString(paramIndex++, pattern);
+                    pstmt.setString(paramIndex++, pattern);
+                    pstmt.setString(paramIndex++, pattern);
+                }
+            }
             
             // Loading Slips
-            setSearchParams.accept(new String[]{"slip_no", "party_name", "remarks"});
+            pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
+            pstmt.setDate(paramIndex++, Date.valueOf(toDate));
+            if (searchTerms != null && !searchTerms.isEmpty()) {
+                for (String term : searchTerms) {
+                    String pattern = "%" + term.trim() + "%";
+                    pstmt.setString(paramIndex++, pattern);
+                    pstmt.setString(paramIndex++, pattern);
+                    pstmt.setString(paramIndex++, pattern);
+                }
+            }
             
             // Lorry Receipts
-            setSearchParams.accept(new String[]{"lr_no", "consignor_name", "remarks"});
+            pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
+            pstmt.setDate(paramIndex++, Date.valueOf(toDate));
+            if (searchTerms != null && !searchTerms.isEmpty()) {
+                for (String term : searchTerms) {
+                    String pattern = "%" + term.trim() + "%";
+                    pstmt.setString(paramIndex++, pattern);
+                    pstmt.setString(paramIndex++, pattern);
+                    pstmt.setString(paramIndex++, pattern);
+                }
+            }
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 int serialNo = 1;
