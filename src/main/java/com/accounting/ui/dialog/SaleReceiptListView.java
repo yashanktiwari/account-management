@@ -81,6 +81,7 @@ public class SaleReceiptListView {
         table.getColumns().add(col("Party", "partyName", 200));
         table.getColumns().add(col("Amount", "amount", 120));
         table.getColumns().add(col("Payment Mode", "paymentMode", 120));
+        table.getColumns().add(col("Remarks", "remarks", 200));
 
         table.setItems(rows);
 
