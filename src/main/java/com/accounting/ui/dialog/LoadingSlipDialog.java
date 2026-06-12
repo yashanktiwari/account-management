@@ -66,7 +66,7 @@ public class LoadingSlipDialog {
             stage.setOnHidden(e -> onClose.run());
         }
 
-        Scene scene = new Scene(createContent(), 750, 620);
+        Scene scene = new Scene(createContent(), 950, 620);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );
