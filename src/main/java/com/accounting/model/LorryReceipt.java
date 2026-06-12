@@ -46,6 +46,7 @@ public class LorryReceipt {
     private String insuranceAmount;
     private LocalDate insuranceDate;
     private String riskType;
+    private String remarks;
     private String status;
     private LocalDate createdAt;
     private LocalDate updatedAt;
@@ -177,6 +178,9 @@ public class LorryReceipt {
 
     public String getRiskType() { return riskType; }
     public void setRiskType(String riskType) { this.riskType = riskType; }
+
+    public String getRemarks() { return remarks; }
+    public void setRemarks(String remarks) { this.remarks = remarks; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

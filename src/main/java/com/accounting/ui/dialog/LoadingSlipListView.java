@@ -137,6 +137,7 @@ public class LoadingSlipListView {
         table.getColumns().add(col("Freight", "freightAmount", 120));
         table.getColumns().add(col("Advance", "advanceAmount", 120));
         table.getColumns().add(col("Balance", "balanceAmount", 120));
+        table.getColumns().add(col("Remarks", "remarks", 200));
 
         // Created At column with custom date formatting
         TableColumn<LoadingSlip, Object> createdAtCol = new TableColumn<>("Created At");

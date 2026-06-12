@@ -75,6 +75,7 @@ public class LorryReceiptDAO {
                     insurance_amount VARCHAR(50),
                     insurance_date DATE,
                     risk_type VARCHAR(50),
+                    remarks TEXT,
                     status VARCHAR(20) DEFAULT 'SAVED',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -92,6 +93,14 @@ public class LorryReceiptDAO {
             } catch (SQLException e) {
                 log.warn("Could not check/add freight_watermark column: {}", e.getMessage());
             }
+            // Add remarks column if it doesn't exist (for existing databases)
+            try {
+                stmt.executeUpdate("ALTER TABLE lorry_receipts ADD COLUMN remarks TEXT AFTER risk_type");
+            } catch (SQLException e) {
+                if (!e.getMessage().contains("Duplicate column")) {
+                    log.warn("Could not add remarks column: {}", e.getMessage());
+                }
+            }
         }
     }
 
@@ -107,7 +116,7 @@ public class LorryReceiptDAO {
                     freight_to_pay, freight_paid, freight, freight_watermark, advance, balance, aoc, st_charge, total,
                     st_no, sh_no, gross_weight, tare_weight, net_weight, value_rs, to_pay_rs, adv_paid_rs,
                     inv_no, inv_date, insurance_company, policy_no, policy_date, insurance_amount,
-                    insurance_date, risk_type, status, created_at, updated_at)
+                    insurance_date, risk_type, remarks, status, created_at, updated_at)
                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())
                     """;
         } else {
@@ -118,8 +127,8 @@ public class LorryReceiptDAO {
                     freight_to_pay, freight_paid, freight, advance, balance, aoc, st_charge, total,
                     st_no, sh_no, gross_weight, tare_weight, net_weight, value_rs, to_pay_rs, adv_paid_rs,
                     inv_no, inv_date, insurance_company, policy_no, policy_date, insurance_amount,
-                    insurance_date, risk_type, status, created_at, updated_at)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())
+                    insurance_date, risk_type, remarks, status, created_at, updated_at)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())
                     """;
         }
         try (Connection conn = DBConnection.getConnection();
@@ -145,7 +154,7 @@ public class LorryReceiptDAO {
                     freight_to_pay=?, freight_paid=?, freight=?, freight_watermark=?, advance=?, balance=?, aoc=?, st_charge=?, total=?,
                     st_no=?, sh_no=?, gross_weight=?, tare_weight=?, net_weight=?, value_rs=?, to_pay_rs=?, adv_paid_rs=?,
                     inv_no=?, inv_date=?, insurance_company=?, policy_no=?, policy_date=?, insurance_amount=?,
-                    insurance_date=?, risk_type=?, status=?, updated_at=NOW()
+                    insurance_date=?, risk_type=?, remarks=?, status=?, updated_at=NOW()
                     WHERE id=?
                     """;
         } else {
@@ -156,14 +165,14 @@ public class LorryReceiptDAO {
                     freight_to_pay=?, freight_paid=?, freight=?, advance=?, balance=?, aoc=?, st_charge=?, total=?,
                     st_no=?, sh_no=?, gross_weight=?, tare_weight=?, net_weight=?, value_rs=?, to_pay_rs=?, adv_paid_rs=?,
                     inv_no=?, inv_date=?, insurance_company=?, policy_no=?, policy_date=?, insurance_amount=?,
-                    insurance_date=?, risk_type=?, status=?, updated_at=NOW()
+                    insurance_date=?, risk_type=?, remarks=?, status=?, updated_at=NOW()
                     WHERE id=?
                     """;
         }
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement p = conn.prepareStatement(sql)) {
             setAllParams(p, lr, hasFreightWatermark);
-            p.setInt(hasFreightWatermark ? 43 : 42, lr.getId());
+            p.setInt(hasFreightWatermark ? 44 : 43, lr.getId());
             p.executeUpdate();
             log.info("Lorry receipt updated: {}", lr.getLrNo());
         }
@@ -213,7 +222,8 @@ public class LorryReceiptDAO {
         p.setString(hasFreightWatermark ? 39 : 38, lr.getInsuranceAmount());
         p.setDate(hasFreightWatermark ? 40 : 39, lr.getInsuranceDate() != null ? java.sql.Date.valueOf(lr.getInsuranceDate()) : null);
         p.setString(hasFreightWatermark ? 41 : 40, lr.getRiskType());
-        p.setString(hasFreightWatermark ? 42 : 41, lr.getStatus());
+        p.setString(hasFreightWatermark ? 42 : 41, lr.getRemarks());
+        p.setString(hasFreightWatermark ? 43 : 42, lr.getStatus());
     }
 
     public void delete(int id) throws Exception {
@@ -262,7 +272,7 @@ public class LorryReceiptDAO {
                     IFNULL(e_way_bill_no,''), IFNULL(consignor_name,''), IFNULL(consignor_gstin,''),
                     IFNULL(consignee_name,''), IFNULL(consignee_gstin,''), IFNULL(no_of_packages,''),
                     IFNULL(description,''), IFNULL(CAST(freight AS CHAR),''), IFNULL(CAST(total AS CHAR),''),
-                    IFNULL(inv_no,''), IFNULL(status,'')
+                    IFNULL(inv_no,''), IFNULL(remarks,''), IFNULL(status,'')
                 ) LIKE ?
                 ORDER BY id DESC
                 """;
@@ -337,6 +347,7 @@ public class LorryReceiptDAO {
         lr.setInsuranceAmount(rs.getString("insurance_amount"));
         lr.setInsuranceDate(rs.getDate("insurance_date") != null ? rs.getDate("insurance_date").toLocalDate() : null);
         lr.setRiskType(rs.getString("risk_type"));
+        lr.setRemarks(rs.getString("remarks"));
         lr.setStatus(rs.getString("status"));
         lr.setCreatedAt(rs.getDate("created_at").toLocalDate());
         lr.setUpdatedAt(rs.getDate("updated_at").toLocalDate());

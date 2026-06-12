@@ -20,6 +20,7 @@ public class LoadingSlip {
     private String bankName;
     private String accountNo;
     private String ifscCode;
+    private String remarks;
     private String status;
     private LocalDate createdAt;
     private LocalDate updatedAt;
@@ -73,6 +74,9 @@ public class LoadingSlip {
 
     public String getIfscCode() { return ifscCode; }
     public void setIfscCode(String ifscCode) { this.ifscCode = ifscCode; }
+
+    public String getRemarks() { return remarks; }
+    public void setRemarks(String remarks) { this.remarks = remarks; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

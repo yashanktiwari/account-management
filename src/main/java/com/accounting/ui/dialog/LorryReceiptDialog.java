@@ -85,6 +85,7 @@ public class LorryReceiptDialog {
     private TextField insuranceAmountField;
     private DatePicker insuranceDatePicker;
     private ComboBox<String> riskTypeCombo;
+    private TextArea remarksField;
 
     public LorryReceiptDialog() {
         this.lr = new LorryReceipt();
@@ -215,6 +216,7 @@ public class LorryReceiptDialog {
         insuranceAmountField.setText(lr.getInsuranceAmount());
         insuranceDatePicker.setValue(lr.getInsuranceDate());
         if (lr.getRiskType() != null) riskTypeCombo.setValue(lr.getRiskType());
+        remarksField.setText(lr.getRemarks());
     }
 
     private Parent createContent() {
@@ -264,6 +266,12 @@ public class LorryReceiptDialog {
         riskTypeCombo.setValue("OWNER'S RISK");
         basicGrid.add(label("Risk Type"), 0, 3);
         basicGrid.add(riskTypeCombo, 1, 3);
+
+        remarksField = new TextArea();
+        remarksField.setPrefRowCount(2);
+        remarksField.setPromptText("Remarks...");
+        basicGrid.add(label("Remarks"), 2, 3);
+        basicGrid.add(remarksField, 3, 3);
 
         // ── Section 2: Consignor / Consignee ──
         GridPane partyGrid = sectionGrid();
@@ -587,6 +595,7 @@ public class LorryReceiptDialog {
         lr.setInsuranceAmount(insuranceAmountField.getText().trim());
         lr.setInsuranceDate(insuranceDatePicker.getValue());
         lr.setRiskType(riskTypeCombo.getValue());
+        lr.setRemarks(remarksField.getText().trim());
         lr.setStatus("SAVED");
 
         AppExecutor.submit(() -> {

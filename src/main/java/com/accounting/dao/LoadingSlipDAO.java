@@ -35,11 +35,21 @@ public class LoadingSlipDAO {
                     bank_name VARCHAR(255),
                     account_no VARCHAR(100),
                     ifsc_code VARCHAR(20),
+                    remarks TEXT,
                     status VARCHAR(20) DEFAULT 'SAVED',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
                 ) ENGINE=InnoDB
             """);
+            // Add remarks column if it doesn't exist (for existing tables)
+            try {
+                stmt.executeUpdate("ALTER TABLE loading_slips ADD COLUMN remarks TEXT AFTER ifsc_code");
+            } catch (SQLException e) {
+                // Column might already exist, ignore error
+                if (!e.getMessage().contains("Duplicate column")) {
+                    throw e;
+                }
+            }
         }
     }
 
@@ -48,8 +58,8 @@ public class LoadingSlipDAO {
         String sql = """
                 INSERT INTO loading_slips (slip_no, slip_date, party_name, vehicle_no, gr_no,
                 station, to_location, weight, rate, freight_amount, advance_amount, balance_amount,
-                bank_name, account_no, ifsc_code, status, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                bank_name, account_no, ifsc_code, remarks, status, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -68,7 +78,8 @@ public class LoadingSlipDAO {
             pstmt.setString(13, slip.getBankName());
             pstmt.setString(14, slip.getAccountNo());
             pstmt.setString(15, slip.getIfscCode());
-            pstmt.setString(16, slip.getStatus());
+            pstmt.setString(16, slip.getRemarks());
+            pstmt.setString(17, slip.getStatus());
 
             pstmt.executeUpdate();
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
@@ -83,7 +94,7 @@ public class LoadingSlipDAO {
         String sql = """
                 UPDATE loading_slips SET slip_no=?, slip_date=?, party_name=?, vehicle_no=?, gr_no=?,
                 station=?, to_location=?, weight=?, rate=?, freight_amount=?, advance_amount=?,
-                balance_amount=?, bank_name=?, account_no=?, ifsc_code=?, status=?, updated_at=NOW()
+                balance_amount=?, bank_name=?, account_no=?, ifsc_code=?, remarks=?, status=?, updated_at=NOW()
                 WHERE id=?
                 """;
         try (Connection conn = DBConnection.getConnection();
@@ -103,8 +114,9 @@ public class LoadingSlipDAO {
             pstmt.setString(13, slip.getBankName());
             pstmt.setString(14, slip.getAccountNo());
             pstmt.setString(15, slip.getIfscCode());
-            pstmt.setString(16, slip.getStatus());
-            pstmt.setInt(17, slip.getId());
+            pstmt.setString(16, slip.getRemarks());
+            pstmt.setString(17, slip.getStatus());
+            pstmt.setInt(18, slip.getId());
 
             pstmt.executeUpdate();
             log.info("Loading slip updated: {}", slip.getSlipNo());
@@ -173,6 +185,7 @@ public class LoadingSlipDAO {
                     IFNULL(bank_name, ''),
                     IFNULL(account_no, ''),
                     IFNULL(ifsc_code, ''),
+                    IFNULL(remarks, ''),
                     IFNULL(status, '')
                 ) LIKE ?
                 ORDER BY id DESC
@@ -221,6 +234,7 @@ public class LoadingSlipDAO {
         slip.setBankName(rs.getString("bank_name"));
         slip.setAccountNo(rs.getString("account_no"));
         slip.setIfscCode(rs.getString("ifsc_code"));
+        slip.setRemarks(rs.getString("remarks"));
         slip.setStatus(rs.getString("status"));
         slip.setCreatedAt(rs.getDate("created_at").toLocalDate());
         slip.setUpdatedAt(rs.getDate("updated_at").toLocalDate());

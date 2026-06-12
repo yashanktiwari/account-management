@@ -46,6 +46,7 @@ public class LoadingSlipDialog {
     private TextField bankNameField;
     private TextField accountNoField;
     private TextField ifscCodeField;
+    private TextArea remarksField;
 
     public LoadingSlipDialog() {
         this.slip = new LoadingSlip();
@@ -119,6 +120,7 @@ public class LoadingSlipDialog {
         bankNameField.setText(slip.getBankName());
         accountNoField.setText(slip.getAccountNo());
         ifscCodeField.setText(slip.getIfscCode());
+        remarksField.setText(slip.getRemarks());
     }
 
     private Parent createContent() {
@@ -247,6 +249,12 @@ public class LoadingSlipDialog {
         bankGrid.add(label("IFSC Code"), 0, 1);
         bankGrid.add(ifscCodeField, 1, 1);
 
+        remarksField = new TextArea();
+        remarksField.setPrefRowCount(2);
+        remarksField.setPromptText("Remarks...");
+        bankGrid.add(label("Remarks"), 2, 0, 1, 2);
+        bankGrid.add(remarksField, 3, 0, 1, 2);
+
         // Footer with buttons
         Button saveBtn = new Button("Save");
         saveBtn.setStyle("-fx-padding: 8 20 8 20; -fx-font-size: 12px; -fx-background-color: #16a34a; -fx-text-fill: white;");
@@ -327,6 +335,7 @@ public class LoadingSlipDialog {
         slip.setBankName(bankNameField.getText().trim());
         slip.setAccountNo(accountNoField.getText().trim());
         slip.setIfscCode(ifscCodeField.getText().trim());
+        slip.setRemarks(remarksField.getText().trim());
         slip.setStatus("SAVED");
 
         AppExecutor.submit(() -> {

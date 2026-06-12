@@ -135,6 +135,7 @@ public class LorryReceiptListView {
         table.getColumns().add(col("Consignee", "consigneeName", 150));
         table.getColumns().add(col("Freight", "freight", 90));
         table.getColumns().add(col("Total", "total", 90));
+        table.getColumns().add(col("Remarks", "remarks", 200));
 
         TableColumn<LorryReceipt, Object> createdAtCol = new TableColumn<>("Created At");
         createdAtCol.setCellValueFactory(new PropertyValueFactory<>("createdAt"));

@@ -132,6 +132,7 @@ public class PurchaseInvoiceListView {
         table.getColumns().add(col("Party Name", "partyName", 200));
         table.getColumns().add(col("Voucher Type", "voucherType", 120));
         table.getColumns().add(col("Total Amount", "netAmount", 120));
+        table.getColumns().add(col("Remarks", "remarks", 200));
 
         // Created At column with custom date formatting
         TableColumn<PurchaseInvoice, Object> createdAtCol = new TableColumn<>("Created At");
