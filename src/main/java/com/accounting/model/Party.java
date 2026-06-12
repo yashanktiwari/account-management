@@ -33,6 +33,9 @@ public class Party {
     private String routes;  // pipe-separated list of route values
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    
+    // Transient field for display purposes - current balance (opening balance + all transactions)
+    private transient double currentBalance;
 
     public Party() {}
 
@@ -128,6 +131,9 @@ public class Party {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public double getCurrentBalance() { return currentBalance; }
+    public void setCurrentBalance(double currentBalance) { this.currentBalance = currentBalance; }
 
     @Override
     public String toString() {

@@ -1,6 +1,7 @@
 package com.accounting.ui.dialog;
 
 import com.accounting.MainApp;
+import com.accounting.dao.LedgerDAO;
 import com.accounting.dao.PartyDAO;
 import com.accounting.model.Party;
 import com.accounting.util.AlertUtil;
@@ -32,6 +33,7 @@ import java.util.Arrays;
 public class PartyMasterListView {
 
     private final PartyDAO dao = new PartyDAO();
+    private final LedgerDAO ledgerDAO = new LedgerDAO();
     private final ObservableList<Party> rows = FXCollections.observableArrayList();
     private TableView<Party> table;
     private TextField searchField;
@@ -171,6 +173,33 @@ public class PartyMasterListView {
         });
         table.getColumns().add(routesCol);
         
+        // Balance column with custom formatting (Cr/Dr with color)
+        TableColumn<Party, Double> balanceCol = new TableColumn<>("Balance");
+        balanceCol.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleObjectProperty<>(cellData.getValue().getCurrentBalance()));
+        balanceCol.setPrefWidth(120);
+        balanceCol.setStyle("-fx-alignment: CENTER-RIGHT;");
+        balanceCol.setCellFactory(col -> new TableCell<Party, Double>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    double balance = item;
+                    String suffix = balance >= 0 ? " Cr" : " Dr";
+                    setText(String.format("%,.2f%s", Math.abs(balance), suffix));
+                    if (balance >= 0) {
+                        setStyle("-fx-alignment: CENTER-RIGHT; -fx-text-fill: #16a34a; -fx-font-weight: bold;");
+                    } else {
+                        setStyle("-fx-alignment: CENTER-RIGHT; -fx-text-fill: #dc2626; -fx-font-weight: bold;");
+                    }
+                }
+            }
+        });
+        table.getColumns().add(balanceCol);
+        
         table.getColumns().add(col("Created At",   "createdAt",  170));
         table.getColumns().add(col("Updated At",   "updatedAt",  170));
 
@@ -240,6 +269,15 @@ public class PartyMasterListView {
         AppExecutor.submit(() -> {
             try {
                 List<Party> data = dao.getAll();
+                // Calculate balance for each party
+                for (Party party : data) {
+                    try {
+                        double balance = ledgerDAO.getCurrentBalance(party.getId());
+                        party.setCurrentBalance(balance);
+                    } catch (Exception e) {
+                        party.setCurrentBalance(0);
+                    }
+                }
                 Platform.runLater(() -> rows.setAll(data));
             } catch (Exception ignored) {
                 Platform.runLater(rows::clear);

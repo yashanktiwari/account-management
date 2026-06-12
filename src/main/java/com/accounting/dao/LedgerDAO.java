@@ -67,6 +67,15 @@ public class LedgerDAO {
     }
 
     /**
+     * Get the current balance for a party (opening balance + all transactions).
+     */
+    public double getCurrentBalance(int partyId) throws Exception {
+        double partyOpeningBalance = getPartyOpeningBalance(partyId);
+        double allTransactionsBalance = getAllTransactionsBalance(partyId);
+        return partyOpeningBalance + allTransactionsBalance;
+    }
+
+    /**
      * Generate a ledger statement for a party within a date range.
      *
      * Balance logic (as per business rules):
@@ -164,6 +173,46 @@ public class LedgerDAO {
             partyId, beforeDate);
 
         return balance;
+    }
+
+    /**
+     * Calculate the net balance from all transactions for a party (all time).
+     */
+    private double getAllTransactionsBalance(int partyId) throws Exception {
+        double balance = 0;
+
+        // Purchase Invoices -> Credit (+)
+        balance += sumAmount(
+            "SELECT COALESCE(SUM(net_amount), 0) FROM purchase_invoices WHERE party_id = ?",
+            partyId);
+
+        // Sale Invoices -> Debit (-)
+        balance -= sumAmount(
+            "SELECT COALESCE(SUM(net_amount), 0) FROM sale_invoices WHERE party_id = ?",
+            partyId);
+
+        // Purchase Receipts -> Credit (+)
+        balance += sumAmount(
+            "SELECT COALESCE(SUM(amount), 0) FROM purchase_receipts WHERE party_id = ?",
+            partyId);
+
+        // Sale Receipts -> Debit (-)
+        balance -= sumAmount(
+            "SELECT COALESCE(SUM(amount), 0) FROM sale_receipts WHERE party_id = ?",
+            partyId);
+
+        return balance;
+    }
+
+    private double sumAmount(String sql, int partyId) throws Exception {
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, partyId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) return rs.getDouble(1);
+            }
+        }
+        return 0;
     }
 
     private double sumAmount(String sql, int partyId, LocalDate beforeDate) throws Exception {
