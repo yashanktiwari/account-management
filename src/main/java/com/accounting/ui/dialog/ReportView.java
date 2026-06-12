@@ -524,7 +524,7 @@ public class ReportView {
                         // Create header row
                         Row headerRow = sheet.createRow(0);
                         for (int i = 0; i < columns.length; i++) {
-                            Cell cell = headerRow.createCell(i);
+                            org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
                             cell.setCellValue(columns[i]);
                             cell.setCellStyle(headerStyle);
                         }
@@ -545,22 +545,22 @@ public class ReportView {
                             Row dataRow = sheet.createRow(rowNum++);
                             
                             // S.No
-                            Cell cell0 = dataRow.createCell(0);
+                            org.apache.poi.ss.usermodel.Cell cell0 = dataRow.createCell(0);
                             cell0.setCellValue(row.getSerialNo());
                             cell0.setCellStyle(centerStyle);
                             
                             // Type
-                            Cell cell1 = dataRow.createCell(1);
+                            org.apache.poi.ss.usermodel.Cell cell1 = dataRow.createCell(1);
                             cell1.setCellValue(formatTransactionType(row.getTransactionType()));
                             cell1.setCellStyle(dataStyle);
                             
                             // Transaction No
-                            Cell cell2 = dataRow.createCell(2);
+                            org.apache.poi.ss.usermodel.Cell cell2 = dataRow.createCell(2);
                             cell2.setCellValue(row.getTransactionNo());
                             cell2.setCellStyle(dataStyle);
                             
                             // Date
-                            Cell cell3 = dataRow.createCell(3);
+                            org.apache.poi.ss.usermodel.Cell cell3 = dataRow.createCell(3);
                             try {
                                 LocalDate date = LocalDate.parse(row.getDate());
                                 cell3.setCellValue(date);
@@ -571,29 +571,24 @@ public class ReportView {
                             }
                             
                             // Party
-                            Cell cell4 = dataRow.createCell(4);
+                            org.apache.poi.ss.usermodel.Cell cell4 = dataRow.createCell(4);
                             cell4.setCellValue(row.getParty());
                             cell4.setCellStyle(dataStyle);
                             
                             // Debit
-                            Cell cell5 = dataRow.createCell(5);
+                            org.apache.poi.ss.usermodel.Cell cell5 = dataRow.createCell(5);
                             cell5.setCellValue(row.getDebit());
                             cell5.setCellStyle(rightStyle);
                             
                             // Credit
-                            Cell cell6 = dataRow.createCell(6);
+                            org.apache.poi.ss.usermodel.Cell cell6 = dataRow.createCell(6);
                             cell6.setCellValue(row.getCredit());
                             cell6.setCellStyle(rightStyle);
                             
                             // Remarks
-                            Cell cell7 = dataRow.createCell(7);
+                            org.apache.poi.ss.usermodel.Cell cell7 = dataRow.createCell(7);
                             cell7.setCellValue(row.getRemarks());
                             cell7.setCellStyle(dataStyle);
-                        }
-                        
-                        // Auto-size rows for better readability
-                        for (int i = 0; i <= rowNum; i++) {
-                            sheet.autoSizeRow(i);
                         }
                         
                         workbook.write(outputStream);
@@ -645,10 +640,5 @@ public class ReportView {
                         });
                     }
                 });
-            }
-
-            private void updateResultCount() {
-                int total = allTransactions.size();
-                resultCountLabel.setText("Showing " + total + " transaction(s)");
             }
 }
