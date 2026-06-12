@@ -461,7 +461,7 @@ public class ReportView {
                 fileChooser.getExtensionFilters().add(
                     new FileChooser.ExtensionFilter("CSV Files", "*.csv")
                 );
-                fileChooser.setInitialFileName("All_Transactions_" + LocalDate.now().format(DATE_FORMATTER) + ".csv");
+                fileChooser.setInitialFileName("All_Transactions_" + LocalDateTime.now().format(TIMESTAMP_FORMATTER) + ".csv");
 
                 // Show save dialog
                 File file = fileChooser.showSaveDialog(resultTable.getScene().getWindow());
@@ -472,13 +472,14 @@ public class ReportView {
                 // Export in background thread
                 AppExecutor.submit(() -> {
                     try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-                        // Write header row with visible column names in order
+                        // Define columns to export (exclude Amount as it's redundant with Debit/Credit)
+                        String[] columns = {"S.No", "Type", "Transaction No", "Date", "Party", "Debit", "Credit", "Remarks"};
+                        
+                        // Write header row
                         StringBuilder header = new StringBuilder();
-                        for (TableColumn<ReportDAO.ReportRow, ?> col : resultTable.getColumns()) {
-                            if (col.isVisible()) {
-                                if (header.length() > 0) header.append(",");
-                                header.append(escapeCSV(col.getText()));
-                            }
+                        for (int i = 0; i < columns.length; i++) {
+                            if (i > 0) header.append(",");
+                            header.append(escapeCSV(columns[i]));
                         }
                         writer.write(header.toString());
                         writer.newLine();
@@ -486,30 +487,38 @@ public class ReportView {
                         // Write data rows
                         for (ReportDAO.ReportRow row : allTransactions) {
                             StringBuilder line = new StringBuilder();
-                            for (TableColumn<ReportDAO.ReportRow, ?> col : resultTable.getColumns()) {
-                                if (col.isVisible()) {
-                                    if (line.length() > 0) line.append(",");
-                                    Object value = col.getCellData(row);
-                                    String stringValue = value != null ? value.toString() : "";
-                                    
-                                    // Format date if this is the date column
-                                    if (col.getText().equals("Date") && stringValue != null && !stringValue.isEmpty()) {
-                                        try {
-                                            LocalDate date = LocalDate.parse(stringValue);
-                                            stringValue = date.format(DATE_FORMATTER);
-                                        } catch (Exception e) {
-                                            // Keep original if parsing fails
-                                        }
-                                    }
-                                    
-                                    // Format transaction type
-                                    if (col.getText().equals("Type") && stringValue != null) {
-                                        stringValue = formatTransactionType(stringValue);
-                                    }
-                                    
-                                    line.append(escapeCSV(stringValue));
-                                }
-                            }
+                            
+                            // S.No
+                            line.append(escapeCSV(String.valueOf(row.getSerialNo())));
+                            line.append(",");
+                            
+                            // Type
+                            line.append(escapeCSV(formatTransactionType(row.getTransactionType())));
+                            line.append(",");
+                            
+                            // Transaction No
+                            line.append(escapeCSV(row.getTransactionNo()));
+                            line.append(",");
+                            
+                            // Date
+                            line.append(escapeCSV(formatDate(row.getDate())));
+                            line.append(",");
+                            
+                            // Party
+                            line.append(escapeCSV(row.getParty()));
+                            line.append(",");
+                            
+                            // Debit
+                            line.append(escapeCSV(formatAmount(row.getDebit())));
+                            line.append(",");
+                            
+                            // Credit
+                            line.append(escapeCSV(formatAmount(row.getCredit())));
+                            line.append(",");
+                            
+                            // Remarks
+                            line.append(escapeCSV(row.getRemarks()));
+                            
                             writer.write(line.toString());
                             writer.newLine();
                         }
@@ -571,5 +580,20 @@ public class ReportView {
                     return "\"" + value.replace("\"", "\"\"") + "\"";
                 }
                 return value;
+            }
+
+            private String formatDate(String dateStr) {
+                if (dateStr == null || dateStr.isEmpty()) return "";
+                try {
+                    LocalDate date = LocalDate.parse(dateStr);
+                    return date.format(DATE_FORMATTER);
+                } catch (Exception e) {
+                    return dateStr;
+                }
+            }
+
+            private String formatAmount(double amount) {
+                if (amount == 0) return "-";
+                return String.format("%.2f", amount);
             }
 }
