@@ -101,6 +101,9 @@ public class LorryReceiptDAO {
                     log.warn("Could not add remarks column: {}", e.getMessage());
                 }
             }
+
+            // Reset the cache after ensuring table and adding columns
+            freightWatermarkColumnExists = null;
         }
     }
 
