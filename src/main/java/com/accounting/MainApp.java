@@ -1,60 +1,37 @@
 package com.accounting;
 
 import atlantafx.base.theme.PrimerLight;
-import com.accounting.dao.DashboardDAO;
 import com.accounting.dao.SettingsDAO;
 import com.accounting.database.AppConfig;
 import com.accounting.database.DBConnection;
-import com.accounting.model.Payment;
 import com.accounting.ui.dialog.*;
-import com.accounting.ui.dialog.ReportView;
 import com.accounting.util.AlertUtil;
 import com.accounting.util.AppExecutor;
 import com.accounting.util.AppLogger;
 import com.accounting.util.NotificationUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 
 public class MainApp extends Application {
 
     private static final Logger log = AppLogger.get(MainApp.class);
-    private static final DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
     private static Stage primaryStage;
     private static MainApp instance;
 
-    // Dashboard KPI labels
-    private Label totalOutstandingLabel;
-    private Label overdueLabel;
-    private Label dueTodayLabel;
-    private Label collectedTodayLabel;
-    private Label collectedMTDLabel;
-    private Label pendingInvoicesLabel;
-
-    // Dashboard tables
-    private TableView<DashboardDAO.OutstandingCustomer> outstandingTable;
-    private ObservableList<DashboardDAO.OutstandingCustomer> outstandingList = FXCollections.observableArrayList();
-    private TableView<Payment> recentPaymentsTable;
-    private ObservableList<Payment> recentPaymentsList = FXCollections.observableArrayList();
     private StackPane contentHost;
-    private ScrollPane dashboardScroll;
     private final List<Button> sidebarNavButtons = new ArrayList<>();
     private Button dashBtn;
     private Button partyBtn;
@@ -133,11 +110,9 @@ public class MainApp extends Application {
         root.setLeft(sidebar);
 
         // ── Center: Dashboard ──
-        dashboardScroll = new ScrollPane(buildDashboard());
-        dashboardScroll.setFitToWidth(true);
-        dashboardScroll.setStyle("-fx-background-color: #f8fafc;");
-        contentHost = new StackPane(dashboardScroll);
+        contentHost = new StackPane();
         root.setCenter(contentHost);
+        showDashboard();
 
         Scene scene = new Scene(root, 1200, 700);
         scene.getStylesheets().addAll(
@@ -156,9 +131,6 @@ public class MainApp extends Application {
         });
 
         stage.show();
-
-        // Load dashboard data
-        refreshDashboard();
     }
 
     private VBox buildSidebar() {
@@ -246,8 +218,7 @@ public class MainApp extends Application {
     }
 
     private void showDashboard() {
-        contentHost.getChildren().setAll(dashboardScroll);
-        refreshDashboard();
+        showContent(new DashboardView().createContent());
     }
 
     private void showContent(Parent content) {
@@ -296,250 +267,6 @@ public class MainApp extends Application {
 
     private void showQueryBuilder() {
         showContent(new QueryBuilderView().createContent());
-    }
-
-    private VBox buildDashboard() {
-        VBox dashboard = new VBox(16);
-        dashboard.setPadding(new Insets(20));
-        dashboard.setStyle("-fx-background-color: #f8fafc;");
-
-        // Title
-        Label title = new Label("Dashboard");
-        title.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
-
-        Label subtitle = new Label("Collections & Outstanding Overview");
-        subtitle.setStyle("-fx-font-size: 13px; -fx-text-fill: #64748b;");
-
-        // KPI Cards row
-        HBox kpiRow = buildKPICards();
-
-        // Quick Actions
-        HBox quickActions = buildQuickActions();
-
-        // Main content: Outstanding table + Recent Payments
-        HBox mainContent = new HBox(16);
-        mainContent.setMinHeight(350);
-        HBox.setHgrow(mainContent, Priority.ALWAYS);
-
-        VBox outstandingSection = buildOutstandingSection();
-        HBox.setHgrow(outstandingSection, Priority.ALWAYS);
-
-        VBox recentSection = buildRecentPaymentsSection();
-        recentSection.setPrefWidth(380);
-        recentSection.setMinWidth(350);
-
-        mainContent.getChildren().addAll(outstandingSection, recentSection);
-
-        dashboard.getChildren().addAll(title, subtitle, kpiRow, quickActions, mainContent);
-        return dashboard;
-    }
-
-    private HBox buildKPICards() {
-        totalOutstandingLabel = new Label("0");
-        overdueLabel = new Label("0");
-        dueTodayLabel = new Label("0");
-        collectedTodayLabel = new Label("0");
-        collectedMTDLabel = new Label("0");
-        pendingInvoicesLabel = new Label("0");
-
-        HBox row = new HBox(12);
-        row.getChildren().addAll(
-                kpiCard("Total Outstanding", totalOutstandingLabel, "#dc2626"),
-                kpiCard("Overdue", overdueLabel, "#ea580c"),
-                kpiCard("Due Today", dueTodayLabel, "#d97706"),
-                kpiCard("Collected Today", collectedTodayLabel, "#16a34a"),
-                kpiCard("Collected (Month)", collectedMTDLabel, "#0891b2"),
-                kpiCard("Pending Invoices", pendingInvoicesLabel, "#7c3aed")
-        );
-        return row;
-    }
-
-    private VBox kpiCard(String title, Label valueLabel, String color) {
-        Label titleLbl = new Label(title);
-        titleLbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
-
-        valueLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: " + color + ";");
-
-        VBox card = new VBox(4, titleLbl, valueLabel);
-        card.setPadding(new Insets(12, 16, 12, 16));
-        card.setStyle("-fx-background-color: white; -fx-background-radius: 8; " +
-                "-fx-border-color: #e2e8f0; -fx-border-radius: 8; " +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 4, 0, 0, 1);");
-        card.setPrefWidth(160);
-        HBox.setHgrow(card, Priority.ALWAYS);
-        return card;
-    }
-
-    private HBox buildQuickActions() {
-        Button purchaseInvBtn = quickActionBtn("Purchase Invoice", "#16a34a",
-                () -> {
-                    setActiveSidebarButton(purchaseInvoiceBtn);
-                    showPurchaseInvoice();
-                });
-        Button saleInvBtn = quickActionBtn("Sale Invoice", "#2563eb",
-                () -> {
-                    setActiveSidebarButton(saleInvoiceBtn);
-                    showSaleInvoice();
-                });
-        Button purchaseRecBtn = quickActionBtn("Purchase Receipt", "#dc2626",
-                () -> {
-                    setActiveSidebarButton(purchaseReceiptBtn);
-                    showPurchaseReceipt();
-                });
-        Button saleRecBtn = quickActionBtn("Sale Receipt", "#0891b2",
-                () -> {
-                    setActiveSidebarButton(saleReceiptBtn);
-                    showSaleReceipt();
-                });
-        Button partyBtn = quickActionBtn("Manage Parties", "#7c3aed",
-                () -> {
-                    setActiveSidebarButton(this.partyBtn);
-                    showParties();
-                });
-
-        Button refreshBtn = quickActionBtn("Refresh", "#475569", () -> {
-            setActiveSidebarButton(dashBtn);
-            showDashboard();
-        });
-
-        HBox actions = new HBox(10, purchaseInvBtn, saleInvBtn, purchaseRecBtn, saleRecBtn,
-            partyBtn, refreshBtn);
-        actions.setAlignment(Pos.CENTER_LEFT);
-        return actions;
-    }
-
-    private Button quickActionBtn(String text, String color, Runnable action) {
-        Button btn = new Button(text);
-        btn.setStyle("""
-                -fx-background-color: %s;
-                -fx-text-fill: white;
-                -fx-font-size: 12px;
-                -fx-font-weight: bold;
-                -fx-background-radius: 6;
-                -fx-padding: 8 16 8 16;
-                -fx-cursor: hand;
-                """.formatted(color));
-        btn.setOnAction(e -> action.run());
-        return btn;
-    }
-
-    @SuppressWarnings("unchecked")
-    private VBox buildOutstandingSection() {
-        Label sectionTitle = new Label("Top Outstanding Customers");
-        sectionTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
-
-        outstandingTable = new TableView<>();
-        outstandingTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
-
-        TableColumn<DashboardDAO.OutstandingCustomer, String> nameCol = new TableColumn<>("Customer");
-        nameCol.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getAccountName()));
-        nameCol.setPrefWidth(180);
-
-        TableColumn<DashboardDAO.OutstandingCustomer, String> areaCol = new TableColumn<>("Area");
-        areaCol.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(
-                c.getValue().getArea() != null ? c.getValue().getArea() : ""));
-        areaCol.setPrefWidth(100);
-
-        TableColumn<DashboardDAO.OutstandingCustomer, String> mobileCol = new TableColumn<>("Mobile");
-        mobileCol.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(
-                c.getValue().getMobile() != null ? c.getValue().getMobile() : ""));
-        mobileCol.setPrefWidth(100);
-
-        TableColumn<DashboardDAO.OutstandingCustomer, String> amtCol = new TableColumn<>("Outstanding");
-        amtCol.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(
-                String.format("%.2f", c.getValue().getOutstanding())));
-        amtCol.setStyle("-fx-alignment: CENTER-RIGHT;");
-        amtCol.setPrefWidth(120);
-
-        outstandingTable.getColumns().addAll(nameCol, areaCol, mobileCol, amtCol);
-        outstandingTable.setItems(outstandingList);
-
-        VBox.setVgrow(outstandingTable, Priority.ALWAYS);
-
-        VBox section = new VBox(8, sectionTitle, outstandingTable);
-        section.setPadding(new Insets(12));
-        section.setStyle("-fx-background-color: white; -fx-background-radius: 8; " +
-                "-fx-border-color: #e2e8f0; -fx-border-radius: 8;");
-        return section;
-    }
-
-    @SuppressWarnings("unchecked")
-    private VBox buildRecentPaymentsSection() {
-        Label sectionTitle = new Label("Recent Payments");
-        sectionTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
-
-        recentPaymentsTable = new TableView<>();
-        recentPaymentsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
-
-        TableColumn<Payment, LocalDate> dateCol = new TableColumn<>("Date");
-        dateCol.setCellValueFactory(new PropertyValueFactory<>("paymentDate"));
-        dateCol.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(LocalDate item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.format(dateFmt));
-            }
-        });
-        dateCol.setPrefWidth(80);
-
-        TableColumn<Payment, String> nameCol = new TableColumn<>("Customer");
-        nameCol.setCellValueFactory(new PropertyValueFactory<>("accountName"));
-        nameCol.setPrefWidth(140);
-
-        TableColumn<Payment, Double> amtCol = new TableColumn<>("Amount");
-        amtCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
-        amtCol.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(Double item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : String.format("%.2f", item));
-                setAlignment(Pos.CENTER_RIGHT);
-            }
-        });
-        amtCol.setPrefWidth(90);
-
-        recentPaymentsTable.getColumns().addAll(dateCol, nameCol, amtCol);
-        recentPaymentsTable.setItems(recentPaymentsList);
-
-        VBox.setVgrow(recentPaymentsTable, Priority.ALWAYS);
-
-        VBox section = new VBox(8, sectionTitle, recentPaymentsTable);
-        section.setPadding(new Insets(12));
-        section.setStyle("-fx-background-color: white; -fx-background-radius: 8; " +
-                "-fx-border-color: #e2e8f0; -fx-border-radius: 8;");
-        return section;
-    }
-
-    private void refreshDashboard() {
-        AppExecutor.submit(() -> {
-            DashboardDAO dao = new DashboardDAO();
-            double outstanding = dao.getTotalOutstanding();
-            double overdue = dao.getOverdueAmount();
-            double dueToday = dao.getDueToday();
-            double collectedToday = dao.getCollectedToday();
-            double collectedMTD = dao.getCollectedThisMonth();
-            int pendingCount = dao.getPendingInvoiceCount();
-            List<DashboardDAO.OutstandingCustomer> topCustomers = dao.getTopOutstandingCustomers(20);
-            List<Payment> recentPayments = dao.getRecentPayments(15);
-
-            Platform.runLater(() -> {
-                totalOutstandingLabel.setText(formatAmount(outstanding));
-                overdueLabel.setText(formatAmount(overdue));
-                dueTodayLabel.setText(formatAmount(dueToday));
-                collectedTodayLabel.setText(formatAmount(collectedToday));
-                collectedMTDLabel.setText(formatAmount(collectedMTD));
-                pendingInvoicesLabel.setText(String.valueOf(pendingCount));
-                outstandingList.setAll(topCustomers);
-                recentPaymentsList.setAll(recentPayments);
-            });
-        });
-    }
-
-    private String formatAmount(double amount) {
-        if (amount >= 10_000_000) return String.format("%.2f Cr", amount / 10_000_000);
-        if (amount >= 100_000) return String.format("%.2f L", amount / 100_000);
-        if (amount >= 1_000) return String.format("%.1f K", amount / 1_000);
-        return String.format("%.0f", amount);
     }
 
     private void showCompanySettings() {
