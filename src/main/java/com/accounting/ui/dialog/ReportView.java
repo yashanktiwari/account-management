@@ -476,6 +476,17 @@ public class ReportView {
                         // Define columns to export (exclude Amount as it's redundant with Debit/Credit)
                         String[] columns = {"S.No", "Type", "Transaction No", "Date", "Party", "Debit", "Credit", "Remarks"};
                         
+                        // Write width hint row to force Excel to auto-size columns properly
+                        // This is a hidden row that forces wider column widths in Excel
+                        String[] widthHints = {"", "", "", "DD/MM/YYYY - WIDER COLUMN", "", "", "", ""};
+                        StringBuilder widthHintLine = new StringBuilder();
+                        for (int i = 0; i < widthHints.length; i++) {
+                            if (i > 0) widthHintLine.append(",");
+                            widthHintLine.append(escapeCSV(widthHints[i]));
+                        }
+                        writer.write(widthHintLine.toString());
+                        writer.newLine();
+                        
                         // Write header row
                         StringBuilder header = new StringBuilder();
                         for (int i = 0; i < columns.length; i++) {
@@ -529,7 +540,7 @@ public class ReportView {
                         // Show success message on UI thread
                         Platform.runLater(() -> {
                             AlertUtil.showInfo("Export Successful", 
-                                "Exported " + allTransactions.size() + " transactions to:\n" + file.getAbsolutePath());
+                                "Exported " + allTransactions.size() + " transactions to:\n" + file.getAbsolutePath() + "\n\nNote: The first row is a width hint for Excel - you can delete it.");
                         });
                     } catch (Exception e) {
                         Platform.runLater(() -> {
