@@ -984,11 +984,11 @@ public class ReportDAO {
                     double purchases = rs.getDouble("purchases");
                     double sales = rs.getDouble("sales");
                     double receipts = rs.getDouble("receipts");
-                    double payments = rs.getDouble("payments");
-                    double net = (purchases + sales) - (receipts + payments);
+                    double paymentAmt = rs.getDouble("payments");
+                    double net = (purchases + sales) - (receipts + paymentAmt);
                     total += net;
                     rows.add(new String[]{String.valueOf(sr++), rs.getString("party"),
-                        fmt(purchases), fmt(sales), fmt(receipts), fmt(payments), fmt(net)});
+                        fmt(purchases), fmt(sales), fmt(receipts), fmt(paymentAmt), fmt(net)});
                 }
             }
         }
