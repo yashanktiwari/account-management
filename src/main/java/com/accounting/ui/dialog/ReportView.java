@@ -93,8 +93,11 @@ public class ReportView {
                 grid.add(searchField, 1, 1, 3, 1);
         Button generateBtn = new Button("Generate Report");
         generateBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
+        generateBtn.setOnAction(e -> generateReport());
+        
         Button exportBtn = new Button("Export to CSV");
         exportBtn.setStyle("-fx-background-color: #64748b; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
+        exportBtn.setOnAction(e -> exportReport());
 
         Button clearBtn = new Button("Clear Search");
                 clearBtn.setStyle("-fx-background-color: #94a3b8; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
