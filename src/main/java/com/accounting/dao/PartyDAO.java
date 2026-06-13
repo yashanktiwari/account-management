@@ -62,7 +62,7 @@ public class PartyDAO {
             pstmt.setString(7, party.getEmail());
             pstmt.setString(8, party.getPan());
             pstmt.setString(9, party.getGstin());
-            pstmt.setString(10, party.getRemarks());
+            pstmt.setString(10, "");
             pstmt.setString(11, party.getOwnerName());
             pstmt.setString(12, party.getCstNo());
             pstmt.setString(13, party.getTanNo());
@@ -82,7 +82,7 @@ public class PartyDAO {
         String sql = """
                 UPDATE parties SET name=?, type='CUSTOMER', mailing_name='', address=?, city=?, state=?, pincode=?,
                 mobile=?, email=?, pan=?, gstin=?, credit_limit='', opening_balance='', balance_type='',
-                nature_of_payment='', bank_name='', bank_account='', ifsc_code='', remarks=?,
+                nature_of_payment='', bank_name='', bank_account='', ifsc_code='', remarks='',
                 owner_name=?, cst_no=?, tan_no=?, tds=?, aadhar_no=?, routes=?, updated_at=NOW()
                 WHERE id=?
                 """;
@@ -98,7 +98,7 @@ public class PartyDAO {
             pstmt.setString(7, party.getEmail());
             pstmt.setString(8, party.getPan());
             pstmt.setString(9, party.getGstin());
-            pstmt.setString(10, party.getRemarks());
+            pstmt.setString(10, "");
             pstmt.setString(11, party.getOwnerName());
             pstmt.setString(12, party.getCstNo());
             pstmt.setString(13, party.getTanNo());
