@@ -7,6 +7,7 @@ import com.accounting.model.LoadingSlip;
 import com.accounting.util.AlertUtil;
 import com.accounting.util.AppExecutor;
 import com.accounting.util.AppLogger;
+import com.accounting.util.ScreenUtil;
 import com.accounting.util.LoadingSlipPDFGenerator;
 import com.accounting.util.NotificationUtil;
 import javafx.application.Platform;
