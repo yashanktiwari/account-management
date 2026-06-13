@@ -43,13 +43,9 @@ public class ReportDAO {
     }
 
     public ReportResult generateReport(String reportType, LocalDate fromDate, LocalDate toDate, String party, String vehicle) throws Exception {
-        return generateReport(reportType, fromDate, toDate, party, vehicle, null);
-    }
-
-    public ReportResult generateReport(String reportType, LocalDate fromDate, LocalDate toDate, String party, String vehicle, java.util.List<String> searchTerms) throws Exception {
         switch (reportType) {
             case "All Transactions":
-                return generateAllTransactionsReport(fromDate, toDate, searchTerms);
+                return generateAllTransactionsReport(fromDate, toDate);
             case "Party Transactions":
                 return generatePartyTransactionsReport(fromDate, toDate, party);
             case "Vehicle Transactions":
@@ -70,26 +66,66 @@ public class ReportDAO {
     }
 
     private ReportResult generateAllTransactionsReport(LocalDate fromDate, LocalDate toDate) throws Exception {
-        return generateAllTransactionsReport(fromDate, toDate, null);
-    }
-
-    private ReportResult generateAllTransactionsReport(LocalDate fromDate, LocalDate toDate, java.util.List<String> searchTerms) throws Exception {
         List<ReportRow> rows = new ArrayList<>();
         double totalAmount = 0.0;
 
-        // First, get all transactions in the date range
-        String sql = buildAllTransactionsSQL(false);
-        
+        // Combine all transactions from invoices, receipts, payments, loading slips, and lorry receipts
+        String sql = """
+            SELECT * FROM (
+                SELECT 'Purchase Invoice' as transaction_type, invoice_no as transaction_no, invoice_date as date,
+                       party_name as party, total_amount as amount, 'INVOICE' as type
+                FROM purchase_invoices
+                WHERE invoice_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT 'Sale Invoice' as transaction_type, invoice_no as transaction_no, invoice_date as date,
+                       party_name as party, total_amount as amount, 'INVOICE' as type
+                FROM sale_invoices
+                WHERE invoice_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT 'Purchase Receipt' as transaction_type, receipt_no as transaction_no, receipt_date as date,
+                       party_name as party, amount as amount, 'RECEIPT' as type
+                FROM purchase_receipts
+                WHERE receipt_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT 'Sale Receipt' as transaction_type, receipt_no as transaction_no, receipt_date as date,
+                       party_name as party, amount as amount, 'RECEIPT' as type
+                FROM sale_receipts
+                WHERE receipt_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT 'Payment' as transaction_type, voucher_no as transaction_no, payment_date as date,
+                       account_name as party, amount as amount, 'PAYMENT' as type
+                FROM payments
+                WHERE payment_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT 'Loading Slip' as transaction_type, slip_no as transaction_no, slip_date as date,
+                       party_name as party, freight as amount, 'SLIP' as type
+                FROM loading_slips
+                WHERE slip_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT 'Lorry Receipt' as transaction_type, lr_no as transaction_no, lr_date as date,
+                       party_name as party, freight as amount, 'LR' as type
+                FROM lorry_receipts
+                WHERE lr_date BETWEEN ? AND ?
+            ) combined
+            ORDER BY date
+            """;
+
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            int paramIndex = 1;
-            
-            // Set date parameters for all 7 transaction types
-            for (int i = 0; i < 7; i++) {
-                pstmt.setDate(paramIndex++, Date.valueOf(fromDate));
-                pstmt.setDate(paramIndex++, Date.valueOf(toDate));
-            }
+            pstmt.setDate(1, Date.valueOf(fromDate));
+            pstmt.setDate(2, Date.valueOf(toDate));
+            pstmt.setDate(3, Date.valueOf(fromDate));
+            pstmt.setDate(4, Date.valueOf(toDate));
+            pstmt.setDate(5, Date.valueOf(fromDate));
+            pstmt.setDate(6, Date.valueOf(toDate));
+            pstmt.setDate(7, Date.valueOf(fromDate));
+            pstmt.setDate(8, Date.valueOf(toDate));
+            pstmt.setDate(9, Date.valueOf(fromDate));
+            pstmt.setDate(10, Date.valueOf(toDate));
+            pstmt.setDate(11, Date.valueOf(fromDate));
+            pstmt.setDate(12, Date.valueOf(toDate));
+            pstmt.setDate(13, Date.valueOf(fromDate));
+            pstmt.setDate(14, Date.valueOf(toDate));
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 int serialNo = 1;
@@ -104,166 +140,13 @@ public class ReportDAO {
                     row.setDate(rs.getDate("date").toLocalDate().toString());
                     row.setParty(rs.getString("party"));
                     row.setAmount(amount);
-                    row.setDebit(rs.getDouble("debit"));
-                    row.setCredit(rs.getDouble("credit"));
-                    row.setRemarks(rs.getString("remarks"));
                     row.setType(rs.getString("type"));
                     rows.add(row);
                 }
             }
         }
-        
-        // Apply client-side filtering if search terms exist
-        if (searchTerms != null && !searchTerms.isEmpty()) {
-            List<ReportRow> filteredRows = new ArrayList<>(rows);
-            
-            // Apply each search term with AND logic
-            for (String term : searchTerms) {
-                String lowerTerm = term.trim().toLowerCase();
-                filteredRows.retainAll(rows.stream()
-                    .filter(row -> matchesSearchTerm(row, lowerTerm))
-                    .collect(java.util.stream.Collectors.toList()));
-            }
-            
-            rows = filteredRows;
-        }
 
         return new ReportResult(rows, 0.0, totalAmount);
-    }
-    
-    private boolean matchesSearchTerm(ReportRow row, String searchTerm) {
-        if (row.getTransactionNo() != null && row.getTransactionNo().toLowerCase().contains(searchTerm)) {
-            return true;
-        }
-        if (row.getTransactionType() != null && row.getTransactionType().toLowerCase().contains(searchTerm)) {
-            return true;
-        }
-        if (row.getParty() != null && row.getParty().toLowerCase().contains(searchTerm)) {
-            return true;
-        }
-        if (row.getRemarks() != null && row.getRemarks().toLowerCase().contains(searchTerm)) {
-            return true;
-        }
-        return false;
-    }
-    
-    private String buildAllTransactionsSQL(boolean withSearch) {
-        StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM (");
-        
-        // Purchase Invoices
-        sqlBuilder.append("""
-            SELECT 'Purchase Invoice' as transaction_type, 
-                   COALESCE(invoice_no, '') as transaction_no, 
-                   invoice_date as date,
-                   COALESCE(party_name, '') as party, 
-                   COALESCE(net_amount, 0) as amount, 
-                   COALESCE(net_amount, 0) as debit,
-                   0 as credit,
-                   COALESCE(remarks, '') as remarks,
-                   'INVOICE' as type
-            FROM purchase_invoices
-            WHERE invoice_date BETWEEN ? AND ?
-            """);
-        
-        // Sale Invoices
-        sqlBuilder.append("""
-            UNION ALL
-            SELECT 'Sale Invoice' as transaction_type, 
-                   COALESCE(invoice_no, '') as transaction_no, 
-                   invoice_date as date,
-                   COALESCE(party_name, '') as party, 
-                   COALESCE(net_amount, 0) as amount, 
-                   0 as debit,
-                   COALESCE(net_amount, 0) as credit,
-                   COALESCE(remarks, '') as remarks,
-                   'INVOICE' as type
-            FROM sale_invoices
-            WHERE invoice_date BETWEEN ? AND ?
-            """);
-        
-        // Purchase Receipts
-        sqlBuilder.append("""
-            UNION ALL
-            SELECT 'Purchase Receipt' as transaction_type, 
-                   COALESCE(receipt_no, '') as transaction_no, 
-                   receipt_date as date,
-                   COALESCE(party_name, '') as party, 
-                   COALESCE(amount, 0) as amount, 
-                   COALESCE(amount, 0) as debit,
-                   0 as credit,
-                   COALESCE(remarks, '') as remarks,
-                   'RECEIPT' as type
-            FROM purchase_receipts
-            WHERE receipt_date BETWEEN ? AND ?
-            """);
-        
-        // Sale Receipts
-        sqlBuilder.append("""
-            UNION ALL
-            SELECT 'Sale Receipt' as transaction_type, 
-                   COALESCE(receipt_no, '') as transaction_no, 
-                   receipt_date as date,
-                   COALESCE(party_name, '') as party, 
-                   COALESCE(amount, 0) as amount, 
-                   0 as debit,
-                   COALESCE(amount, 0) as credit,
-                   COALESCE(remarks, '') as remarks,
-                   'RECEIPT' as type
-            FROM sale_receipts
-            WHERE receipt_date BETWEEN ? AND ?
-            """);
-        
-        // Payments (assume payments are debits - outgoing)
-        sqlBuilder.append("""
-            UNION ALL
-            SELECT 'Payment' as transaction_type, 
-                   COALESCE(voucher_no, '') as transaction_no, 
-                   payment_date as date,
-                   COALESCE(account_name, '') as party, 
-                   COALESCE(amount, 0) as amount, 
-                   COALESCE(amount, 0) as debit,
-                   0 as credit,
-                   COALESCE(remarks, '') as remarks,
-                   'PAYMENT' as type
-            FROM payments
-            WHERE payment_date BETWEEN ? AND ?
-            """);
-        
-        // Loading Slips - use freight_amount instead of freight (assume debits - expense)
-        sqlBuilder.append("""
-            UNION ALL
-            SELECT 'Loading Slip' as transaction_type, 
-                   COALESCE(slip_no, '') as transaction_no, 
-                   slip_date as date,
-                   COALESCE(party_name, '') as party, 
-                   COALESCE(freight_amount, 0) as amount, 
-                   COALESCE(freight_amount, 0) as debit,
-                   0 as credit,
-                   COALESCE(remarks, '') as remarks,
-                   'SLIP' as type
-            FROM loading_slips
-            WHERE slip_date BETWEEN ? AND ?
-            """);
-        
-        // Lorry Receipts - use total instead of freight (assume debits - expense)
-        sqlBuilder.append("""
-            UNION ALL
-            SELECT 'Lorry Receipt' as transaction_type, 
-                   COALESCE(lr_no, '') as transaction_no, 
-                   lr_date as date,
-                   COALESCE(consignor_name, '') as party, 
-                   COALESCE(total, 0) as amount, 
-                   COALESCE(total, 0) as debit,
-                   0 as credit,
-                   COALESCE(remarks, '') as remarks,
-                   'LR' as type
-            FROM lorry_receipts
-            WHERE lr_date BETWEEN ? AND ?
-            """);
-        
-        sqlBuilder.append(") combined ORDER BY date DESC");
-        
-        return sqlBuilder.toString();
     }
 
     private ReportResult generatePartyTransactionsReport(LocalDate fromDate, LocalDate toDate, String party) throws Exception {

@@ -3,7 +3,6 @@ package com.accounting.ui.dialog;
 import com.accounting.dao.ReportDAO;
 import com.accounting.util.AlertUtil;
 import com.accounting.util.AppExecutor;
-import com.accounting.util.ReportPDFGenerator;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -14,39 +13,23 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
-import javafx.stage.FileChooser;
 
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
-import java.io.File;
-import java.io.FileOutputStream;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.prefs.Preferences;
 
 public class ReportView {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-    private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy_HH-mm-ss");
     private final ReportDAO reportDAO = new ReportDAO();
     private final ObservableList<ReportDAO.ReportRow> allTransactions = FXCollections.observableArrayList();
+    private FilteredList<ReportDAO.ReportRow> filteredTransactions;
 
     private TableView<ReportDAO.ReportRow> resultTable;
     private DatePicker fromDate;
     private DatePicker toDate;
     private TextField searchField;
     private Label resultCountLabel;
-    private final Set<String> searchTerms = new HashSet<>();
-    private final ObservableList<String> searchTagsList = FXCollections.observableArrayList();
-    private HBox tagsContainer;
-    private Timer debounceTimer;
-    private static final int DEBOUNCE_DELAY = 500;
-    private static final int MAX_SEARCH_TERMS = 5;
 
     public Parent createContent() {
         VBox root = new VBox(16);
@@ -63,8 +46,6 @@ public class ReportView {
 
         root.getChildren().addAll(title, filterSection, tableSection);
 
-        // Load initial data
-        Platform.runLater(this::generateReport);
 
         return root;
     }
@@ -95,90 +76,41 @@ public class ReportView {
         toDate.setPrefWidth(150);
         toDate.setValue(LocalDate.now());
 
-        Label searchLabel = new Label("Search:");
-        searchLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #64748b;");
-        searchField = new TextField();
-        searchField.setPromptText("Type and press Enter to add search term...");
-        searchField.setPrefWidth(300);
-        searchField.setOnKeyPressed(e -> {
-            if (e.getCode().toString().equals("ENTER")) {
-                addSearchTerm();
-                e.consume();
-            }
-        });
-        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (debounceTimer != null) {
-                debounceTimer.cancel();
-            }
-            debounceTimer = new Timer();
-            debounceTimer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    Platform.runLater(ReportView.this::generateReport);
-                }
-            }, DEBOUNCE_DELAY);
-        });
-
-        Button clearBtn = new Button("Clear");
-        clearBtn.setStyle("-fx-background-color: #94a3b8; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
-        clearBtn.setOnAction(e -> {
-            searchField.clear();
-            searchTerms.clear();
-            searchTagsList.clear();
-            generateReport();
-        });
-
-        HBox searchControls = new HBox(10, searchLabel, searchField, clearBtn);
-        searchControls.setAlignment(Pos.CENTER_LEFT);
-
-        tagsContainer = new HBox(8);
-        tagsContainer.setAlignment(Pos.CENTER_LEFT);
-        tagsContainer.setPrefHeight(32);
-        searchTagsList.addListener((javafx.collections.ListChangeListener<String>) change -> {
-            tagsContainer.getChildren().clear();
-            for (String term : searchTagsList) {
-                HBox tag = new HBox(5);
-                tag.setStyle("-fx-padding: 4px 8px; -fx-background-color: #e3f2fd; -fx-border-color: #1976d2; -fx-border-radius: 4; -fx-alignment: CENTER;");
-                Label label = new Label(term);
-                Button removeBtn = new Button("✕");
-                removeBtn.setStyle("-fx-padding: 0; -fx-font-size: 12px;");
-                removeBtn.setOnAction(e -> removeSearchTerm(term));
-                tag.getChildren().addAll(label, removeBtn);
-                tagsContainer.getChildren().add(tag);
-            }
-        });
-
-        VBox searchRow = new VBox(8, searchControls, tagsContainer);
-
+        // Party Filter
+                Label searchLabel = new Label("Search:");
+                searchLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #64748b;");
+                searchField = new TextField();
+                searchField.setPromptText("Search by Invoice, Receipt, Slip, LR, Party, Vehicle, etc.");
+                searchField.setPrefWidth(400);
+                searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        // Vehicle Filter
         // Add to grid
-        grid.add(fromDateLabel, 0, 0);
-        grid.add(fromDate, 1, 0);
-        grid.add(toDateLabel, 2, 0);
-        grid.add(toDate, 3, 0);
+        grid.add(fromDate, 3, 0);
+        grid.add(toDateLabel, 4, 0);
+        grid.add(toDate, 5, 0);
 
-        grid.add(searchRow, 0, 1, 4, 1);
+        grid.add(searchLabel, 0, 1);
+                grid.add(searchField, 1, 1, 3, 1);
         Button generateBtn = new Button("Generate Report");
         generateBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
-        generateBtn.setOnAction(e -> generateReport());
-
-        Button exportBtn = new Button("Export to Excel");
+        Button exportBtn = new Button("Export to CSV");
         exportBtn.setStyle("-fx-background-color: #64748b; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
-        exportBtn.setOnAction(e -> exportReport());
 
-        Button printPdfBtn = new Button("Print to PDF");
-        printPdfBtn.setStyle("-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
-        printPdfBtn.setOnAction(e -> printToPDF());
+        Button clearBtn = new Button("Clear Search");
+                clearBtn.setStyle("-fx-background-color: #94a3b8; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
+                clearBtn.setOnAction(e -> {
+                    searchField.clear();
+                    applyFilters();
+                });
 
-        HBox buttonBox = new HBox(10, generateBtn, exportBtn, printPdfBtn);
+        HBox buttonBox = new HBox(10, generateBtn, exportBtn, clearBtn);
         buttonBox.setAlignment(Pos.CENTER_LEFT);
 
         grid.add(buttonBox, 0, 2, 4, 1);
 
-        resultCountLabel = new Label("No results");
-        resultCountLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
-        grid.add(resultCountLabel, 0, 3, 4, 1);
-
-        section.getChildren().addAll(sectionTitle, grid);
+                resultCountLabel = new Label("No results");
+                resultCountLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
+                grid.add(resultCountLabel, 0, 3, 4, 1);
         return section;
     }
 
@@ -192,11 +124,12 @@ public class ReportView {
         sectionTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
 
         resultTable = new TableView<>();
-        resultTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+        resultTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
 
-        resultTable.setItems(allTransactions);
+    filteredTransactions = new FilteredList<>(allTransactions);
+    resultTable.setItems(filteredTransactions);
 
-        setupTableColumns("All Transactions");
+    setupTableColumns("All Transactions");
 
         VBox.setVgrow(resultTable, Priority.ALWAYS);
 
@@ -210,14 +143,13 @@ public class ReportView {
             // Serial No
             TableColumn<ReportDAO.ReportRow, Integer> serialCol = new TableColumn<>("S.No");
             serialCol.setCellValueFactory(new PropertyValueFactory<>("serialNo"));
-            serialCol.setMinWidth(50);
-            serialCol.setMaxWidth(70);
+            serialCol.setPrefWidth(50);
             serialCol.setStyle("-fx-alignment: CENTER;");
 
             // Transaction Type
             TableColumn<ReportDAO.ReportRow, String> typeCol = new TableColumn<>("Type");
             typeCol.setCellValueFactory(new PropertyValueFactory<>("transactionType"));
-            typeCol.setMinWidth(150);
+            typeCol.setPrefWidth(120);
             typeCol.setCellFactory(col -> new TableCell<>() {
                 @Override
                 protected void updateItem(String item, boolean empty) {
@@ -234,67 +166,127 @@ public class ReportView {
             // Transaction No
             TableColumn<ReportDAO.ReportRow, String> noCol = new TableColumn<>("Transaction No");
             noCol.setCellValueFactory(new PropertyValueFactory<>("transactionNo"));
-            noCol.setMinWidth(130);
+            noCol.setPrefWidth(120);
 
             // Date
             TableColumn<ReportDAO.ReportRow, String> dateCol = new TableColumn<>("Date");
             dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
-            dateCol.setMinWidth(110);
-            dateCol.setCellFactory(col -> new TableCell<>() {
-                @Override
-                protected void updateItem(String item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty || item == null) {
-                        setText(null);
-                    } else {
-                        try {
-                            // Parse the date from database format and format as dd-mm-yyyy
-                            LocalDate date = LocalDate.parse(item);
-                            setText(date.format(DATE_FORMATTER));
-                        } catch (Exception e) {
-                            setText(item); // If parsing fails, show as-is
-                        }
-                    }
-                }
-            });
+            dateCol.setPrefWidth(100);
 
             // Party Name
             TableColumn<ReportDAO.ReportRow, String> partyCol = new TableColumn<>("Party");
             partyCol.setCellValueFactory(new PropertyValueFactory<>("party"));
-            partyCol.setMinWidth(150);
+            partyCol.setPrefWidth(150);
+
+            // Vehicle No
+            TableColumn<ReportDAO.ReportRow, String> vehicleCol = new TableColumn<>("Vehicle No");
+            vehicleCol.setCellValueFactory(new PropertyValueFactory<>("vehicle"));
+            vehicleCol.setPrefWidth(120);
+
+            // From Location
+            TableColumn<ReportDAO.ReportRow, String> fromLocCol = new TableColumn<>("From Location");
+            fromLocCol.setCellValueFactory(new PropertyValueFactory<>("fromLocation"));
+            fromLocCol.setPrefWidth(120);
+
+            // To Location
+            TableColumn<ReportDAO.ReportRow, String> toLocCol = new TableColumn<>("To Location");
+            toLocCol.setCellValueFactory(new PropertyValueFactory<>("toLocation"));
+            toLocCol.setPrefWidth(120);
+
+            // Description
+            TableColumn<ReportDAO.ReportRow, String> descCol = new TableColumn<>("Description");
+            descCol.setCellValueFactory(new PropertyValueFactory<>("description"));
+            descCol.setPrefWidth(150);
+
+            // GST
+            TableColumn<ReportDAO.ReportRow, String> gstCol = new TableColumn<>("GST %");
+            gstCol.setCellValueFactory(new PropertyValueFactory<>("gst"));
+            gstCol.setPrefWidth(80);
+
+            // Taxable Amount
+            TableColumn<ReportDAO.ReportRow, Double> taxableCol = new TableColumn<>("Taxable Amount");
+            taxableCol.setCellValueFactory(new PropertyValueFactory<>("taxableAmount"));
+            taxableCol.setCellFactory(col -> formatCurrencyCell());
+            taxableCol.setPrefWidth(120);
+
+            // SGST
+            TableColumn<ReportDAO.ReportRow, Double> sgstCol = new TableColumn<>("SGST");
+            sgstCol.setCellValueFactory(new PropertyValueFactory<>("sgst"));
+            sgstCol.setCellFactory(col -> formatCurrencyCell());
+            sgstCol.setPrefWidth(100);
+
+            // CGST
+            TableColumn<ReportDAO.ReportRow, Double> cgstCol = new TableColumn<>("CGST");
+            cgstCol.setCellValueFactory(new PropertyValueFactory<>("cgst"));
+            cgstCol.setCellFactory(col -> formatCurrencyCell());
+            cgstCol.setPrefWidth(100);
+
+            // IGST
+            TableColumn<ReportDAO.ReportRow, Double> igstCol = new TableColumn<>("IGST");
+            igstCol.setCellValueFactory(new PropertyValueFactory<>("igst"));
+            igstCol.setCellFactory(col -> formatCurrencyCell());
+            igstCol.setPrefWidth(100);
+
+            // Total GST
+            TableColumn<ReportDAO.ReportRow, Double> totalGstCol = new TableColumn<>("Total GST");
+            totalGstCol.setCellValueFactory(new PropertyValueFactory<>("totalGst"));
+            totalGstCol.setCellFactory(col -> formatCurrencyCell());
+            totalGstCol.setPrefWidth(100);
 
             // Amount
             TableColumn<ReportDAO.ReportRow, Double> amountCol = new TableColumn<>("Amount");
             amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
             amountCol.setCellFactory(col -> formatCurrencyCell());
-            amountCol.setMinWidth(120);
+            amountCol.setPrefWidth(120);
 
-            // Debit
-            TableColumn<ReportDAO.ReportRow, Double> debitCol = new TableColumn<>("Debit");
-            debitCol.setCellValueFactory(new PropertyValueFactory<>("debit"));
-            debitCol.setCellFactory(col -> formatCurrencyCell());
-            debitCol.setMinWidth(100);
+            // Advance
+            TableColumn<ReportDAO.ReportRow, Double> advanceCol = new TableColumn<>("Advance");
+            advanceCol.setCellValueFactory(new PropertyValueFactory<>("advance"));
+            advanceCol.setCellFactory(col -> formatCurrencyCell());
+            advanceCol.setPrefWidth(100);
 
-            // Credit
-            TableColumn<ReportDAO.ReportRow, Double> creditCol = new TableColumn<>("Credit");
-            creditCol.setCellValueFactory(new PropertyValueFactory<>("credit"));
-            creditCol.setCellFactory(col -> formatCurrencyCell());
-            creditCol.setMinWidth(100);
+            // Balance
+            TableColumn<ReportDAO.ReportRow, Double> balanceCol = new TableColumn<>("Balance");
+            balanceCol.setCellValueFactory(new PropertyValueFactory<>("balance"));
+            balanceCol.setCellFactory(col -> formatCurrencyCell());
+            balanceCol.setPrefWidth(100);
+
+            // Payment Mode
+            TableColumn<ReportDAO.ReportRow, String> paymentModeCol = new TableColumn<>("Payment Mode");
+            paymentModeCol.setCellValueFactory(new PropertyValueFactory<>("paymentMode"));
+            paymentModeCol.setPrefWidth(100);
+
+            // Cheque No
+            TableColumn<ReportDAO.ReportRow, String> chequeNoCol = new TableColumn<>("Cheque No");
+            chequeNoCol.setCellValueFactory(new PropertyValueFactory<>("chequeNo"));
+            chequeNoCol.setPrefWidth(100);
+
+            // Cheque Date
+            TableColumn<ReportDAO.ReportRow, String> chequeDateCol = new TableColumn<>("Cheque Date");
+            chequeDateCol.setCellValueFactory(new PropertyValueFactory<>("chequeDate"));
+            chequeDateCol.setPrefWidth(100);
+
+            // Bank Name
+            TableColumn<ReportDAO.ReportRow, String> bankCol = new TableColumn<>("Bank Name");
+            bankCol.setCellValueFactory(new PropertyValueFactory<>("bankName"));
+            bankCol.setPrefWidth(120);
 
             // Remarks
             TableColumn<ReportDAO.ReportRow, String> remarksCol = new TableColumn<>("Remarks");
             remarksCol.setCellValueFactory(new PropertyValueFactory<>("remarks"));
-            remarksCol.setMinWidth(180);
+            remarksCol.setPrefWidth(150);
+
+            // Status
+            TableColumn<ReportDAO.ReportRow, String> statusCol = new TableColumn<>("Status");
+            statusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
+            statusCol.setPrefWidth(80);
 
             resultTable.getColumns().addAll(
-                serialCol, typeCol, noCol, dateCol, partyCol, amountCol, debitCol, creditCol, remarksCol
+                serialCol, typeCol, noCol, dateCol, partyCol, vehicleCol, fromLocCol, toLocCol,
+                descCol, gstCol, taxableCol, sgstCol, cgstCol, igstCol, totalGstCol, amountCol,
+                advanceCol, balanceCol, paymentModeCol, chequeNoCol, chequeDateCol, bankCol,
+                remarksCol, statusCol
             );
-
-        // Save column state when columns change
-        resultTable.getColumns().addListener((javafx.collections.ListChangeListener<TableColumn<ReportDAO.ReportRow, ?>>) change -> saveColumnState());
-
-        // Load saved column state
-        loadColumnState();
     }
 
             private TableCell<ReportDAO.ReportRow, Double> formatCurrencyCell() {
@@ -325,320 +317,159 @@ public class ReportView {
                 }
     }
 
-    private void generateReport() {
-        LocalDate from = fromDate.getValue();
-        LocalDate to = toDate.getValue();
+            private void generateReport() {
+                LocalDate from = fromDate.getValue();
+                LocalDate to = toDate.getValue();
 
-        if (from == null || to == null) {
-            AlertUtil.showWarning("Validation", "Please select both from and to dates");
-            return;
-        }
-
-        if (from.isAfter(to)) {
-            AlertUtil.showWarning("Validation", "From date cannot be after to date");
-            return;
-        }
-
-        // Combine search terms into a list
-        java.util.List<String> searchTermsList = new java.util.ArrayList<>(searchTerms);
-        if (!searchField.getText().trim().isEmpty()) {
-            searchTermsList.add(searchField.getText().trim());
-        }
-
-        final java.util.List<String> searchTermsToUse = searchTermsList.isEmpty() ? null : searchTermsList;
-
-        AppExecutor.submit(() -> {
-            try {
-                ReportDAO.ReportResult result = reportDAO.generateReport("All Transactions", from, to, null, null, searchTermsToUse);
-
-                Platform.runLater(() -> {
-                    allTransactions.clear();
-                    allTransactions.addAll(result.getRows());
-                    updateResultCount();
-                });
-            } catch (Exception e) {
-                Platform.runLater(() -> AlertUtil.showError("Error", "Failed to generate report: " + e.getMessage()));
-            }
-        });
-    }
-
-            private void addSearchTerm() {
-                String term = searchField.getText().trim();
-                if (term.isEmpty() || searchTerms.size() >= MAX_SEARCH_TERMS) {
+                if (from == null || to == null) {
+                    AlertUtil.showWarning("Validation", "Please select both from and to dates");
                     return;
                 }
-                if (!searchTerms.contains(term)) {
-                    searchTerms.add(term);
-                    searchTagsList.add(term);
-                    searchField.clear();
-                    generateReport();
+
+                if (from.isAfter(to)) {
+                    AlertUtil.showWarning("Validation", "From date cannot be after to date");
+                    return;
                 }
-            }
 
-            private void removeSearchTerm(String term) {
-                searchTerms.remove(term);
-                searchTagsList.remove(term);
-                generateReport();
-            }
+                AppExecutor.submit(() -> {
+                    try {
+                        ReportDAO.ReportResult result = reportDAO.generateReport("All Transactions", from, to, null, null);
 
-            private void saveColumnState() {
-                Preferences prefs = Preferences.userNodeForPackage(ReportView.class);
-                StringBuilder columnOrder = new StringBuilder();
-                StringBuilder columnWidths = new StringBuilder();
-
-                for (int i = 0; i < resultTable.getColumns().size(); i++) {
-                    TableColumn<ReportDAO.ReportRow, ?> col = resultTable.getColumns().get(i);
-                    if (i > 0) {
-                        columnOrder.append(",");
-                        columnWidths.append(",");
+                        Platform.runLater(() -> {
+                            allTransactions.clear();
+                            allTransactions.addAll(result.getRows());
+                            applyFilters();
+                        });
+                    } catch (Exception e) {
+                        Platform.runLater(() -> AlertUtil.showError("Error", "Failed to generate report: " + e.getMessage()));
                     }
-                    columnOrder.append(col.getText());
-                    columnWidths.append((int) col.getWidth());
-                }
+                });
+    }
 
-                prefs.put("reportTable_columnOrder", columnOrder.toString());
-                prefs.put("reportTable_columnWidths", columnWidths.toString());
-            }
+            private void applyFilters() {
+                String searchText = searchField.getText().toLowerCase().trim();
 
-            private void loadColumnState() {
-                Preferences prefs = Preferences.userNodeForPackage(ReportView.class);
-                String columnOrderStr = prefs.get("reportTable_columnOrder", "");
-                String columnWidthsStr = prefs.get("reportTable_columnWidths", "");
-
-                try {
-                    // Restore column order
-                    if (!columnOrderStr.isEmpty()) {
-                        String[] columnNames = columnOrderStr.split(",");
-                        List<TableColumn<ReportDAO.ReportRow, ?>> currentColumns = new java.util.ArrayList<>(resultTable.getColumns());
-
-                        // Reorder columns based on saved order
-                        for (int i = 0; i < columnNames.length && i < currentColumns.size(); i++) {
-                            String targetName = columnNames[i];
-                            for (int j = i; j < currentColumns.size(); j++) {
-                                if (currentColumns.get(j).getText().equals(targetName)) {
-                                    // Swap columns
-                                    TableColumn<ReportDAO.ReportRow, ?> temp = currentColumns.get(i);
-                                    currentColumns.set(i, currentColumns.get(j));
-                                    currentColumns.set(j, temp);
-                                    break;
-                                }
-                            }
+                if (searchText.isEmpty()) {
+                    filteredTransactions.setPredicate(null);
+                } else {
+                    filteredTransactions.setPredicate(row -> {
+                        // Match transaction number (invoice no, receipt no, etc.)
+                        if (row.getTransactionNo() != null && row.getTransactionNo().toLowerCase().contains(searchText)) {
+                            return true;
                         }
 
-                        // Clear and re-add columns in correct order
-                        resultTable.getColumns().clear();
-                        resultTable.getColumns().addAll(currentColumns);
-                    }
-
-                    // Restore column widths
-                    if (!columnWidthsStr.isEmpty()) {
-                        String[] widths = columnWidthsStr.split(",");
-                        for (int i = 0; i < widths.length && i < resultTable.getColumns().size(); i++) {
-                            int width = Integer.parseInt(widths[i]);
-                            if (width > 0) {
-                                resultTable.getColumns().get(i).setPrefWidth(width);
-                            }
+                        // Match transaction type (e.g., "Invoice", "Receipt", "LR", "Slip")
+                        String typeFormatted = formatTransactionType(row.getTransactionType()).toLowerCase();
+                        if (typeFormatted.contains(searchText)) {
+                            return true;
                         }
-                    }
-                } catch (Exception e) {
-                    // Ignore if preferences are corrupted
-                    e.printStackTrace();
+
+                        // Match party name
+                        if (row.getParty() != null && row.getParty().toLowerCase().contains(searchText)) {
+                            return true;
+                        }
+
+                        // Match vehicle number
+                        if (row.getVehicle() != null && row.getVehicle().toLowerCase().contains(searchText)) {
+                            return true;
+                        }
+
+                        // Match from/to locations
+                        if (row.getFromLocation() != null && row.getFromLocation().toLowerCase().contains(searchText)) {
+                            return true;
+                        }
+                        if (row.getToLocation() != null && row.getToLocation().toLowerCase().contains(searchText)) {
+                            return true;
+                        }
+
+                        // Match description
+                        if (row.getDescription() != null && row.getDescription().toLowerCase().contains(searchText)) {
+                            return true;
+                        }
+
+                        // Match remarks
+                        if (row.getRemarks() != null && row.getRemarks().toLowerCase().contains(searchText)) {
+                            return true;
+                        }
+
+                        // Match payment mode
+                        if (row.getPaymentMode() != null && row.getPaymentMode().toLowerCase().contains(searchText)) {
+                            return true;
+                        }
+
+                        // Match cheque number
+                        if (row.getChequeNo() != null && row.getChequeNo().toLowerCase().contains(searchText)) {
+                            return true;
+                        }
+
+                        // Match bank name
+                        if (row.getBankName() != null && row.getBankName().toLowerCase().contains(searchText)) {
+                            return true;
+                        }
+
+                        return false;
+                    });
                 }
+
+                updateResultCount();
             }
 
             private void updateResultCount() {
                 int total = allTransactions.size();
-                resultCountLabel.setText("Showing " + total + " transaction(s)");
+                int filtered = filteredTransactions.size();
+                if (filtered == total) {
+                    resultCountLabel.setText("Showing " + total + " transaction(s)");
+                } else {
+                    resultCountLabel.setText("Showing " + filtered + " of " + total + " transaction(s)");
+                }
             }
 
             private void exportReport() {
-                if (allTransactions.isEmpty()) {
+                if (filteredTransactions.isEmpty()) {
                     AlertUtil.showWarning("Export", "No data to export");
                     return;
                 }
 
-                // Create file chooser
-                FileChooser fileChooser = new FileChooser();
-                fileChooser.setTitle("Export to Excel");
-                fileChooser.getExtensionFilters().add(
-                    new FileChooser.ExtensionFilter("Excel Files", "*.xlsx")
-                );
-                fileChooser.setInitialFileName("All_Transactions_" + LocalDateTime.now().format(TIMESTAMP_FORMATTER) + ".xlsx");
+                // Simple CSV export
+                StringBuilder csv = new StringBuilder();
+                csv.append("S.No,Type,Transaction No,Date,Party,Vehicle No,From Location,To Location,");
+                csv.append("Description,GST %,Taxable Amount,SGST,CGST,IGST,Total GST,Amount,");
+                csv.append("Advance,Balance,Payment Mode,Cheque No,Cheque Date,Bank Name,Remarks,Status\n");
 
-                // Show save dialog
-                File file = fileChooser.showSaveDialog(resultTable.getScene().getWindow());
-                if (file == null) {
-                    return; // User cancelled
+                for (ReportDAO.ReportRow row : filteredTransactions) {
+                    csv.append(row.getSerialNo()).append(",");
+                    csv.append(formatTransactionType(row.getTransactionType())).append(",");
+                    csv.append(row.getTransactionNo()).append(",");
+                    csv.append(row.getDate()).append(",");
+                    csv.append(escapeCSV(row.getParty())).append(",");
+                    csv.append(row.getVehicle()).append(",");
+                    csv.append(row.getFromLocation()).append(",");
+                    csv.append(row.getToLocation()).append(",");
+                    csv.append(escapeCSV(row.getDescription())).append(",");
+                    csv.append(row.getGst()).append(",");
+                    csv.append(row.getTaxableAmount() != null ? row.getTaxableAmount() : "").append(",");
+                    csv.append(row.getSgst() != null ? row.getSgst() : "").append(",");
+                    csv.append(row.getCgst() != null ? row.getCgst() : "").append(",");
+                    csv.append(row.getIgst() != null ? row.getIgst() : "").append(",");
+                    csv.append(row.getTotalGst() != null ? row.getTotalGst() : "").append(",");
+                    csv.append(row.getAmount() != null ? row.getAmount() : "").append(",");
+                    csv.append(row.getAdvance() != null ? row.getAdvance() : "").append(",");
+                    csv.append(row.getBalance() != null ? row.getBalance() : "").append(",");
+                    csv.append(row.getPaymentMode()).append(",");
+                    csv.append(row.getChequeNo()).append(",");
+                    csv.append(row.getChequeDate()).append(",");
+                    csv.append(row.getBankName()).append(",");
+                    csv.append(escapeCSV(row.getRemarks())).append("\n");
                 }
 
-                // Export in background thread
-                AppExecutor.submit(() -> {
-                    try (Workbook workbook = new XSSFWorkbook();
-                         FileOutputStream outputStream = new FileOutputStream(file)) {
-                        
-                        Sheet sheet = workbook.createSheet("All Transactions");
-                        
-                        // Define column widths
-                        sheet.setColumnWidth(0, 5 * 256);  // S.No - 5 characters
-                        sheet.setColumnWidth(1, 20 * 256); // Type - 20 characters
-                        sheet.setColumnWidth(2, 18 * 256); // Transaction No - 18 characters
-                        sheet.setColumnWidth(3, 15 * 256); // Date - 15 characters
-                        sheet.setColumnWidth(4, 25 * 256); // Party - 25 characters
-                        sheet.setColumnWidth(5, 12 * 256); // Debit - 12 characters
-                        sheet.setColumnWidth(6, 12 * 256); // Credit - 12 characters
-                        sheet.setColumnWidth(7, 30 * 256); // Remarks - 30 characters
-                        
-                        // Create header style
-                        CellStyle headerStyle = workbook.createCellStyle();
-                        Font headerFont = workbook.createFont();
-                        headerFont.setBold(true);
-                        headerStyle.setFont(headerFont);
-                        headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-                        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-                        headerStyle.setBorderBottom(BorderStyle.THIN);
-                        headerStyle.setBorderTop(BorderStyle.THIN);
-                        headerStyle.setBorderLeft(BorderStyle.THIN);
-                        headerStyle.setBorderRight(BorderStyle.THIN);
-                        
-                        // Create data style
-                        CellStyle dataStyle = workbook.createCellStyle();
-                        dataStyle.setBorderBottom(BorderStyle.THIN);
-                        dataStyle.setBorderTop(BorderStyle.THIN);
-                        dataStyle.setBorderLeft(BorderStyle.THIN);
-                        dataStyle.setBorderRight(BorderStyle.THIN);
-                        
-                        // Create date style
-                        CellStyle dateStyle = workbook.createCellStyle();
-                        dateStyle.cloneStyleFrom(dataStyle);
-                        CreationHelper createHelper = workbook.getCreationHelper();
-                        dateStyle.setDataFormat(createHelper.createDataFormat().getFormat("dd/mm/yyyy"));
-                        
-                        // Create number style
-                        CellStyle numberStyle = workbook.createCellStyle();
-                        numberStyle.cloneStyleFrom(dataStyle);
-                        numberStyle.setDataFormat(createHelper.createDataFormat().getFormat("#,##0.00"));
-                        
-                        // Define columns
-                        String[] columns = {"S.No", "Type", "Transaction No", "Date", "Party", "Debit", "Credit", "Remarks"};
-                        
-                        // Create header row
-                        Row headerRow = sheet.createRow(0);
-                        for (int i = 0; i < columns.length; i++) {
-                            org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
-                            cell.setCellValue(columns[i]);
-                            cell.setCellStyle(headerStyle);
-                        }
-                        
-                        // Create data style for center alignment
-                        CellStyle centerStyle = workbook.createCellStyle();
-                        centerStyle.cloneStyleFrom(dataStyle);
-                        centerStyle.setAlignment(HorizontalAlignment.CENTER);
-                        
-                        // Create data style for right alignment (numbers)
-                        CellStyle rightStyle = workbook.createCellStyle();
-                        rightStyle.cloneStyleFrom(numberStyle);
-                        rightStyle.setAlignment(HorizontalAlignment.RIGHT);
-                        
-                        // Write data rows
-                        int rowNum = 1;
-                        for (ReportDAO.ReportRow row : allTransactions) {
-                            Row dataRow = sheet.createRow(rowNum++);
-                            
-                            // S.No
-                            org.apache.poi.ss.usermodel.Cell cell0 = dataRow.createCell(0);
-                            cell0.setCellValue(row.getSerialNo());
-                            cell0.setCellStyle(centerStyle);
-                            
-                            // Type
-                            org.apache.poi.ss.usermodel.Cell cell1 = dataRow.createCell(1);
-                            cell1.setCellValue(formatTransactionType(row.getTransactionType()));
-                            cell1.setCellStyle(dataStyle);
-                            
-                            // Transaction No
-                            org.apache.poi.ss.usermodel.Cell cell2 = dataRow.createCell(2);
-                            cell2.setCellValue(row.getTransactionNo());
-                            cell2.setCellStyle(dataStyle);
-                            
-                            // Date
-                            org.apache.poi.ss.usermodel.Cell cell3 = dataRow.createCell(3);
-                            try {
-                                LocalDate date = LocalDate.parse(row.getDate());
-                                cell3.setCellValue(date);
-                                cell3.setCellStyle(dateStyle);
-                            } catch (Exception e) {
-                                cell3.setCellValue(row.getDate());
-                                cell3.setCellStyle(dataStyle);
-                            }
-                            
-                            // Party
-                            org.apache.poi.ss.usermodel.Cell cell4 = dataRow.createCell(4);
-                            cell4.setCellValue(row.getParty());
-                            cell4.setCellStyle(dataStyle);
-                            
-                            // Debit
-                            org.apache.poi.ss.usermodel.Cell cell5 = dataRow.createCell(5);
-                            cell5.setCellValue(row.getDebit());
-                            cell5.setCellStyle(rightStyle);
-                            
-                            // Credit
-                            org.apache.poi.ss.usermodel.Cell cell6 = dataRow.createCell(6);
-                            cell6.setCellValue(row.getCredit());
-                            cell6.setCellStyle(rightStyle);
-                            
-                            // Remarks
-                            org.apache.poi.ss.usermodel.Cell cell7 = dataRow.createCell(7);
-                            cell7.setCellValue(row.getRemarks());
-                            cell7.setCellStyle(dataStyle);
-                        }
-                        
-                        workbook.write(outputStream);
-                        
-                        // Show success message on UI thread
-                        Platform.runLater(() -> {
-                            AlertUtil.showInfo("Export Successful", 
-                                "Exported " + allTransactions.size() + " transactions to:\n" + file.getAbsolutePath());
-                        });
-                    } catch (Exception e) {
-                        Platform.runLater(() -> {
-                            AlertUtil.showError("Export Failed", "Failed to export data: " + e.getMessage());
-                        });
-                    }
-                });
+                AlertUtil.showInfo("Export", "CSV export:\n\n" + csv.toString().substring(0, Math.min(500, csv.length())) + "...\n\n(Export to CSV feature would save to file)");
             }
 
-            private void printToPDF() {
-                if (allTransactions.isEmpty()) {
-                    AlertUtil.showWarning("Print to PDF", "No data to print");
-                    return;
+            private String escapeCSV(String value) {
+                if (value == null) return "";
+                if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+                    return "\"" + value.replace("\"", "\"\"") + "\"";
                 }
-
-                // Create file chooser
-                FileChooser fileChooser = new FileChooser();
-                fileChooser.setTitle("Print to PDF");
-                fileChooser.getExtensionFilters().add(
-                    new FileChooser.ExtensionFilter("PDF Files", "*.pdf")
-                );
-                fileChooser.setInitialFileName("All_Transactions_Report_" + LocalDateTime.now().format(TIMESTAMP_FORMATTER) + ".pdf");
-
-                // Show save dialog
-                File file = fileChooser.showSaveDialog(resultTable.getScene().getWindow());
-                if (file == null) {
-                    return; // User cancelled
-                }
-
-                // Generate PDF in background thread
-                AppExecutor.submit(() -> {
-                    try {
-                        ReportPDFGenerator.generateReportPDF(allTransactions, fromDate.getValue(), toDate.getValue(), file.getAbsolutePath());
-                        Platform.runLater(() -> {
-                            AlertUtil.showInfo("PDF Generated", 
-                                "Successfully generated PDF with " + allTransactions.size() + " transactions:\n" + file.getAbsolutePath());
-                        });
-                    } catch (Exception e) {
-                        Platform.runLater(() -> {
-                            AlertUtil.showError("PDF Generation Failed", "Failed to generate PDF: " + e.getMessage());
-                        });
-                    }
-                });
+                return value;
             }
 }
