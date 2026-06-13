@@ -19,6 +19,7 @@ import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 
+import java.awt.Color;
 import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -462,7 +463,7 @@ public class ReportView {
                     String[] headers = {"Sr. No", "Type", "Transaction No", "Date", "Party", "Amount"};
                     for (String header : headers) {
                         com.lowagie.text.pdf.PdfPCell cell = new com.lowagie.text.pdf.PdfPCell(new com.lowagie.text.Phrase(header, headerFont));
-                        cell.setBackgroundColor(new com.lowagie.text.Color(192, 192, 192));
+                        cell.setBackgroundColor(Color.LIGHT_GRAY);
                         table.addCell(cell);
                     }
 
