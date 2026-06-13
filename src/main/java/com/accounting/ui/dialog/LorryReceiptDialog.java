@@ -248,7 +248,7 @@ public class LorryReceiptDialog {
         basicGrid.add(lrDatePicker, 3, 0);
 
         vehicleNoField = tf();
-        basicGrid.add(label("Vehicle"), 0, 1);
+        basicGrid.add(label("Vehicle No"), 0, 1);
         basicGrid.add(vehicleNoField, 1, 1);
 
         eWayBillNoField = tf();
@@ -283,7 +283,7 @@ public class LorryReceiptDialog {
         partyGrid.add(consignorNameField, 1, 0, 3, 1);
 
         consignorGstinField = tf();
-        partyGrid.add(label("Consignor GST"), 0, 1);
+        partyGrid.add(label("Consignor GSTIN"), 0, 1);
         partyGrid.add(consignorGstinField, 1, 1, 3, 1);
 
         consigneeNameField = tf();
@@ -292,7 +292,7 @@ public class LorryReceiptDialog {
         partyGrid.add(consigneeNameField, 1, 2, 3, 1);
 
         consigneeGstinField = tf();
-        partyGrid.add(label("Consignee GST"), 0, 3);
+        partyGrid.add(label("Consignee GSTIN"), 0, 3);
         partyGrid.add(consigneeGstinField, 1, 3, 3, 1);
 
         // ── Section 3: Package & Description ──
@@ -315,11 +315,11 @@ public class LorryReceiptDialog {
         // Other package fields
         GridPane pkgGrid = sectionGrid();
         weightActualField = tf();
-        pkgGrid.add(label("Wt. Actual"), 0, 0);
+        pkgGrid.add(label("Weight Actual"), 0, 0);
         pkgGrid.add(weightActualField, 1, 0);
 
         weightChargedField = tf();
-        pkgGrid.add(label("Wt. Charged"), 2, 0);
+        pkgGrid.add(label("Weight Charged"), 2, 0);
         pkgGrid.add(weightChargedField, 3, 0);
 
         rateField = tf();
@@ -327,11 +327,11 @@ public class LorryReceiptDialog {
         pkgGrid.add(rateField, 1, 1);
 
         freightToPayField = numField();
-        pkgGrid.add(label("Fr. To Pay"), 2, 1);
+        pkgGrid.add(label("Freight To Pay"), 2, 1);
         pkgGrid.add(freightToPayField, 3, 1);
 
         freightPaidField = numField();
-        pkgGrid.add(label("Fr. Paid"), 0, 2);
+        pkgGrid.add(label("Freight Paid"), 0, 2);
         pkgGrid.add(freightPaidField, 1, 2);
 
         pkgSection.getChildren().add(pkgGrid);
@@ -360,7 +360,7 @@ public class LorryReceiptDialog {
 
         stChargeField = numField();
         stChargeField.textProperty().addListener((o, ov, nv) -> updateTotals());
-        amountGrid.add(label("ST Charge"), 0, 2);
+        amountGrid.add(label("S.T. Charge"), 0, 2);
         amountGrid.add(stChargeField, 1, 2);
 
         totalLabel = new Label("0.00");
@@ -371,27 +371,27 @@ public class LorryReceiptDialog {
         // ── Section 5: ST/SH/Weights ──
         GridPane weightsGrid = sectionGrid();
         stNoField = tf();
-        weightsGrid.add(label("ST No"), 0, 0);
+        weightsGrid.add(label("S.T. No"), 0, 0);
         weightsGrid.add(stNoField, 1, 0);
 
         shNoField = tf();
-        weightsGrid.add(label("SH No"), 2, 0);
+        weightsGrid.add(label("S.H. No"), 2, 0);
         weightsGrid.add(shNoField, 3, 0);
 
         grossWeightField = tf();
-        weightsGrid.add(label("Gross"), 0, 1);
+        weightsGrid.add(label("G. Wt."), 0, 1);
         weightsGrid.add(grossWeightField, 1, 1);
 
         tareWeightField = tf();
-        weightsGrid.add(label("Tare"), 2, 1);
+        weightsGrid.add(label("T. Wt."), 2, 1);
         weightsGrid.add(tareWeightField, 3, 1);
 
         netWeightField = tf();
-        weightsGrid.add(label("Net"), 0, 2);
+        weightsGrid.add(label("N. Wt."), 0, 2);
         weightsGrid.add(netWeightField, 1, 2);
 
         valueRsField = tf();
-        weightsGrid.add(label("Value"), 2, 2);
+        weightsGrid.add(label("Value Rs."), 2, 2);
         weightsGrid.add(valueRsField, 3, 2);
 
         // ── Section 6: Insurance ──
@@ -401,11 +401,11 @@ public class LorryReceiptDialog {
         insGrid.add(insuranceCompanyField, 1, 0, 3, 1);
 
         policyNoField = tf();
-        insGrid.add(label("Policy"), 0, 1);
+        insGrid.add(label("Policy No"), 0, 1);
         insGrid.add(policyNoField, 1, 1);
 
         policyDatePicker = new DatePicker();
-        insGrid.add(label("Pol. Date"), 2, 1);
+        insGrid.add(label("Policy Date"), 2, 1);
         insGrid.add(policyDatePicker, 3, 1);
 
         insuranceAmountField = tf();
@@ -419,26 +419,26 @@ public class LorryReceiptDialog {
         // ── Section 7: Footer fields ──
         GridPane footerGrid = sectionGrid();
         toPayRsField = numField();
-        footerGrid.add(label("To Pay"), 0, 0);
+        footerGrid.add(label("To Pay Rs."), 0, 0);
         footerGrid.add(toPayRsField, 1, 0);
 
         advPaidRsField = numField();
-        footerGrid.add(label("Adv. Paid"), 2, 0);
+        footerGrid.add(label("Adv. Paid Rs."), 2, 0);
         footerGrid.add(advPaidRsField, 3, 0);
 
         invNoField = tf();
-        footerGrid.add(label("Invoice No"), 0, 1);
+        footerGrid.add(label("Inv. No"), 0, 1);
         footerGrid.add(invNoField, 1, 1);
 
         invDatePicker = new DatePicker();
-        footerGrid.add(label("Invoice Dt"), 2, 1);
+        footerGrid.add(label("Inv. Date"), 2, 1);
         footerGrid.add(invDatePicker, 3, 1);
 
         // ── Section 8: Freight Watermark (simple text field) ──
         HBox watermarkBox = new HBox(10);
         watermarkBox.setAlignment(Pos.CENTER_LEFT);
         watermarkBox.setPadding(new Insets(8, 0, 8, 0));
-        watermarkBox.getChildren().add(label("Fr. Watermark:"));
+        watermarkBox.getChildren().add(label("Freight Watermark:"));
         freightWatermarkField = tf();
         freightWatermarkField.setPrefWidth(300);
         watermarkBox.getChildren().add(freightWatermarkField);
@@ -659,10 +659,30 @@ public class LorryReceiptDialog {
     // ── Helpers ──
     private GridPane sectionGrid() {
         GridPane g = new GridPane();
-        g.setHgap(16);
-        g.setVgap(10);
-        g.setPadding(new Insets(10));
+        g.setHgap(10);
+        g.setVgap(6);
+        g.setPadding(new Insets(6));
         g.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
+        
+        // Set column constraints to ensure label columns have minimum width
+        ColumnConstraints col0 = new ColumnConstraints();
+        col0.setMinWidth(90);
+        col0.setPrefWidth(100);
+        
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setMinWidth(120);
+        col1.setHgrow(Priority.ALWAYS);
+        
+        ColumnConstraints col2 = new ColumnConstraints();
+        col2.setMinWidth(90);
+        col2.setPrefWidth(100);
+        
+        ColumnConstraints col3 = new ColumnConstraints();
+        col3.setMinWidth(120);
+        col3.setHgrow(Priority.ALWAYS);
+        
+        g.getColumnConstraints().addAll(col0, col1, col2, col3);
+        
         return g;
     }
 
@@ -674,7 +694,7 @@ public class LorryReceiptDialog {
 
     private Label label(String text) {
         Label lbl = new Label(text);
-        lbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #475569;");
+        lbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #475569;");
         return lbl;
     }
 
