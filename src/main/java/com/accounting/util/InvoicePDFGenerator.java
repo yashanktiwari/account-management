@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import java.awt.Color;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -350,11 +351,14 @@ public class InvoicePDFGenerator {
 
     private static Image loadScaledImage(String name, float contentWidth) {
         try {
-            File imageFile = findImageFile(IMAGES_FOLDER, name);
-            if (imageFile.exists()) {
-                Image image = Image.getInstance(imageFile.getAbsolutePath());
-                image.scaleAbsolute(contentWidth, image.getHeight() * contentWidth / image.getWidth());
-                return image;
+            String resourcePath = findResourcePath(name);
+            if (resourcePath != null) {
+                InputStream is = InvoicePDFGenerator.class.getResourceAsStream(resourcePath);
+                if (is != null) {
+                    Image image = Image.getInstance(is);
+                    image.scaleAbsolute(contentWidth, image.getHeight() * contentWidth / image.getWidth());
+                    return image;
+                }
             }
         } catch (Exception e) {
             log.error("Failed to load image: " + name, e);
@@ -374,17 +378,32 @@ public class InvoicePDFGenerator {
         return new File(folder + "/" + name + ".png"); // Return default path even if doesn't exist
     }
 
+    private static String findResourcePath(String name) {
+        // Check for various image extensions in classpath
+        String[] extensions = {".png", ".PNG", ".jpg", ".JPG", ".jpeg", ".JPEG"};
+        for (String ext : extensions) {
+            String path = "/images/" + name + ext;
+            if (InvoicePDFGenerator.class.getResource(path) != null) {
+                return path;
+            }
+        }
+        return null;
+    }
+
     /** Load an image and scale it to fit within maxWidth x maxHeight, preserving aspect ratio. */
     private static Image loadImageFitToBox(String name, float maxWidth, float maxHeight) {
         try {
-            File imageFile = findImageFile(IMAGES_FOLDER, name);
-            if (imageFile.exists()) {
-                Image image = Image.getInstance(imageFile.getAbsolutePath());
-                float w = image.getWidth();
-                float h = image.getHeight();
-                float scale = Math.min(maxWidth / w, maxHeight / h);
-                image.scaleAbsolute(w * scale, h * scale);
-                return image;
+            String resourcePath = findResourcePath(name);
+            if (resourcePath != null) {
+                InputStream is = InvoicePDFGenerator.class.getResourceAsStream(resourcePath);
+                if (is != null) {
+                    Image image = Image.getInstance(is);
+                    float w = image.getWidth();
+                    float h = image.getHeight();
+                    float scale = Math.min(maxWidth / w, maxHeight / h);
+                    image.scaleAbsolute(w * scale, h * scale);
+                    return image;
+                }
             }
         } catch (Exception e) {
             log.error("Failed to load image: " + name, e);
