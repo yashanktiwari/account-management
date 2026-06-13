@@ -489,7 +489,7 @@ public class InvoicePDFGenerator {
         invoiceTable.setSpacingBefore(5);
 
         invoiceTable.addCell(createCell("Invoice No -", true));
-        invoiceTable.addCell(createCell(invoice.getInvoiceNo() != null ? invoice.getInvoiceNo() : "", false));
+        invoiceTable.addCell(createCell(invoice.getInvoiceNo() != null ? "SE/" + invoice.getInvoiceNo() : "", false));
         invoiceTable.addCell(createCell("Invoice Date -", true));
         invoiceTable.addCell(createCell(invoice.getInvoiceDate() != null ? invoice.getInvoiceDate().format(DATE_FORMATTER) : "", false));
 
