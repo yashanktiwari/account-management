@@ -248,11 +248,11 @@ public class LorryReceiptDialog {
         basicGrid.add(lrDatePicker, 3, 0);
 
         vehicleNoField = tf();
-        basicGrid.add(label("Vehicle No"), 0, 1);
+        basicGrid.add(label("Vehicle"), 0, 1);
         basicGrid.add(vehicleNoField, 1, 1);
 
         eWayBillNoField = tf();
-        basicGrid.add(label("E-Way Bill No"), 2, 1);
+        basicGrid.add(label("E-Way Bill"), 2, 1);
         basicGrid.add(eWayBillNoField, 3, 1);
 
         fromField = tf();
@@ -283,7 +283,7 @@ public class LorryReceiptDialog {
         partyGrid.add(consignorNameField, 1, 0, 3, 1);
 
         consignorGstinField = tf();
-        partyGrid.add(label("Consignor GSTIN"), 0, 1);
+        partyGrid.add(label("Consignor GST"), 0, 1);
         partyGrid.add(consignorGstinField, 1, 1, 3, 1);
 
         consigneeNameField = tf();
@@ -292,7 +292,7 @@ public class LorryReceiptDialog {
         partyGrid.add(consigneeNameField, 1, 2, 3, 1);
 
         consigneeGstinField = tf();
-        partyGrid.add(label("Consignee GSTIN"), 0, 3);
+        partyGrid.add(label("Consignee GST"), 0, 3);
         partyGrid.add(consigneeGstinField, 1, 3, 3, 1);
 
         // ── Section 3: Package & Description ──
@@ -315,11 +315,11 @@ public class LorryReceiptDialog {
         // Other package fields
         GridPane pkgGrid = sectionGrid();
         weightActualField = tf();
-        pkgGrid.add(label("Weight Actual"), 0, 0);
+        pkgGrid.add(label("Wt. Actual"), 0, 0);
         pkgGrid.add(weightActualField, 1, 0);
 
         weightChargedField = tf();
-        pkgGrid.add(label("Weight Charged"), 2, 0);
+        pkgGrid.add(label("Wt. Charged"), 2, 0);
         pkgGrid.add(weightChargedField, 3, 0);
 
         rateField = tf();
@@ -327,11 +327,11 @@ public class LorryReceiptDialog {
         pkgGrid.add(rateField, 1, 1);
 
         freightToPayField = numField();
-        pkgGrid.add(label("Freight To Pay"), 2, 1);
+        pkgGrid.add(label("Fr. To Pay"), 2, 1);
         pkgGrid.add(freightToPayField, 3, 1);
 
         freightPaidField = numField();
-        pkgGrid.add(label("Freight Paid"), 0, 2);
+        pkgGrid.add(label("Fr. Paid"), 0, 2);
         pkgGrid.add(freightPaidField, 1, 2);
 
         pkgSection.getChildren().add(pkgGrid);
@@ -360,7 +360,7 @@ public class LorryReceiptDialog {
 
         stChargeField = numField();
         stChargeField.textProperty().addListener((o, ov, nv) -> updateTotals());
-        amountGrid.add(label("S.T. Charge"), 0, 2);
+        amountGrid.add(label("ST Charge"), 0, 2);
         amountGrid.add(stChargeField, 1, 2);
 
         totalLabel = new Label("0.00");
@@ -371,74 +371,74 @@ public class LorryReceiptDialog {
         // ── Section 5: ST/SH/Weights ──
         GridPane weightsGrid = sectionGrid();
         stNoField = tf();
-        weightsGrid.add(label("S.T. No"), 0, 0);
+        weightsGrid.add(label("ST No"), 0, 0);
         weightsGrid.add(stNoField, 1, 0);
 
         shNoField = tf();
-        weightsGrid.add(label("S.H. No"), 2, 0);
+        weightsGrid.add(label("SH No"), 2, 0);
         weightsGrid.add(shNoField, 3, 0);
 
         grossWeightField = tf();
-        weightsGrid.add(label("G. Wt."), 0, 1);
+        weightsGrid.add(label("Gross"), 0, 1);
         weightsGrid.add(grossWeightField, 1, 1);
 
         tareWeightField = tf();
-        weightsGrid.add(label("T. Wt."), 2, 1);
+        weightsGrid.add(label("Tare"), 2, 1);
         weightsGrid.add(tareWeightField, 3, 1);
 
         netWeightField = tf();
-        weightsGrid.add(label("N. Wt."), 0, 2);
+        weightsGrid.add(label("Net"), 0, 2);
         weightsGrid.add(netWeightField, 1, 2);
 
         valueRsField = tf();
-        weightsGrid.add(label("Value Rs."), 2, 2);
+        weightsGrid.add(label("Value"), 2, 2);
         weightsGrid.add(valueRsField, 3, 2);
 
         // ── Section 6: Insurance ──
         GridPane insGrid = sectionGrid();
         insuranceCompanyField = tf();
-        insGrid.add(label("Insurance Company"), 0, 0);
+        insGrid.add(label("Insurance Co"), 0, 0);
         insGrid.add(insuranceCompanyField, 1, 0, 3, 1);
 
         policyNoField = tf();
-        insGrid.add(label("Policy No"), 0, 1);
+        insGrid.add(label("Policy"), 0, 1);
         insGrid.add(policyNoField, 1, 1);
 
         policyDatePicker = new DatePicker();
-        insGrid.add(label("Policy Date"), 2, 1);
+        insGrid.add(label("Pol. Date"), 2, 1);
         insGrid.add(policyDatePicker, 3, 1);
 
         insuranceAmountField = tf();
-        insGrid.add(label("Insurance Amount"), 0, 2);
+        insGrid.add(label("Ins. Amount"), 0, 2);
         insGrid.add(insuranceAmountField, 1, 2);
 
         insuranceDatePicker = new DatePicker();
-        insGrid.add(label("Insurance Date"), 2, 2);
+        insGrid.add(label("Ins. Date"), 2, 2);
         insGrid.add(insuranceDatePicker, 3, 2);
 
         // ── Section 7: Footer fields ──
         GridPane footerGrid = sectionGrid();
         toPayRsField = numField();
-        footerGrid.add(label("To Pay Rs."), 0, 0);
+        footerGrid.add(label("To Pay"), 0, 0);
         footerGrid.add(toPayRsField, 1, 0);
 
         advPaidRsField = numField();
-        footerGrid.add(label("Adv. Paid Rs."), 2, 0);
+        footerGrid.add(label("Adv. Paid"), 2, 0);
         footerGrid.add(advPaidRsField, 3, 0);
 
         invNoField = tf();
-        footerGrid.add(label("Inv. No"), 0, 1);
+        footerGrid.add(label("Invoice No"), 0, 1);
         footerGrid.add(invNoField, 1, 1);
 
         invDatePicker = new DatePicker();
-        footerGrid.add(label("Inv. Date"), 2, 1);
+        footerGrid.add(label("Invoice Dt"), 2, 1);
         footerGrid.add(invDatePicker, 3, 1);
 
         // ── Section 8: Freight Watermark (simple text field) ──
         HBox watermarkBox = new HBox(10);
         watermarkBox.setAlignment(Pos.CENTER_LEFT);
         watermarkBox.setPadding(new Insets(8, 0, 8, 0));
-        watermarkBox.getChildren().add(label("Freight Watermark:"));
+        watermarkBox.getChildren().add(label("Fr. Watermark:"));
         freightWatermarkField = tf();
         freightWatermarkField.setPrefWidth(300);
         watermarkBox.getChildren().add(freightWatermarkField);
