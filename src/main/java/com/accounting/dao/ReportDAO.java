@@ -73,7 +73,7 @@ public class ReportDAO {
         String sql = """
             SELECT * FROM (
                 SELECT 'Purchase Invoice' as transaction_type, invoice_no as transaction_no, invoice_date as date,
-                       account_name as party, net_amount as amount, 'INVOICE' as type
+                       party_name as party, net_amount as amount, 'INVOICE' as type
                 FROM purchase_invoices
                 WHERE invoice_date BETWEEN ? AND ?
                 UNION ALL
