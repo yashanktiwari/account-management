@@ -129,6 +129,7 @@ public class ReportView {
         resultCountLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
         grid.add(resultCountLabel, 0, 3, 4, 1);
         
+        section.getChildren().addAll(sectionTitle, grid);
         return section;
     }
 
