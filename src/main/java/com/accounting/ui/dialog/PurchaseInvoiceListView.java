@@ -168,14 +168,6 @@ public class PurchaseInvoiceListView {
             }
         });
 
-        MenuItem printItem = new MenuItem("Print");
-        printItem.setOnAction(e -> {
-            PurchaseInvoice selected = table.getSelectionModel().getSelectedItem();
-            if (selected != null) {
-                printInvoice(selected);
-            }
-        });
-
         MenuItem deleteItem = new MenuItem("Delete");
         deleteItem.setOnAction(e -> {
             PurchaseInvoice selected = table.getSelectionModel().getSelectedItem();
@@ -197,7 +189,7 @@ public class PurchaseInvoiceListView {
             });
         });
 
-        ctxMenu.getItems().addAll(editItem, printItem, new SeparatorMenuItem(), deleteItem);
+        ctxMenu.getItems().addAll(editItem, new SeparatorMenuItem(), deleteItem);
 
         // Show menu only on rows that have data
         table.setRowFactory(tv -> {
@@ -298,26 +290,6 @@ public class PurchaseInvoiceListView {
         searchTerms.remove(term);
         searchTagsList.remove(term);
         searchRows();
-    }
-
-    private void printInvoice(PurchaseInvoice invoice) {
-        try {
-            // Use system temp directory for initial preview (not saved to app folder)
-            java.io.File tempDir = new java.io.File(System.getProperty("java.io.tmpdir"));
-            String fileName = tempDir.getAbsolutePath() + "/Purchase_Invoice_" + invoice.getInvoiceNo() + "_" +
-                            java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".pdf";
-
-            // Generate Original PDF
-            com.accounting.util.InvoicePDFGenerator.generatePurchaseInvoicePDF(invoice, fileName, "Original");
-
-            // Show print preview embedded in app; Close returns to this list
-            new PrintPreviewDialog(fileName, (copyLabel, outputPath) ->
-                    com.accounting.util.InvoicePDFGenerator.generatePurchaseInvoicePDF(invoice, outputPath, copyLabel)
-            , true).showInApp(() -> MainApp.showContentInApp(createContent()));
-        } catch (Exception e) {
-            e.printStackTrace();
-            AlertUtil.showError("Error", "Failed to generate PDF: " + e.getMessage());
-        }
     }
 
     private TableColumn<PurchaseInvoice, Object> col(String title, String property, double width) {

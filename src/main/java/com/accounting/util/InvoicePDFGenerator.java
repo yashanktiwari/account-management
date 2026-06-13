@@ -656,6 +656,7 @@ public class InvoicePDFGenerator {
         addSummaryRow(totalsTable, "Total", formatAmount(invoice.getTaxableAmount()), headerFont, normalFont);
         addSummaryRow(totalsTable, "SGST", formatAmount(invoice.getSgstAmount()), headerFont, normalFont);
         addSummaryRow(totalsTable, "CGST", formatAmount(invoice.getCgstAmount()), headerFont, normalFont);
+        addSummaryRow(totalsTable, "IGST", formatAmount(invoice.getIgstAmount()), headerFont, normalFont);
         addSummaryRow(totalsTable, "Total", formatAmount(invoice.getNetAmount()), headerFont, headerFont);
 
         document.add(totalsTable);

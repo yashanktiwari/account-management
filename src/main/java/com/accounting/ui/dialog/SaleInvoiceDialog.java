@@ -163,7 +163,7 @@ public class SaleInvoiceDialog {
         remarksField.setText(invoice.getRemarks());
 
         // Credit/Debit
-        creditDebitCombo.setValue(invoice.getCreditDebit() != null ? invoice.getCreditDebit() : "Credit");
+        creditDebitCombo.setValue(invoice.getCreditDebit() != null ? invoice.getCreditDebit() : "Debit");
 
         // Account Name
         accountNameField.setText(invoice.getAccountName());
@@ -276,7 +276,7 @@ public class SaleInvoiceDialog {
         grid.add(voucherTypeCombo, 1, 1);
 
         creditDebitCombo = new ComboBox<>(FXCollections.observableArrayList("Credit", "Debit"));
-        creditDebitCombo.setValue("Credit");
+        creditDebitCombo.setValue("Debit");
         grid.add(label("Credit/Debit"), 2, 1);
         grid.add(creditDebitCombo, 3, 1);
 

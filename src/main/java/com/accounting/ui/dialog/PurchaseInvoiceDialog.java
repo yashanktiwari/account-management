@@ -3,8 +3,6 @@ package com.accounting.ui.dialog;
 import com.accounting.MainApp;
 import com.accounting.dao.PartyDAO;
 import com.accounting.dao.PurchaseInvoiceDAO;
-import com.accounting.dao.SettingsDAO;
-import com.accounting.database.DBConnection;
 import com.accounting.model.InvoiceLineItem;
 import com.accounting.model.Party;
 import com.accounting.model.PurchaseInvoice;
@@ -30,9 +28,6 @@ import javafx.stage.Window;
 import org.controlsfx.control.textfield.TextFields;
 import org.slf4j.Logger;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -52,8 +47,10 @@ public class PurchaseInvoiceDialog {
     private TextField remarksField;
     private CheckBox sgstCheckBox;
     private CheckBox cgstCheckBox;
+    private CheckBox igstCheckBox;
     private TextField sgstValueField;
     private TextField cgstValueField;
+    private TextField igstValueField;
     private ComboBox<String> creditDebitCombo;
     private TextField accountNameField;
     private TextField paidByField;
@@ -145,7 +142,7 @@ public class PurchaseInvoiceDialog {
             remarksField.setText(invoice.getRemarks());
 
             // Credit/Debit
-            creditDebitCombo.setValue(invoice.getCreditDebit() != null ? invoice.getCreditDebit() : "Debit");
+            creditDebitCombo.setValue(invoice.getCreditDebit() != null ? invoice.getCreditDebit() : "Credit");
 
             // Account Name
             accountNameField.setText(invoice.getAccountName());
@@ -178,109 +175,15 @@ public class PurchaseInvoiceDialog {
             sgstValueField.setText(sgstCheckBox.isSelected() ? "9" : "0");
             cgstCheckBox.setSelected(invoice.getCgstAmount() > 0);
             cgstValueField.setText(cgstCheckBox.isSelected() ? "9" : "0");
+            igstCheckBox.setSelected(invoice.getIgstAmount() > 0);
+            igstValueField.setText(igstCheckBox.isSelected() ? "18" : "0");
             // Load line items
             lineItems.setAll(invoice.getLineItems());
             lineItemTable.setItems(lineItems);
             updateTotal();
         } else {
-            // New invoice - auto-generate invoice number
-            generateNextInvoiceNumber();
+            invoiceNoField.setText("");
         }
-    }
-
-    private void generateNextInvoiceNumber() {
-        AppExecutor.submit(() -> {
-            try {
-                SettingsDAO settingsDAO = new SettingsDAO();
-                String startingNumberStr = settingsDAO.getSetting("global_invoice_starting_number");
-                int startingNumber = startingNumberStr != null ? Integer.parseInt(startingNumberStr) : 1;
-
-                // Get the last invoice number from all invoice/receipt tables
-                int lastNumber = getLastGlobalInvoiceNumber();
-
-                // Next invoice number is max of starting number and last number + 1
-                int nextNumber = Math.max(startingNumber, lastNumber + 1);
-
-                Platform.runLater(() -> {
-                    invoiceNoField.setText(String.valueOf(nextNumber));
-                });
-            } catch (Exception e) {
-                log.error("Failed to generate invoice number", e);
-                Platform.runLater(() -> {
-                    invoiceNoField.setText("1"); // Default to 1 if there's an error
-                });
-            }
-        });
-    }
-
-    private int getLastGlobalInvoiceNumber() throws Exception {
-        int maxNumber = 0;
-
-        // Check purchase invoices
-        String purchaseLast = new PurchaseInvoiceDAO().getLastInvoiceNumber();
-        if (purchaseLast != null && !purchaseLast.isEmpty()) {
-            try {
-                maxNumber = Math.max(maxNumber, Integer.parseInt(purchaseLast));
-            } catch (NumberFormatException e) {
-                // Ignore non-numeric invoice numbers
-            }
-        }
-
-        // Check sale invoices (if exists)
-        try {
-            String saleLast = getLastInvoiceNumberFromTable("sale_invoices");
-            if (saleLast != null && !saleLast.isEmpty()) {
-                try {
-                    maxNumber = Math.max(maxNumber, Integer.parseInt(saleLast));
-                } catch (NumberFormatException e) {
-                    // Ignore non-numeric invoice numbers
-                }
-            }
-        } catch (Exception e) {
-            // Table might not exist, ignore
-        }
-
-        // Check purchase receipts (if exists)
-        try {
-            String purchaseReceiptLast = getLastInvoiceNumberFromTable("purchase_receipts");
-            if (purchaseReceiptLast != null && !purchaseReceiptLast.isEmpty()) {
-                try {
-                    maxNumber = Math.max(maxNumber, Integer.parseInt(purchaseReceiptLast));
-                } catch (NumberFormatException e) {
-                    // Ignore non-numeric invoice numbers
-                }
-            }
-        } catch (Exception e) {
-            // Table might not exist, ignore
-        }
-
-        // Check sale receipts (if exists)
-        try {
-            String saleReceiptLast = getLastInvoiceNumberFromTable("sale_receipts");
-            if (saleReceiptLast != null && !saleReceiptLast.isEmpty()) {
-                try {
-                    maxNumber = Math.max(maxNumber, Integer.parseInt(saleReceiptLast));
-                } catch (NumberFormatException e) {
-                    // Ignore non-numeric invoice numbers
-                }
-            }
-        } catch (Exception e) {
-            // Table might not exist, ignore
-        }
-
-        return maxNumber;
-    }
-
-    private String getLastInvoiceNumberFromTable(String tableName) throws Exception {
-        String sql = "SELECT invoice_no FROM " + tableName + " ORDER BY id DESC LIMIT 1";
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            if (rs.next()) {
-                return rs.getString("invoice_no");
-            }
-        }
-        return null;
     }
 
     // Helper method to trigger auto-fill from party selection
@@ -432,7 +335,7 @@ public class PurchaseInvoiceDialog {
 
         // Invoice No
         invoiceNoField = new TextField();
-        invoiceNoField.setPromptText("Auto-generated");
+        invoiceNoField.setPromptText("Leave blank if not needed");
         invoiceNoField.setDisable(false);
         grid.add(label("Invoice No"), 0, 0);
         grid.add(invoiceNoField, 1, 0);
@@ -452,7 +355,7 @@ public class PurchaseInvoiceDialog {
 
         // Credit/Debit
         creditDebitCombo = new ComboBox<>(FXCollections.observableArrayList("Credit", "Debit"));
-        creditDebitCombo.setValue("Debit");
+        creditDebitCombo.setValue("Credit");
         grid.add(label("Credit/Debit"), 2, 1);
         grid.add(creditDebitCombo, 3, 1);
 
@@ -505,6 +408,18 @@ public class PurchaseInvoiceDialog {
         HBox cgstBox = new HBox(10, cgstCheckBox, cgstValueField);
         grid.add(label(""), 2, 0);
         grid.add(cgstBox, 3, 0);
+
+        igstCheckBox = new CheckBox("IGST");
+        igstValueField = new TextField("0");
+        igstValueField.setPrefWidth(80);
+        igstValueField.setEditable(false);
+        igstCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            igstValueField.setText(newVal ? "18" : "0");
+            updateTotal();
+        });
+        HBox igstBox = new HBox(10, igstCheckBox, igstValueField);
+        grid.add(label(""), 0, 1);
+        grid.add(igstBox, 1, 1);
 
         return grid;
     }
@@ -810,7 +725,8 @@ public class PurchaseInvoiceDialog {
         
         double sgst = sgstCheckBox.isSelected() ? taxable * 0.09 : 0;
         double cgst = cgstCheckBox.isSelected() ? taxable * 0.09 : 0;
-        double totalGst = sgst + cgst;
+        double igst = igstCheckBox.isSelected() ? taxable * 0.18 : 0;
+        double totalGst = sgst + cgst + igst;
         double netAmount = taxable + totalGst;
 
         totalLabel.setText(String.format("%.2f", netAmount));
@@ -872,11 +788,12 @@ public class PurchaseInvoiceDialog {
 
         double sgst = sgstCheckBox.isSelected() ? total * 0.09 : 0;
         double cgst = cgstCheckBox.isSelected() ? total * 0.09 : 0;
-        double totalGst = sgst + cgst;
+        double igst = igstCheckBox.isSelected() ? total * 0.18 : 0;
+        double totalGst = sgst + cgst + igst;
 
         invoice.setSgstAmount(sgst);
         invoice.setCgstAmount(cgst);
-        invoice.setIgstAmount(0);
+        invoice.setIgstAmount(igst);
         invoice.setTotalGst(totalGst);
         invoice.setNetAmount(total + totalGst);
 
@@ -887,14 +804,6 @@ public class PurchaseInvoiceDialog {
                     dao.update(invoice);
                 } else {
                     dao.save(invoice);
-
-                    // Update the next invoice number in settings only for new invoices
-                    try {
-                        int currentInvoiceNo = Integer.parseInt(invoice.getInvoiceNo());
-                        new SettingsDAO().saveSetting("global_invoice_starting_number", String.valueOf(currentInvoiceNo + 1));
-                    } catch (Exception e) {
-                        log.error("Failed to update invoice number in settings", e);
-                    }
                 }
 
                 Platform.runLater(() -> {
@@ -906,32 +815,6 @@ public class PurchaseInvoiceDialog {
                 Platform.runLater(() -> AlertUtil.showError("Error", "Failed to save invoice: " + e.getMessage()));
             }
         });
-    }
-
-    private void printInvoice() {
-        if (invoice.getId() == 0) {
-            AlertUtil.showWarning("Warning", "Please save the invoice before printing");
-            return;
-        }
-
-        try {
-            // Use system temp directory for initial preview (not saved to app folder)
-            java.io.File tempDir = new java.io.File(System.getProperty("java.io.tmpdir"));
-            String fileName = tempDir.getAbsolutePath() + "/Purchase_Invoice_" + invoice.getInvoiceNo() + "_" +
-                            java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".pdf";
-
-            // Generate Original PDF
-            com.accounting.util.InvoicePDFGenerator.generatePurchaseInvoicePDF(invoice, fileName, "Original");
-
-            // Show print preview embedded in app; Close returns to purchase invoice list
-            stage.close();
-            new PrintPreviewDialog(fileName, (copyLabel, outputPath) ->
-                    com.accounting.util.InvoicePDFGenerator.generatePurchaseInvoicePDF(invoice, outputPath, copyLabel)
-            , true).showInApp(() -> MainApp.showContentInApp(new PurchaseInvoiceListView().createContent()));
-        } catch (Exception e) {
-            log.error("Failed to generate PDF", e);
-            AlertUtil.showError("Error", "Failed to generate PDF: " + e.getMessage());
-        }
     }
 
     private Label label(String text) {
