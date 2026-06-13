@@ -93,7 +93,7 @@ public class LorryReceiptPDFGenerator {
 
         Image headerImg = loadImage("LR_HEADER");
         if (headerImg != null) {
-            float maxW = (PageSize.A4.getHeight() - 28) * 2f / 3f;
+            float maxW = (PageSize.A4.getHeight() - 28) * 2f / 3f - 2;
             float scaledH = headerImg.getHeight() * maxW / headerImg.getWidth();
             if (scaledH > 150) scaledH = 150;
             headerImg.scaleAbsolute(maxW, scaledH);
