@@ -33,6 +33,8 @@ public class QueryBuilderView {
     private final ReportDAO reportDAO = new ReportDAO();
 
     private ComboBox<String> reportTypeCombo;
+    private ComboBox<String> partyCombo;
+    private ComboBox<String> vehicleCombo;
     private DatePicker fromDate, toDate;
     private TextField searchField;
     private TableView<String[]> resultsTable;
@@ -76,6 +78,7 @@ public class QueryBuilderView {
         reportTypeCombo = new ComboBox<>(FXCollections.observableArrayList(ReportDAO.getPresetReportTypes()));
         reportTypeCombo.setPromptText("Select a report...");
         reportTypeCombo.setPrefWidth(220);
+        reportTypeCombo.setOnAction(e -> onReportTypeChanged());
 
         // Date Range
         Label fromLabel = new Label("From Date:");
@@ -87,6 +90,24 @@ public class QueryBuilderView {
         toLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #64748b;");
         toDate = new DatePicker(LocalDate.now());
         toDate.setPrefWidth(150);
+
+        // Party Filter
+        Label partyLabel = new Label("Party:");
+        partyLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #64748b;");
+        partyCombo = new ComboBox<>();
+        partyCombo.setPromptText("(Optional)");
+        partyCombo.setPrefWidth(200);
+        partyCombo.setVisible(false);
+        partyCombo.setManaged(false);
+
+        // Vehicle Filter
+        Label vehicleLabel = new Label("Vehicle:");
+        vehicleLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #64748b;");
+        vehicleCombo = new ComboBox<>();
+        vehicleCombo.setPromptText("(Optional)");
+        vehicleCombo.setPrefWidth(200);
+        vehicleCombo.setVisible(false);
+        vehicleCombo.setManaged(false);
 
         // Search
         Label searchLabel = new Label("Search:");
@@ -103,8 +124,13 @@ public class QueryBuilderView {
         grid.add(toLabel, 4, 0);
         grid.add(toDate, 5, 0);
 
-        grid.add(searchLabel, 0, 1);
-        grid.add(searchField, 1, 1, 5, 1);
+        grid.add(partyLabel, 0, 1);
+        grid.add(partyCombo, 1, 1);
+        grid.add(vehicleLabel, 2, 1);
+        grid.add(vehicleCombo, 3, 1);
+
+        grid.add(searchLabel, 0, 2);
+        grid.add(searchField, 1, 2, 5, 1);
 
         // Buttons
         Button runBtn = new Button("Generate Report");
@@ -135,14 +161,66 @@ public class QueryBuilderView {
 
         HBox buttonBox = new HBox(10, runBtn, excelBtn, pdfBtn, clearBtn);
         buttonBox.setAlignment(Pos.CENTER_LEFT);
-        grid.add(buttonBox, 0, 2, 6, 1);
+        grid.add(buttonBox, 0, 3, 6, 1);
 
         statusLabel = new Label("Select a report and click Generate");
         statusLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
-        grid.add(statusLabel, 0, 3, 6, 1);
+        grid.add(statusLabel, 0, 4, 6, 1);
 
         section.getChildren().add(grid);
         return section;
+    }
+
+    private void onReportTypeChanged() {
+        String reportType = reportTypeCombo.getValue();
+        if (reportType == null) return;
+
+        // Show/hide party filter
+        boolean needsParty = List.of("Purchase Invoices", "Sale Invoices", "Purchase Receipts", 
+            "Sale Receipts", "Payments", "Party-wise Summary", "GST Report").contains(reportType);
+        partyCombo.setVisible(needsParty);
+        partyCombo.setManaged(needsParty);
+
+        // Show/hide vehicle filter
+        boolean needsVehicle = List.of("Loading Slips", "Lorry Receipts", "Vehicle-wise Summary").contains(reportType);
+        vehicleCombo.setVisible(needsVehicle);
+        vehicleCombo.setManaged(needsVehicle);
+
+        // Load parties if needed
+        if (needsParty && partyCombo.getItems().isEmpty()) {
+            loadParties();
+        }
+
+        // Load vehicles if needed
+        if (needsVehicle && vehicleCombo.getItems().isEmpty()) {
+            loadVehicles();
+        }
+    }
+
+    private void loadParties() {
+        AppExecutor.submit(() -> {
+            try {
+                List<String> parties = reportDAO.getAllParties();
+                Platform.runLater(() -> {
+                    partyCombo.setItems(FXCollections.observableArrayList(parties));
+                });
+            } catch (Exception e) {
+                log.error("Failed to load parties", e);
+            }
+        });
+    }
+
+    private void loadVehicles() {
+        AppExecutor.submit(() -> {
+            try {
+                List<String> vehicles = reportDAO.getAllVehicles();
+                Platform.runLater(() -> {
+                    vehicleCombo.setItems(FXCollections.observableArrayList(vehicles));
+                });
+            } catch (Exception e) {
+                log.error("Failed to load vehicles", e);
+            }
+        });
     }
 
     private VBox buildResultsSection() {
@@ -184,9 +262,12 @@ public class QueryBuilderView {
         currentReportTitle = reportType;
         statusLabel.setText("Loading...");
 
+        String party = partyCombo.isVisible() ? partyCombo.getValue() : null;
+        String vehicle = vehicleCombo.isVisible() ? vehicleCombo.getValue() : null;
+
         AppExecutor.submit(() -> {
             try {
-                SimpleReportResult result = reportDAO.generatePresetReport(reportType, from, to);
+                SimpleReportResult result = reportDAO.generatePresetReport(reportType, from, to, party, vehicle);
 
                 Platform.runLater(() -> {
                     currentHeaders = result.getColumnHeaders();
