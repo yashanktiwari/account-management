@@ -131,7 +131,7 @@ public class ReportView {
         sectionTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
 
         resultTable = new TableView<>();
-        resultTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
+        resultTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
 
         filteredTransactions = new FilteredList<>(allTransactions);
         resultTable.setItems(filteredTransactions);
