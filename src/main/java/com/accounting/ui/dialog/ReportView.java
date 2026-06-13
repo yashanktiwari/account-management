@@ -81,7 +81,7 @@ public class ReportView {
         Label searchLabel = new Label("Search:");
         searchLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #64748b;");
         searchField = new TextField();
-        searchField.setPromptText("Search by Invoice, Receipt, Slip, LR, Party, Vehicle, etc.");
+        searchField.setPromptText("Search by Type, Transaction No, Party, Date, or Amount");
         searchField.setPrefWidth(400);
         searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
         
@@ -131,16 +131,20 @@ public class ReportView {
         sectionTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
 
         resultTable = new TableView<>();
-        resultTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
+        resultTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
 
         filteredTransactions = new FilteredList<>(allTransactions);
         resultTable.setItems(filteredTransactions);
 
         setupTableColumns("All Transactions");
 
-        VBox.setVgrow(resultTable, Priority.ALWAYS);
+        // Wrap table in ScrollPane for proper scrolling
+        ScrollPane scrollPane = new ScrollPane(resultTable);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        VBox.setVgrow(scrollPane, Priority.ALWAYS);
 
-        section.getChildren().addAll(sectionTitle, resultTable);
+        section.getChildren().addAll(sectionTitle, scrollPane);
         return section;
     }
 
@@ -148,15 +152,15 @@ public class ReportView {
         resultTable.getColumns().clear();
 
         // Serial No
-        TableColumn<ReportDAO.ReportRow, Integer> serialCol = new TableColumn<>("S.No");
+        TableColumn<ReportDAO.ReportRow, Integer> serialCol = new TableColumn<>("Sr. No");
         serialCol.setCellValueFactory(new PropertyValueFactory<>("serialNo"));
-        serialCol.setPrefWidth(50);
+        serialCol.setPrefWidth(60);
         serialCol.setStyle("-fx-alignment: CENTER;");
 
         // Transaction Type
         TableColumn<ReportDAO.ReportRow, String> typeCol = new TableColumn<>("Type");
         typeCol.setCellValueFactory(new PropertyValueFactory<>("transactionType"));
-        typeCol.setPrefWidth(120);
+        typeCol.setPrefWidth(150);
         typeCol.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -183,62 +187,7 @@ public class ReportView {
         // Party Name
         TableColumn<ReportDAO.ReportRow, String> partyCol = new TableColumn<>("Party");
         partyCol.setCellValueFactory(new PropertyValueFactory<>("party"));
-        partyCol.setPrefWidth(150);
-
-        // Vehicle No
-        TableColumn<ReportDAO.ReportRow, String> vehicleCol = new TableColumn<>("Vehicle No");
-        vehicleCol.setCellValueFactory(new PropertyValueFactory<>("vehicle"));
-        vehicleCol.setPrefWidth(120);
-
-        // From Location
-        TableColumn<ReportDAO.ReportRow, String> fromLocCol = new TableColumn<>("From Location");
-        fromLocCol.setCellValueFactory(new PropertyValueFactory<>("fromLocation"));
-        fromLocCol.setPrefWidth(120);
-
-        // To Location
-        TableColumn<ReportDAO.ReportRow, String> toLocCol = new TableColumn<>("To Location");
-        toLocCol.setCellValueFactory(new PropertyValueFactory<>("toLocation"));
-        toLocCol.setPrefWidth(120);
-
-        // Description
-        TableColumn<ReportDAO.ReportRow, String> descCol = new TableColumn<>("Description");
-        descCol.setCellValueFactory(new PropertyValueFactory<>("description"));
-        descCol.setPrefWidth(150);
-
-        // GST
-        TableColumn<ReportDAO.ReportRow, String> gstCol = new TableColumn<>("GST %");
-        gstCol.setCellValueFactory(new PropertyValueFactory<>("gst"));
-        gstCol.setPrefWidth(80);
-
-        // Taxable Amount
-        TableColumn<ReportDAO.ReportRow, Double> taxableCol = new TableColumn<>("Taxable Amount");
-        taxableCol.setCellValueFactory(new PropertyValueFactory<>("taxableAmount"));
-        taxableCol.setCellFactory(col -> formatCurrencyCell());
-        taxableCol.setPrefWidth(120);
-
-        // SGST
-        TableColumn<ReportDAO.ReportRow, Double> sgstCol = new TableColumn<>("SGST");
-        sgstCol.setCellValueFactory(new PropertyValueFactory<>("sgst"));
-        sgstCol.setCellFactory(col -> formatCurrencyCell());
-        sgstCol.setPrefWidth(100);
-
-        // CGST
-        TableColumn<ReportDAO.ReportRow, Double> cgstCol = new TableColumn<>("CGST");
-        cgstCol.setCellValueFactory(new PropertyValueFactory<>("cgst"));
-        cgstCol.setCellFactory(col -> formatCurrencyCell());
-        cgstCol.setPrefWidth(100);
-
-        // IGST
-        TableColumn<ReportDAO.ReportRow, Double> igstCol = new TableColumn<>("IGST");
-        igstCol.setCellValueFactory(new PropertyValueFactory<>("igst"));
-        igstCol.setCellFactory(col -> formatCurrencyCell());
-        igstCol.setPrefWidth(100);
-
-        // Total GST
-        TableColumn<ReportDAO.ReportRow, Double> totalGstCol = new TableColumn<>("Total GST");
-        totalGstCol.setCellValueFactory(new PropertyValueFactory<>("totalGst"));
-        totalGstCol.setCellFactory(col -> formatCurrencyCell());
-        totalGstCol.setPrefWidth(100);
+        partyCol.setPrefWidth(200);
 
         // Amount
         TableColumn<ReportDAO.ReportRow, Double> amountCol = new TableColumn<>("Amount");
@@ -246,53 +195,8 @@ public class ReportView {
         amountCol.setCellFactory(col -> formatCurrencyCell());
         amountCol.setPrefWidth(120);
 
-        // Advance
-        TableColumn<ReportDAO.ReportRow, Double> advanceCol = new TableColumn<>("Advance");
-        advanceCol.setCellValueFactory(new PropertyValueFactory<>("advance"));
-        advanceCol.setCellFactory(col -> formatCurrencyCell());
-        advanceCol.setPrefWidth(100);
-
-        // Balance
-        TableColumn<ReportDAO.ReportRow, Double> balanceCol = new TableColumn<>("Balance");
-        balanceCol.setCellValueFactory(new PropertyValueFactory<>("balance"));
-        balanceCol.setCellFactory(col -> formatCurrencyCell());
-        balanceCol.setPrefWidth(100);
-
-        // Payment Mode
-        TableColumn<ReportDAO.ReportRow, String> paymentModeCol = new TableColumn<>("Payment Mode");
-        paymentModeCol.setCellValueFactory(new PropertyValueFactory<>("paymentMode"));
-        paymentModeCol.setPrefWidth(100);
-
-        // Cheque No
-        TableColumn<ReportDAO.ReportRow, String> chequeNoCol = new TableColumn<>("Cheque No");
-        chequeNoCol.setCellValueFactory(new PropertyValueFactory<>("chequeNo"));
-        chequeNoCol.setPrefWidth(100);
-
-        // Cheque Date
-        TableColumn<ReportDAO.ReportRow, String> chequeDateCol = new TableColumn<>("Cheque Date");
-        chequeDateCol.setCellValueFactory(new PropertyValueFactory<>("chequeDate"));
-        chequeDateCol.setPrefWidth(100);
-
-        // Bank Name
-        TableColumn<ReportDAO.ReportRow, String> bankCol = new TableColumn<>("Bank Name");
-        bankCol.setCellValueFactory(new PropertyValueFactory<>("bankName"));
-        bankCol.setPrefWidth(120);
-
-        // Remarks
-        TableColumn<ReportDAO.ReportRow, String> remarksCol = new TableColumn<>("Remarks");
-        remarksCol.setCellValueFactory(new PropertyValueFactory<>("remarks"));
-        remarksCol.setPrefWidth(150);
-
-        // Status
-        TableColumn<ReportDAO.ReportRow, String> statusCol = new TableColumn<>("Status");
-        statusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
-        statusCol.setPrefWidth(80);
-
         resultTable.getColumns().addAll(
-            serialCol, typeCol, noCol, dateCol, partyCol, vehicleCol, fromLocCol, toLocCol,
-            descCol, gstCol, taxableCol, sgstCol, cgstCol, igstCol, totalGstCol, amountCol,
-            advanceCol, balanceCol, paymentModeCol, chequeNoCol, chequeDateCol, bankCol,
-            remarksCol, statusCol
+            serialCol, typeCol, noCol, dateCol, partyCol, amountCol
         );
     }
 
@@ -360,12 +264,12 @@ public class ReportView {
             filteredTransactions.setPredicate(null);
         } else {
             filteredTransactions.setPredicate(row -> {
-                // Match transaction number (invoice no, receipt no, etc.)
+                // Match transaction number
                 if (row.getTransactionNo() != null && row.getTransactionNo().toLowerCase().contains(searchText)) {
                     return true;
                 }
 
-                // Match transaction type (e.g., "Invoice", "Receipt", "LR", "Slip")
+                // Match transaction type
                 String typeFormatted = formatTransactionType(row.getTransactionType()).toLowerCase();
                 if (typeFormatted.contains(searchText)) {
                     return true;
@@ -376,41 +280,13 @@ public class ReportView {
                     return true;
                 }
 
-                // Match vehicle number
-                if (row.getVehicle() != null && row.getVehicle().toLowerCase().contains(searchText)) {
+                // Match date
+                if (row.getDate() != null && row.getDate().toLowerCase().contains(searchText)) {
                     return true;
                 }
 
-                // Match from/to locations
-                if (row.getFromLocation() != null && row.getFromLocation().toLowerCase().contains(searchText)) {
-                    return true;
-                }
-                if (row.getToLocation() != null && row.getToLocation().toLowerCase().contains(searchText)) {
-                    return true;
-                }
-
-                // Match description
-                if (row.getDescription() != null && row.getDescription().toLowerCase().contains(searchText)) {
-                    return true;
-                }
-
-                // Match remarks
-                if (row.getRemarks() != null && row.getRemarks().toLowerCase().contains(searchText)) {
-                    return true;
-                }
-
-                // Match payment mode
-                if (row.getPaymentMode() != null && row.getPaymentMode().toLowerCase().contains(searchText)) {
-                    return true;
-                }
-
-                // Match cheque number
-                if (row.getChequeNo() != null && row.getChequeNo().toLowerCase().contains(searchText)) {
-                    return true;
-                }
-
-                // Match bank name
-                if (row.getBankName() != null && row.getBankName().toLowerCase().contains(searchText)) {
+                // Match amount
+                if (row.getAmount() != null && row.getAmount().toString().contains(searchText)) {
                     return true;
                 }
 
@@ -439,9 +315,7 @@ public class ReportView {
 
         // Simple CSV export
         StringBuilder csv = new StringBuilder();
-        csv.append("S.No,Type,Transaction No,Date,Party,Vehicle No,From Location,To Location,");
-        csv.append("Description,GST %,Taxable Amount,SGST,CGST,IGST,Total GST,Amount,");
-        csv.append("Advance,Balance,Payment Mode,Cheque No,Cheque Date,Bank Name,Remarks,Status\n");
+        csv.append("Sr. No,Type,Transaction No,Date,Party,Amount\n");
 
         for (ReportDAO.ReportRow row : filteredTransactions) {
             csv.append(row.getSerialNo()).append(",");
@@ -449,24 +323,7 @@ public class ReportView {
             csv.append(row.getTransactionNo()).append(",");
             csv.append(row.getDate()).append(",");
             csv.append(escapeCSV(row.getParty())).append(",");
-            csv.append(row.getVehicle()).append(",");
-            csv.append(row.getFromLocation()).append(",");
-            csv.append(row.getToLocation()).append(",");
-            csv.append(escapeCSV(row.getDescription())).append(",");
-            csv.append(row.getGst()).append(",");
-            csv.append(row.getTaxableAmount() != null ? row.getTaxableAmount() : "").append(",");
-            csv.append(row.getSgst() != null ? row.getSgst() : "").append(",");
-            csv.append(row.getCgst() != null ? row.getCgst() : "").append(",");
-            csv.append(row.getIgst() != null ? row.getIgst() : "").append(",");
-            csv.append(row.getTotalGst() != null ? row.getTotalGst() : "").append(",");
-            csv.append(row.getAmount() != null ? row.getAmount() : "").append(",");
-            csv.append(row.getAdvance() != null ? row.getAdvance() : "").append(",");
-            csv.append(row.getBalance() != null ? row.getBalance() : "").append(",");
-            csv.append(row.getPaymentMode()).append(",");
-            csv.append(row.getChequeNo()).append(",");
-            csv.append(row.getChequeDate()).append(",");
-            csv.append(row.getBankName()).append(",");
-            csv.append(escapeCSV(row.getRemarks())).append("\n");
+            csv.append(row.getAmount() != null ? row.getAmount() : "").append("\n");
         }
 
         AlertUtil.showInfo("Export", "CSV export:\n\n" + csv.toString().substring(0, Math.min(500, csv.length())) + "...\n\n(Export to CSV feature would save to file)");
