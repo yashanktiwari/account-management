@@ -210,14 +210,14 @@ public class SaleInvoiceDialog {
     }
 
     public Parent createContent() {
-        VBox root = new VBox(12);
-        root.setPadding(new Insets(16));
+        VBox root = new VBox(8);
+        root.setPadding(new Insets(12));
 
         // Header section
         HBox headerBox = createHeaderSection();
 
         // Top row: Invoice details + GST
-        HBox topRow = new HBox(12);
+        HBox topRow = new HBox(8);
         GridPane invoiceDetailsGrid = createInvoiceDetailsGrid();
         GridPane gstGrid = createGstGrid();
         topRow.getChildren().addAll(invoiceDetailsGrid, gstGrid);
@@ -228,7 +228,7 @@ public class SaleInvoiceDialog {
         VBox lineItemsSection = createLineItemsSection();
 
         // Bottom row: Payment details + Receiver details
-        HBox bottomRow = new HBox(12);
+        HBox bottomRow = new HBox(8);
         GridPane paymentGrid = createPaymentGrid();
         GridPane receiverGrid = createReceiverGrid();
         bottomRow.getChildren().addAll(paymentGrid, receiverGrid);
@@ -457,36 +457,36 @@ public class SaleInvoiceDialog {
         // Input fields for new line item
         TextField lrNoField = new TextField();
         setupUppercaseListener(lrNoField);
-        VBox lrNoBox = new VBox(4, new Label("LR No"), lrNoField);
+        VBox lrNoBox = new VBox(2, new Label("LR No"), lrNoField);
         HBox.setHgrow(lrNoBox, Priority.ALWAYS);
 
         DatePicker rowDatePicker = new DatePicker();
-        VBox dateBox = new VBox(4, new Label("Date"), rowDatePicker);
+        VBox dateBox = new VBox(2, new Label("Date"), rowDatePicker);
         HBox.setHgrow(dateBox, Priority.ALWAYS);
 
         TextField containerNoField = new TextField();
         setupUppercaseListener(containerNoField);
-        VBox containerBox = new VBox(4, new Label("Container No"), containerNoField);
+        VBox containerBox = new VBox(2, new Label("Container"), containerNoField);
         HBox.setHgrow(containerBox, Priority.ALWAYS);
 
         TextField vehicleNoField = new TextField();
         setupUppercaseListener(vehicleNoField);
-        VBox vehicleBox = new VBox(4, new Label("Vehicle No"), vehicleNoField);
+        VBox vehicleBox = new VBox(2, new Label("Vehicle"), vehicleNoField);
         HBox.setHgrow(vehicleBox, Priority.ALWAYS);
 
         TextField fromField = new TextField();
         setupUppercaseListener(fromField);
-        VBox fromBox = new VBox(4, new Label("From"), fromField);
+        VBox fromBox = new VBox(2, new Label("From"), fromField);
         HBox.setHgrow(fromBox, Priority.ALWAYS);
 
         TextField toField = new TextField();
         setupUppercaseListener(toField);
-        VBox toBox = new VBox(4, new Label("To"), toField);
+        VBox toBox = new VBox(2, new Label("To"), toField);
         HBox.setHgrow(toBox, Priority.ALWAYS);
 
         TextField typeField = new TextField();
         setupUppercaseListener(typeField);
-        VBox typeBox = new VBox(4, new Label("Type"), typeField);
+        VBox typeBox = new VBox(2, new Label("Type"), typeField);
         HBox.setHgrow(typeBox, Priority.ALWAYS);
 
         TextField freightField = new TextField();
@@ -495,7 +495,7 @@ public class SaleInvoiceDialog {
                 freightField.setText(oldVal);
             }
         });
-        VBox freightBox = new VBox(4, new Label("Basic Freight"), freightField);
+        VBox freightBox = new VBox(2, new Label("Freight"), freightField);
         HBox.setHgrow(freightBox, Priority.ALWAYS);
 
         TextField detentionField = new TextField();
@@ -504,7 +504,7 @@ public class SaleInvoiceDialog {
                 detentionField.setText(oldVal);
             }
         });
-        VBox detentionBox = new VBox(4, new Label("Detention Charge"), detentionField);
+        VBox detentionBox = new VBox(2, new Label("Detention"), detentionField);
         HBox.setHgrow(detentionBox, Priority.ALWAYS);
 
         TextField otherChargesField = new TextField();
@@ -513,24 +513,26 @@ public class SaleInvoiceDialog {
                 otherChargesField.setText(oldVal);
             }
         });
-        VBox otherChargesBox = new VBox(4, new Label("Other Charges"), otherChargesField);
+        VBox otherChargesBox = new VBox(2, new Label("Other"), otherChargesField);
         HBox.setHgrow(otherChargesBox, Priority.ALWAYS);
 
         Button addRowBtn = new Button("+ Add Row");
-        addRowBtn.setStyle("-fx-padding: 4 12 4 12; -fx-font-size: 12px;");
-        addRowBtn.setPrefHeight(35);
-        addRowBtn.setMinWidth(90);
+        addRowBtn.setStyle("-fx-padding: 3 8 3 8; -fx-font-size: 11px;");
+        addRowBtn.setPrefHeight(28);
+        addRowBtn.setMinWidth(80);
         addRowBtn.setWrapText(false);
         VBox.setVgrow(addRowBtn, Priority.ALWAYS);
 
-        HBox inputRow = new HBox(8, dateBox, lrNoBox, containerBox, vehicleBox, fromBox, toBox, typeBox, freightBox, detentionBox, otherChargesBox, addRowBtn);
-        inputRow.setPadding(new Insets(12));
+        HBox inputRow = new HBox(6, dateBox, lrNoBox, containerBox, vehicleBox, fromBox, toBox, typeBox, freightBox, detentionBox, otherChargesBox, addRowBtn);
+        inputRow.setPadding(new Insets(8));
         inputRow.setAlignment(Pos.BOTTOM_CENTER);
         inputRow.setStyle("-fx-background-color: #f5f5f5; -fx-border-color: #e2e8f0; -fx-border-radius: 4;");
 
         lineItemTable = new TableView<>(lineItems);
         lineItemTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         lineItemTable.setEditable(false);
+        lineItemTable.setPrefHeight(200);
+        lineItemTable.setMinHeight(150);
 
         // Sr. No. column (auto-filled, read-only)
         TableColumn<InvoiceLineItem, Integer> srNoCol = new TableColumn<>("Sr. No");
@@ -551,32 +553,32 @@ public class SaleInvoiceDialog {
         lrNoCol.setPrefWidth(70);
         lrNoCol.setEditable(true);
 
-        TableColumn<InvoiceLineItem, String> containerCol = new TableColumn<>("Container No");
+        TableColumn<InvoiceLineItem, String> containerCol = new TableColumn<>("Container");
         containerCol.setCellValueFactory(new PropertyValueFactory<>("containerNo"));
         containerCol.setCellFactory(TextFieldTableCell.forTableColumn());
         containerCol.setOnEditCommit(e -> e.getRowValue().setContainerNo(e.getNewValue()));
-        containerCol.setPrefWidth(100);
+        containerCol.setPrefWidth(80);
         containerCol.setEditable(true);
 
-        TableColumn<InvoiceLineItem, String> vehicleCol = new TableColumn<>("Vehicle No");
+        TableColumn<InvoiceLineItem, String> vehicleCol = new TableColumn<>("Vehicle");
         vehicleCol.setCellValueFactory(new PropertyValueFactory<>("vehicleNo"));
         vehicleCol.setCellFactory(TextFieldTableCell.forTableColumn());
         vehicleCol.setOnEditCommit(e -> e.getRowValue().setVehicleNo(e.getNewValue()));
-        vehicleCol.setPrefWidth(100);
+        vehicleCol.setPrefWidth(80);
         vehicleCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> fromCol = new TableColumn<>("From");
         fromCol.setCellValueFactory(new PropertyValueFactory<>("from"));
         fromCol.setCellFactory(TextFieldTableCell.forTableColumn());
         fromCol.setOnEditCommit(e -> e.getRowValue().setFrom(e.getNewValue()));
-        fromCol.setPrefWidth(100);
+        fromCol.setPrefWidth(60);
         fromCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> toCol = new TableColumn<>("To");
         toCol.setCellValueFactory(new PropertyValueFactory<>("to"));
         toCol.setCellFactory(TextFieldTableCell.forTableColumn());
         toCol.setOnEditCommit(e -> e.getRowValue().setTo(e.getNewValue()));
-        toCol.setPrefWidth(100);
+        toCol.setPrefWidth(60);
         toCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> typeCol = new TableColumn<>("Type");
@@ -586,34 +588,34 @@ public class SaleInvoiceDialog {
         typeCol.setPrefWidth(70);
         typeCol.setEditable(true);
 
-        TableColumn<InvoiceLineItem, Double> freightCol = new TableColumn<>("Basic Freight");
+        TableColumn<InvoiceLineItem, Double> freightCol = new TableColumn<>("Freight");
         freightCol.setCellValueFactory(new PropertyValueFactory<>("basicFreight"));
         freightCol.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
         freightCol.setOnEditCommit(e -> {
             e.getRowValue().setBasicFreight(e.getNewValue());
             updateTotal();
         });
-        freightCol.setPrefWidth(115);
+        freightCol.setPrefWidth(90);
         freightCol.setEditable(true);
 
-        TableColumn<InvoiceLineItem, Double> detentionCol = new TableColumn<>("Detention Charge");
+        TableColumn<InvoiceLineItem, Double> detentionCol = new TableColumn<>("Detention");
         detentionCol.setCellValueFactory(new PropertyValueFactory<>("detentionCharge"));
         detentionCol.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
         detentionCol.setOnEditCommit(e -> {
             e.getRowValue().setDetentionCharge(e.getNewValue());
             updateTotal();
         });
-        detentionCol.setPrefWidth(130);
+        detentionCol.setPrefWidth(90);
         detentionCol.setEditable(true);
 
-        TableColumn<InvoiceLineItem, Double> otherChargesCol = new TableColumn<>("Other Charge");
+        TableColumn<InvoiceLineItem, Double> otherChargesCol = new TableColumn<>("Other");
         otherChargesCol.setCellValueFactory(new PropertyValueFactory<>("otherCharges"));
         otherChargesCol.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
         otherChargesCol.setOnEditCommit(e -> {
             e.getRowValue().setOtherCharges(e.getNewValue());
             updateTotal();
         });
-        otherChargesCol.setPrefWidth(120);
+        otherChargesCol.setPrefWidth(80);
         otherChargesCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, Double> totalCol = new TableColumn<>("Total");
@@ -714,8 +716,8 @@ public class SaleInvoiceDialog {
             rowDatePicker.setValue(null);
         });
 
-        VBox section = new VBox(8, sectionTitle, inputRow, lineItemTable);
-        section.setPadding(new Insets(12));
+        VBox section = new VBox(6, sectionTitle, inputRow, lineItemTable);
+        section.setPadding(new Insets(8));
         section.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
         VBox.setVgrow(lineItemTable, Priority.ALWAYS);
         return section;

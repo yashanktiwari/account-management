@@ -1,6 +1,7 @@
 .root {
 
     -fx-font-family: "Segoe UI";
+    -fx-font-size: 12px;
 
     -fx-accent: #2563eb;
     -fx-focus-color: #2563eb;
@@ -86,7 +87,7 @@
 .text-field,
 .combo-box,
 .date-picker {
-    -fx-pref-height: 32;
+    -fx-pref-height: 28;
 }
 
 .combo-box,
@@ -156,7 +157,7 @@
 /* ── Form labels ── */
 
 .form-label {
-    -fx-font-size: 13px;
+    -fx-font-size: 11px;
     -fx-font-weight: bold;
 }
 

@@ -105,14 +105,14 @@ public class PurchaseInvoiceDialog {
     }
 
     public Parent createContent() {
-        VBox root = new VBox(12);
-        root.setPadding(new Insets(16));
+        VBox root = new VBox(8);
+        root.setPadding(new Insets(12));
 
         // Header section
         HBox headerBox = createHeaderSection();
 
         // Top row: Invoice details + GST
-        HBox topRow = new HBox(12);
+        HBox topRow = new HBox(8);
         GridPane invoiceDetailsGrid = createInvoiceDetailsGrid();
         GridPane gstGrid = createGstGrid();
         topRow.getChildren().addAll(invoiceDetailsGrid, gstGrid);
@@ -123,7 +123,7 @@ public class PurchaseInvoiceDialog {
         VBox lineItemsSection = createLineItemsSection();
 
         // Bottom row: Payment details + Supplier details
-        HBox bottomRow = new HBox(12);
+        HBox bottomRow = new HBox(8);
         GridPane paymentGrid = createPaymentGrid();
         GridPane supplierGrid = createSupplierGrid();
         bottomRow.getChildren().addAll(paymentGrid, supplierGrid);
@@ -522,12 +522,12 @@ public class PurchaseInvoiceDialog {
         // Input fields for new line item
         TextField descriptionField = new TextField();
         setupUppercaseListener(descriptionField);
-        VBox descriptionBox = new VBox(4, new Label("Description"), descriptionField);
+        VBox descriptionBox = new VBox(2, new Label("Description"), descriptionField);
         HBox.setHgrow(descriptionBox, Priority.ALWAYS);
 
         TextField unitField = new TextField();
         setupUppercaseListener(unitField);
-        VBox unitBox = new VBox(4, new Label("Unit"), unitField);
+        VBox unitBox = new VBox(2, new Label("Unit"), unitField);
         HBox.setHgrow(unitBox, Priority.ALWAYS);
 
         TextField quantityField = new TextField();
@@ -536,7 +536,7 @@ public class PurchaseInvoiceDialog {
                 quantityField.setText(oldVal);
             }
         });
-        VBox quantityBox = new VBox(4, new Label("Quantity"), quantityField);
+        VBox quantityBox = new VBox(2, new Label("Qty"), quantityField);
         HBox.setHgrow(quantityBox, Priority.ALWAYS);
 
         TextField rateField = new TextField();
@@ -545,29 +545,31 @@ public class PurchaseInvoiceDialog {
                 rateField.setText(oldVal);
             }
         });
-        VBox rateBox = new VBox(4, new Label("Rate"), rateField);
+        VBox rateBox = new VBox(2, new Label("Rate"), rateField);
         HBox.setHgrow(rateBox, Priority.ALWAYS);
 
         TextField remarkField = new TextField();
         setupUppercaseListener(remarkField);
-        VBox remarkBox = new VBox(4, new Label("Remark"), remarkField);
+        VBox remarkBox = new VBox(2, new Label("Remark"), remarkField);
         HBox.setHgrow(remarkBox, Priority.ALWAYS);
 
         Button addRowBtn = new Button("+ Add Row");
-        addRowBtn.setStyle("-fx-padding: 4 12 4 12; -fx-font-size: 12px;");
-        addRowBtn.setPrefHeight(35);
-        addRowBtn.setMinWidth(90);
+        addRowBtn.setStyle("-fx-padding: 3 8 3 8; -fx-font-size: 11px;");
+        addRowBtn.setPrefHeight(28);
+        addRowBtn.setMinWidth(80);
         addRowBtn.setWrapText(false);
         VBox.setVgrow(addRowBtn, Priority.ALWAYS);
 
-        HBox inputRow = new HBox(8, descriptionBox, unitBox, quantityBox, rateBox, remarkBox, addRowBtn);
-        inputRow.setPadding(new Insets(12));
+        HBox inputRow = new HBox(6, descriptionBox, unitBox, quantityBox, rateBox, remarkBox, addRowBtn);
+        inputRow.setPadding(new Insets(8));
         inputRow.setAlignment(Pos.BOTTOM_CENTER);
         inputRow.setStyle("-fx-background-color: #f5f5f5; -fx-border-color: #e2e8f0; -fx-border-radius: 4;");
 
         lineItemTable = new TableView<>(lineItems);
         lineItemTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         lineItemTable.setEditable(false);
+        lineItemTable.setPrefHeight(200);
+        lineItemTable.setMinHeight(150);
 
         // Sr. No. column (auto-filled, read-only)
         TableColumn<InvoiceLineItem, Integer> srNoCol = new TableColumn<>("Sr. No");
@@ -577,13 +579,13 @@ public class PurchaseInvoiceDialog {
 
         TableColumn<InvoiceLineItem, String> descriptionCol = new TableColumn<>("Description");
         descriptionCol.setCellValueFactory(new PropertyValueFactory<>("description"));
-        descriptionCol.setPrefWidth(240);
+        descriptionCol.setPrefWidth(200);
 
         TableColumn<InvoiceLineItem, String> unitCol = new TableColumn<>("Unit");
         unitCol.setCellValueFactory(new PropertyValueFactory<>("unit"));
-        unitCol.setPrefWidth(100);
+        unitCol.setPrefWidth(80);
 
-        TableColumn<InvoiceLineItem, Double> quantityCol = new TableColumn<>("Quantity");
+        TableColumn<InvoiceLineItem, Double> quantityCol = new TableColumn<>("Qty");
         quantityCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
         quantityCol.setPrefWidth(90);
 
@@ -593,11 +595,11 @@ public class PurchaseInvoiceDialog {
 
         TableColumn<InvoiceLineItem, Double> amountCol = new TableColumn<>("Amount");
         amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
-        amountCol.setPrefWidth(110);
+        amountCol.setPrefWidth(90);
 
         TableColumn<InvoiceLineItem, String> remarkCol = new TableColumn<>("Remark");
         remarkCol.setCellValueFactory(new PropertyValueFactory<>("remark"));
-        remarkCol.setPrefWidth(180);
+        remarkCol.setPrefWidth(150);
 
         lineItemTable.getColumns().addAll(srNoCol, descriptionCol, unitCol, quantityCol, rateCol, amountCol, remarkCol);
 
@@ -670,8 +672,8 @@ public class PurchaseInvoiceDialog {
             updateTotal();
         });
 
-        VBox section = new VBox(8, sectionTitle, inputRow, lineItemTable);
-        section.setPadding(new Insets(12));
+        VBox section = new VBox(6, sectionTitle, inputRow, lineItemTable);
+        section.setPadding(new Insets(8));
         section.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
         VBox.setVgrow(lineItemTable, Priority.ALWAYS);
         return section;
