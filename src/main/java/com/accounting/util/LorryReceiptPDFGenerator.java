@@ -87,15 +87,16 @@ public class LorryReceiptPDFGenerator {
         // ── Col1+Col2 merged: LR_HEADER (2/3 width) ──
         PdfPCell headerCell = new PdfPCell();
         headerCell.setBorder(Rectangle.BOX);
-        headerCell.setPadding(2);
+        headerCell.setPadding(0);
         headerCell.setColspan(2);
         headerCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
 
         Image headerImg = loadImage("LR_HEADER");
         if (headerImg != null) {
-            float maxW = (PageSize.A4.getHeight() - 28) * 2f / 3f - 6;
+            float maxW = (PageSize.A4.getHeight() - 28) * 2f / 3f;
             headerImg.scaleToFit(maxW, 150);
-            headerImg.setAlignment(Image.MIDDLE);
+            headerImg.setAlignment(Image.ALIGN_CENTER);
             headerCell.addElement(headerImg);
         } else {
             headerCell.addElement(new Paragraph("[ LR_HEADER.jpg — place image in src/main/resources/images/ ]",
