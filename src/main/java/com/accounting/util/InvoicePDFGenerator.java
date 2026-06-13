@@ -355,7 +355,8 @@ public class InvoicePDFGenerator {
             if (resourcePath != null) {
                 InputStream is = InvoicePDFGenerator.class.getResourceAsStream(resourcePath);
                 if (is != null) {
-                    Image image = Image.getInstance(is);
+                    byte[] imageBytes = is.readAllBytes();
+                    Image image = Image.getInstance(imageBytes);
                     image.scaleAbsolute(contentWidth, image.getHeight() * contentWidth / image.getWidth());
                     return image;
                 }
@@ -397,7 +398,8 @@ public class InvoicePDFGenerator {
             if (resourcePath != null) {
                 InputStream is = InvoicePDFGenerator.class.getResourceAsStream(resourcePath);
                 if (is != null) {
-                    Image image = Image.getInstance(is);
+                    byte[] imageBytes = is.readAllBytes();
+                    Image image = Image.getInstance(imageBytes);
                     float w = image.getWidth();
                     float h = image.getHeight();
                     float scale = Math.min(maxWidth / w, maxHeight / h);
