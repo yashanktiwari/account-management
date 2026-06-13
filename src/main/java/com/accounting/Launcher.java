@@ -1,76 +1,105 @@
 package com.accounting;
 
-import javafx.application.Application;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
+import javax.swing.*;
+import java.awt.*;
 
-public class Launcher extends Application {
+public class Launcher {
 
     private static final String CORRECT_PASSWORD = "Yashank01$";
 
-    @Override
-    public void start(Stage primaryStage) {
-        primaryStage.setTitle("Account Management - Security Check");
-        primaryStage.setResizable(false);
+    public static void main(String[] args) {
+        // Set system property for JavaFX to work with Swing
+        System.setProperty("javafx.embed.singleThread", "true");
 
-        VBox root = new VBox(15);
-        root.setPadding(new Insets(30));
-        root.setAlignment(Pos.CENTER);
-        root.setStyle("-fx-background-color: #f8fafc;");
+        // Create password dialog
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setPreferredSize(new Dimension(350, 150));
+        panel.setBackground(new Color(248, 250, 252));
 
-        Label titleLabel = new Label("Account Management");
-        titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        Label instructionLabel = new Label("Enter password to launch the application:");
-        instructionLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #64748b;");
+        JLabel titleLabel = new JLabel("Account Management");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        titleLabel.setForeground(new Color(30, 58, 95));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        panel.add(titleLabel, gbc);
 
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Enter password");
-        passwordField.setPrefWidth(250);
+        JLabel instructionLabel = new JLabel("Enter password to launch:");
+        instructionLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        instructionLabel.setForeground(new Color(100, 116, 139));
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        panel.add(instructionLabel, gbc);
 
-        Button launchButton = new Button("Launch");
-        launchButton.setStyle("-fx-background-color: #16a34a; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 30 10 30; -fx-background-radius: 6;");
-        launchButton.setPrefWidth(150);
+        JLabel passwordLabel = new JLabel("Password:");
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 1;
+        panel.add(passwordLabel, gbc);
 
-        Label errorLabel = new Label();
-        errorLabel.setStyle("-fx-text-fill: #dc2626; -fx-font-size: 12px;");
+        JPasswordField passwordField = new JPasswordField(15);
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        panel.add(passwordField, gbc);
 
-        launchButton.setOnAction(e -> {
-            String enteredPassword = passwordField.getText();
+        JButton launchButton = new JButton("Launch");
+        launchButton.setBackground(new Color(22, 163, 74));
+        launchButton.setForeground(Color.WHITE);
+        launchButton.setFont(new Font("Arial", Font.BOLD, 12));
+        launchButton.setPreferredSize(new Dimension(100, 30));
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
+        panel.add(launchButton, gbc);
+
+        JLabel errorLabel = new JLabel(" ");
+        errorLabel.setForeground(Color.RED);
+        errorLabel.setFont(new Font("Arial", Font.PLAIN, 11));
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel.add(errorLabel, gbc);
+
+        // Create dialog
+        JDialog dialog = new JDialog();
+        dialog.setTitle("Security Check");
+        dialog.setModal(true);
+        dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        dialog.setContentPane(panel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(null);
+
+        // Button action
+        launchButton.addActionListener(e -> {
+            String enteredPassword = new String(passwordField.getPassword());
             if (enteredPassword.equals(CORRECT_PASSWORD)) {
-                // Password correct - launch MainApp
+                dialog.dispose();
+                // Launch MainApp
                 try {
-                    MainApp mainApp = new MainApp();
-                    mainApp.start(new Stage());
-                    primaryStage.close();
+                    MainApp.main(args);
                 } catch (Exception ex) {
-                    errorLabel.setText("Failed to launch application: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(dialog, "Failed to launch application: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                     ex.printStackTrace();
                 }
             } else {
                 errorLabel.setText("Incorrect password. Please try again.");
-                passwordField.clear();
+                passwordField.setText("");
                 passwordField.requestFocus();
             }
         });
 
-        passwordField.setOnAction(e -> launchButton.fire());
+        // Enter key action
+        passwordField.addActionListener(e -> launchButton.doClick());
 
-        root.getChildren().addAll(titleLabel, instructionLabel, passwordField, launchButton, errorLabel);
-
-        Scene scene = new Scene(root, 400, 250);
-        scene.getStylesheets().add(getClass().getResource("/css/global.css").toExternalForm());
-        primaryStage.setScene(scene);
-        primaryStage.show();
-
-        passwordField.requestFocus();
-    }
-
-    public static void main(String[] args) {
-        launch(args);
+        // Show dialog
+        dialog.setVisible(true);
     }
 }
