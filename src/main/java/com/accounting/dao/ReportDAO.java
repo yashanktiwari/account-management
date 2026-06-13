@@ -682,4 +682,476 @@ public class ReportDAO {
         public double getOpeningBalance() { return openingBalance; }
         public double getClosingBalance() { return closingBalance; }
     }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    //  Preset Reports - Simple table-based reports
+    // ══════════════════════════════════════════════════════════════════════════
+
+    public static class SimpleReportResult {
+        private final String[] columnHeaders;
+        private final List<String[]> rows;
+        private final double totalAmount;
+
+        public SimpleReportResult(String[] columnHeaders, List<String[]> rows, double totalAmount) {
+            this.columnHeaders = columnHeaders;
+            this.rows = rows;
+            this.totalAmount = totalAmount;
+        }
+
+        public String[] getColumnHeaders() { return columnHeaders; }
+        public List<String[]> getRows() { return rows; }
+        public double getTotalAmount() { return totalAmount; }
+    }
+
+    public SimpleReportResult generatePresetReport(String reportType, LocalDate fromDate, LocalDate toDate) throws Exception {
+        return switch (reportType) {
+            case "Purchase Invoices" -> presetPurchaseInvoices(fromDate, toDate);
+            case "Sale Invoices" -> presetSaleInvoices(fromDate, toDate);
+            case "Purchase Receipts" -> presetPurchaseReceipts(fromDate, toDate);
+            case "Sale Receipts" -> presetSaleReceipts(fromDate, toDate);
+            case "Payments" -> presetPayments(fromDate, toDate);
+            case "Loading Slips" -> presetLoadingSlips(fromDate, toDate);
+            case "Lorry Receipts" -> presetLorryReceipts(fromDate, toDate);
+            case "Party-wise Summary" -> presetPartyWiseSummary(fromDate, toDate);
+            case "Monthly Summary" -> presetMonthlySummary(fromDate, toDate);
+            case "GST Report" -> presetGSTReport(fromDate, toDate);
+            case "Vehicle-wise Summary" -> presetVehicleWiseSummary(fromDate, toDate);
+            case "Day Book" -> presetDayBook(fromDate, toDate);
+            default -> new SimpleReportResult(new String[]{}, new ArrayList<>(), 0);
+        };
+    }
+
+    public static List<String> getPresetReportTypes() {
+        return List.of(
+            "Purchase Invoices", "Sale Invoices",
+            "Purchase Receipts", "Sale Receipts",
+            "Payments",
+            "Loading Slips", "Lorry Receipts",
+            "Party-wise Summary", "Monthly Summary",
+            "GST Report", "Vehicle-wise Summary", "Day Book"
+        );
+    }
+
+    private SimpleReportResult presetPurchaseInvoices(LocalDate from, LocalDate to) throws Exception {
+        String[] headers = {"Sr.No", "Date", "Invoice No", "Party", "Voucher Type", "Taxable Amt", "GST", "Net Amount", "Remarks"};
+        List<String[]> rows = new ArrayList<>();
+        double total = 0;
+        String sql = """
+            SELECT invoice_date, invoice_no, party_name, voucher_type,
+                   COALESCE(taxable_amount,0), COALESCE(total_gst,0), COALESCE(net_amount,0), COALESCE(remarks,'')
+            FROM purchase_invoices WHERE invoice_date BETWEEN ? AND ? ORDER BY invoice_date, id
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(from)); ps.setDate(2, Date.valueOf(to));
+            try (ResultSet rs = ps.executeQuery()) {
+                int sr = 1;
+                while (rs.next()) {
+                    double net = rs.getDouble(7);
+                    total += net;
+                    rows.add(new String[]{String.valueOf(sr++), rs.getDate(1).toLocalDate().toString(),
+                        rs.getString(2), rs.getString(3), rs.getString(4),
+                        fmt(rs.getDouble(5)), fmt(rs.getDouble(6)), fmt(net), rs.getString(8)});
+                }
+            }
+        }
+        return new SimpleReportResult(headers, rows, total);
+    }
+
+    private SimpleReportResult presetSaleInvoices(LocalDate from, LocalDate to) throws Exception {
+        String[] headers = {"Sr.No", "Date", "Invoice No", "Party", "Voucher Type", "Taxable Amt", "GST", "Net Amount", "Remarks"};
+        List<String[]> rows = new ArrayList<>();
+        double total = 0;
+        String sql = """
+            SELECT invoice_date, invoice_no, account_name, voucher_type,
+                   COALESCE(taxable_amount,0), COALESCE(total_gst,0), COALESCE(net_amount,0), COALESCE(remarks,'')
+            FROM sale_invoices WHERE invoice_date BETWEEN ? AND ? ORDER BY invoice_date, id
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(from)); ps.setDate(2, Date.valueOf(to));
+            try (ResultSet rs = ps.executeQuery()) {
+                int sr = 1;
+                while (rs.next()) {
+                    double net = rs.getDouble(7);
+                    total += net;
+                    rows.add(new String[]{String.valueOf(sr++), rs.getDate(1).toLocalDate().toString(),
+                        rs.getString(2), rs.getString(3), rs.getString(4),
+                        fmt(rs.getDouble(5)), fmt(rs.getDouble(6)), fmt(net), rs.getString(8)});
+                }
+            }
+        }
+        return new SimpleReportResult(headers, rows, total);
+    }
+
+    private SimpleReportResult presetPurchaseReceipts(LocalDate from, LocalDate to) throws Exception {
+        String[] headers = {"Sr.No", "Date", "Receipt No", "Party", "Amount", "Payment Mode", "Bank", "Remarks"};
+        List<String[]> rows = new ArrayList<>();
+        double total = 0;
+        String sql = """
+            SELECT receipt_date, receipt_no, party_name, COALESCE(amount,0),
+                   COALESCE(payment_mode,''), COALESCE(bank_name,''), COALESCE(remarks,'')
+            FROM purchase_receipts WHERE receipt_date BETWEEN ? AND ? ORDER BY receipt_date, id
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(from)); ps.setDate(2, Date.valueOf(to));
+            try (ResultSet rs = ps.executeQuery()) {
+                int sr = 1;
+                while (rs.next()) {
+                    double amt = rs.getDouble(4);
+                    total += amt;
+                    rows.add(new String[]{String.valueOf(sr++), rs.getDate(1).toLocalDate().toString(),
+                        rs.getString(2), rs.getString(3), fmt(amt),
+                        rs.getString(5), rs.getString(6), rs.getString(7)});
+                }
+            }
+        }
+        return new SimpleReportResult(headers, rows, total);
+    }
+
+    private SimpleReportResult presetSaleReceipts(LocalDate from, LocalDate to) throws Exception {
+        String[] headers = {"Sr.No", "Date", "Receipt No", "Party", "Amount", "Payment Mode", "Bank", "Remarks"};
+        List<String[]> rows = new ArrayList<>();
+        double total = 0;
+        String sql = """
+            SELECT receipt_date, receipt_no, party_name, COALESCE(amount,0),
+                   COALESCE(payment_mode,''), COALESCE(bank_name,''), COALESCE(remarks,'')
+            FROM sale_receipts WHERE receipt_date BETWEEN ? AND ? ORDER BY receipt_date, id
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(from)); ps.setDate(2, Date.valueOf(to));
+            try (ResultSet rs = ps.executeQuery()) {
+                int sr = 1;
+                while (rs.next()) {
+                    double amt = rs.getDouble(4);
+                    total += amt;
+                    rows.add(new String[]{String.valueOf(sr++), rs.getDate(1).toLocalDate().toString(),
+                        rs.getString(2), rs.getString(3), fmt(amt),
+                        rs.getString(5), rs.getString(6), rs.getString(7)});
+                }
+            }
+        }
+        return new SimpleReportResult(headers, rows, total);
+    }
+
+    private SimpleReportResult presetPayments(LocalDate from, LocalDate to) throws Exception {
+        String[] headers = {"Sr.No", "Date", "Voucher No", "Party", "Amount", "Voucher Type", "Particulars"};
+        List<String[]> rows = new ArrayList<>();
+        double total = 0;
+        String sql = """
+            SELECT payment_date, voucher_no, account_name, COALESCE(amount,0),
+                   COALESCE(voucher_type,''), COALESCE(particulars,'')
+            FROM payments WHERE payment_date BETWEEN ? AND ? ORDER BY payment_date, id
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(from)); ps.setDate(2, Date.valueOf(to));
+            try (ResultSet rs = ps.executeQuery()) {
+                int sr = 1;
+                while (rs.next()) {
+                    double amt = rs.getDouble(4);
+                    total += amt;
+                    rows.add(new String[]{String.valueOf(sr++), rs.getDate(1).toLocalDate().toString(),
+                        rs.getString(2), rs.getString(3), fmt(amt),
+                        rs.getString(5), rs.getString(6)});
+                }
+            }
+        }
+        return new SimpleReportResult(headers, rows, total);
+    }
+
+    private SimpleReportResult presetLoadingSlips(LocalDate from, LocalDate to) throws Exception {
+        String[] headers = {"Sr.No", "Date", "Slip No", "Party", "Vehicle", "From", "To", "Freight", "Advance", "Balance"};
+        List<String[]> rows = new ArrayList<>();
+        double total = 0;
+        String sql = """
+            SELECT slip_date, slip_no, COALESCE(party_name,''), COALESCE(vehicle_no,''),
+                   COALESCE(station,''), COALESCE(to_location,''),
+                   COALESCE(freight_amount,0), COALESCE(advance_amount,0), COALESCE(balance_amount,0)
+            FROM loading_slips WHERE slip_date BETWEEN ? AND ? ORDER BY slip_date, id
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(from)); ps.setDate(2, Date.valueOf(to));
+            try (ResultSet rs = ps.executeQuery()) {
+                int sr = 1;
+                while (rs.next()) {
+                    double freight = rs.getDouble(7);
+                    total += freight;
+                    rows.add(new String[]{String.valueOf(sr++), rs.getDate(1).toLocalDate().toString(),
+                        rs.getString(2), rs.getString(3), rs.getString(4),
+                        rs.getString(5), rs.getString(6),
+                        fmt(freight), fmt(rs.getDouble(8)), fmt(rs.getDouble(9))});
+                }
+            }
+        }
+        return new SimpleReportResult(headers, rows, total);
+    }
+
+    private SimpleReportResult presetLorryReceipts(LocalDate from, LocalDate to) throws Exception {
+        String[] headers = {"Sr.No", "Date", "LR No", "Vehicle", "From", "To", "Consignor", "Freight", "Advance", "Total"};
+        List<String[]> rows = new ArrayList<>();
+        double total = 0;
+        String sql = """
+            SELECT lr_date, lr_no, COALESCE(vehicle_no,''), COALESCE(from_location,''),
+                   COALESCE(to_location,''), COALESCE(consignor_name,''),
+                   COALESCE(freight,0), COALESCE(advance,0), COALESCE(total,0)
+            FROM lorry_receipts WHERE lr_date BETWEEN ? AND ? ORDER BY lr_date, id
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(from)); ps.setDate(2, Date.valueOf(to));
+            try (ResultSet rs = ps.executeQuery()) {
+                int sr = 1;
+                while (rs.next()) {
+                    double t = rs.getDouble(9);
+                    total += t;
+                    rows.add(new String[]{String.valueOf(sr++), rs.getDate(1).toLocalDate().toString(),
+                        rs.getString(2), rs.getString(3), rs.getString(4),
+                        rs.getString(5), rs.getString(6),
+                        fmt(rs.getDouble(7)), fmt(rs.getDouble(8)), fmt(t)});
+                }
+            }
+        }
+        return new SimpleReportResult(headers, rows, total);
+    }
+
+    private SimpleReportResult presetPartyWiseSummary(LocalDate from, LocalDate to) throws Exception {
+        String[] headers = {"Sr.No", "Party", "Purchase Invoices", "Sale Invoices", "Receipts", "Payments", "Net Amount"};
+        List<String[]> rows = new ArrayList<>();
+        double total = 0;
+        String sql = """
+            SELECT party,
+                   SUM(purchase_amt) as purchases, SUM(sale_amt) as sales,
+                   SUM(receipt_amt) as receipts, SUM(payment_amt) as payments
+            FROM (
+                SELECT party_name as party, net_amount as purchase_amt, 0 as sale_amt, 0 as receipt_amt, 0 as payment_amt
+                FROM purchase_invoices WHERE invoice_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT account_name as party, 0, net_amount, 0, 0
+                FROM sale_invoices WHERE invoice_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT party_name as party, 0, 0, amount, 0
+                FROM purchase_receipts WHERE receipt_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT party_name as party, 0, 0, amount, 0
+                FROM sale_receipts WHERE receipt_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT account_name as party, 0, 0, 0, amount
+                FROM payments WHERE payment_date BETWEEN ? AND ?
+            ) combined
+            WHERE party IS NOT NULL
+            GROUP BY party
+            ORDER BY (SUM(purchase_amt) + SUM(sale_amt)) DESC
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 0; i < 5; i++) {
+                ps.setDate(i * 2 + 1, Date.valueOf(from));
+                ps.setDate(i * 2 + 2, Date.valueOf(to));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                int sr = 1;
+                while (rs.next()) {
+                    double purchases = rs.getDouble("purchases");
+                    double sales = rs.getDouble("sales");
+                    double receipts = rs.getDouble("receipts");
+                    double payments = rs.getDouble("payments");
+                    double net = (purchases + sales) - (receipts + payments);
+                    total += net;
+                    rows.add(new String[]{String.valueOf(sr++), rs.getString("party"),
+                        fmt(purchases), fmt(sales), fmt(receipts), fmt(payments), fmt(net)});
+                }
+            }
+        }
+        return new SimpleReportResult(headers, rows, total);
+    }
+
+    private SimpleReportResult presetMonthlySummary(LocalDate from, LocalDate to) throws Exception {
+        String[] headers = {"Sr.No", "Month", "Purchase Amt", "Sale Amt", "Receipt Amt", "Payment Amt", "Net"};
+        List<String[]> rows = new ArrayList<>();
+        double total = 0;
+        String sql = """
+            SELECT month_label,
+                   SUM(purchase_amt) as purchases, SUM(sale_amt) as sales,
+                   SUM(receipt_amt) as receipts, SUM(payment_amt) as payments
+            FROM (
+                SELECT DATE_FORMAT(invoice_date, '%b %Y') as month_label, CONCAT(YEAR(invoice_date),'-',LPAD(MONTH(invoice_date),2,'0')) as sort_key,
+                       net_amount as purchase_amt, 0 as sale_amt, 0 as receipt_amt, 0 as payment_amt
+                FROM purchase_invoices WHERE invoice_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT DATE_FORMAT(invoice_date, '%b %Y'), CONCAT(YEAR(invoice_date),'-',LPAD(MONTH(invoice_date),2,'0')),
+                       0, net_amount, 0, 0
+                FROM sale_invoices WHERE invoice_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT DATE_FORMAT(receipt_date, '%b %Y'), CONCAT(YEAR(receipt_date),'-',LPAD(MONTH(receipt_date),2,'0')),
+                       0, 0, amount, 0
+                FROM purchase_receipts WHERE receipt_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT DATE_FORMAT(receipt_date, '%b %Y'), CONCAT(YEAR(receipt_date),'-',LPAD(MONTH(receipt_date),2,'0')),
+                       0, 0, amount, 0
+                FROM sale_receipts WHERE receipt_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT DATE_FORMAT(payment_date, '%b %Y'), CONCAT(YEAR(payment_date),'-',LPAD(MONTH(payment_date),2,'0')),
+                       0, 0, 0, amount
+                FROM payments WHERE payment_date BETWEEN ? AND ?
+            ) combined
+            GROUP BY month_label, sort_key
+            ORDER BY sort_key
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 0; i < 5; i++) {
+                ps.setDate(i * 2 + 1, Date.valueOf(from));
+                ps.setDate(i * 2 + 2, Date.valueOf(to));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                int sr = 1;
+                while (rs.next()) {
+                    double purchases = rs.getDouble("purchases");
+                    double sales = rs.getDouble("sales");
+                    double receipts = rs.getDouble("receipts");
+                    double payments = rs.getDouble("payments");
+                    double net = (sales - purchases) - (payments - receipts);
+                    total += net;
+                    rows.add(new String[]{String.valueOf(sr++), rs.getString("month_label"),
+                        fmt(purchases), fmt(sales), fmt(receipts), fmt(payments), fmt(net)});
+                }
+            }
+        }
+        return new SimpleReportResult(headers, rows, total);
+    }
+
+    private SimpleReportResult presetGSTReport(LocalDate from, LocalDate to) throws Exception {
+        String[] headers = {"Sr.No", "Date", "Type", "Party", "GSTIN", "Taxable Amt", "SGST", "CGST", "IGST", "Total GST"};
+        List<String[]> rows = new ArrayList<>();
+        double total = 0;
+        String sql = """
+            SELECT invoice_date, 'Sale' as type, account_name as party, COALESCE(rcvr_gstin,'') as gstin,
+                   COALESCE(taxable_amount,0), COALESCE(sgst_amount,0), COALESCE(cgst_amount,0),
+                   COALESCE(igst_amount,0), COALESCE(total_gst,0)
+            FROM sale_invoices WHERE invoice_date BETWEEN ? AND ?
+            UNION ALL
+            SELECT invoice_date, 'Purchase' as type, party_name as party, COALESCE(supplier_gst_no,'') as gstin,
+                   COALESCE(taxable_amount,0), COALESCE(sgst_amount,0), COALESCE(cgst_amount,0),
+                   COALESCE(igst_amount,0), COALESCE(total_gst,0)
+            FROM purchase_invoices WHERE invoice_date BETWEEN ? AND ?
+            ORDER BY 1
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(from)); ps.setDate(2, Date.valueOf(to));
+            ps.setDate(3, Date.valueOf(from)); ps.setDate(4, Date.valueOf(to));
+            try (ResultSet rs = ps.executeQuery()) {
+                int sr = 1;
+                while (rs.next()) {
+                    double gst = rs.getDouble(9);
+                    total += gst;
+                    rows.add(new String[]{String.valueOf(sr++), rs.getDate(1).toLocalDate().toString(),
+                        rs.getString(2), rs.getString(3), rs.getString(4),
+                        fmt(rs.getDouble(5)), fmt(rs.getDouble(6)), fmt(rs.getDouble(7)),
+                        fmt(rs.getDouble(8)), fmt(gst)});
+                }
+            }
+        }
+        return new SimpleReportResult(headers, rows, total);
+    }
+
+    private SimpleReportResult presetVehicleWiseSummary(LocalDate from, LocalDate to) throws Exception {
+        String[] headers = {"Sr.No", "Vehicle No", "Loading Slips", "Lorry Receipts", "Total Freight"};
+        List<String[]> rows = new ArrayList<>();
+        double total = 0;
+        String sql = """
+            SELECT vehicle_no,
+                   SUM(CASE WHEN type='LS' THEN 1 ELSE 0 END) as ls_count,
+                   SUM(CASE WHEN type='LR' THEN 1 ELSE 0 END) as lr_count,
+                   SUM(amount) as total_freight
+            FROM (
+                SELECT vehicle_no, 'LS' as type, COALESCE(freight_amount,0) as amount
+                FROM loading_slips WHERE slip_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT vehicle_no, 'LR' as type, COALESCE(freight,0) as amount
+                FROM lorry_receipts WHERE lr_date BETWEEN ? AND ?
+            ) combined
+            WHERE vehicle_no IS NOT NULL AND vehicle_no != ''
+            GROUP BY vehicle_no
+            ORDER BY total_freight DESC
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(from)); ps.setDate(2, Date.valueOf(to));
+            ps.setDate(3, Date.valueOf(from)); ps.setDate(4, Date.valueOf(to));
+            try (ResultSet rs = ps.executeQuery()) {
+                int sr = 1;
+                while (rs.next()) {
+                    double freight = rs.getDouble("total_freight");
+                    total += freight;
+                    rows.add(new String[]{String.valueOf(sr++), rs.getString("vehicle_no"),
+                        String.valueOf(rs.getInt("ls_count")), String.valueOf(rs.getInt("lr_count")),
+                        fmt(freight)});
+                }
+            }
+        }
+        return new SimpleReportResult(headers, rows, total);
+    }
+
+    private SimpleReportResult presetDayBook(LocalDate from, LocalDate to) throws Exception {
+        String[] headers = {"Sr.No", "Date", "Type", "Reference", "Party", "Debit", "Credit"};
+        List<String[]> rows = new ArrayList<>();
+        double totalDebit = 0, totalCredit = 0;
+        String sql = """
+            SELECT * FROM (
+                SELECT invoice_date as txn_date, 'Purchase Invoice' as type, invoice_no as reference,
+                       party_name as party, net_amount as debit, 0 as credit
+                FROM purchase_invoices WHERE invoice_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT invoice_date, 'Sale Invoice', invoice_no, account_name, 0, net_amount
+                FROM sale_invoices WHERE invoice_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT receipt_date, 'Purchase Receipt', receipt_no, party_name, 0, amount
+                FROM purchase_receipts WHERE receipt_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT receipt_date, 'Sale Receipt', receipt_no, party_name, amount, 0
+                FROM sale_receipts WHERE receipt_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT payment_date, 'Payment', voucher_no, account_name, amount, 0
+                FROM payments WHERE payment_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT slip_date, 'Loading Slip', slip_no, party_name, freight_amount, 0
+                FROM loading_slips WHERE slip_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT lr_date, 'Lorry Receipt', lr_no, COALESCE(consignor_name,''), freight, 0
+                FROM lorry_receipts WHERE lr_date BETWEEN ? AND ?
+            ) combined
+            ORDER BY txn_date, type
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 0; i < 7; i++) {
+                ps.setDate(i * 2 + 1, Date.valueOf(from));
+                ps.setDate(i * 2 + 2, Date.valueOf(to));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                int sr = 1;
+                while (rs.next()) {
+                    double debit = rs.getDouble("debit");
+                    double credit = rs.getDouble("credit");
+                    totalDebit += debit;
+                    totalCredit += credit;
+                    rows.add(new String[]{String.valueOf(sr++), rs.getDate("txn_date").toLocalDate().toString(),
+                        rs.getString("type"), rs.getString("reference"),
+                        rs.getString("party") != null ? rs.getString("party") : "",
+                        debit > 0 ? fmt(debit) : "", credit > 0 ? fmt(credit) : ""});
+                }
+            }
+        }
+        return new SimpleReportResult(headers, rows, totalDebit - totalCredit);
+    }
+
+    private static String fmt(double val) {
+        if (val == 0) return "0.00";
+        return String.format("%.2f", val);
+    }
 }

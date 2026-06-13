@@ -172,7 +172,7 @@ public class MainApp extends Application {
 
         reportsBtn = sidebarButton("Reports", this::showReports);
         ledgerBtn = sidebarButton("Party Ledger", this::showLedger);
-        queryBuilderBtn = sidebarButton("Query Builder", this::showQueryBuilder);
+        queryBuilderBtn = sidebarButton("Custom Reports", this::showQueryBuilder);
 
         Label settingsTitle = new Label("Settings");
         settingsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
