@@ -62,13 +62,12 @@ public class PartyDAO {
             pstmt.setString(7, party.getEmail());
             pstmt.setString(8, party.getPan());
             pstmt.setString(9, party.getGstin());
-            pstmt.setString(10, "");
-            pstmt.setString(11, party.getOwnerName());
-            pstmt.setString(12, party.getCstNo());
-            pstmt.setString(13, party.getTanNo());
-            pstmt.setString(14, party.getTds());
-            pstmt.setString(15, party.getAadharNo());
-            pstmt.setString(16, party.getRoutes());
+            pstmt.setString(10, party.getOwnerName());
+            pstmt.setString(11, party.getCstNo());
+            pstmt.setString(12, party.getTanNo());
+            pstmt.setString(13, party.getTds());
+            pstmt.setString(14, party.getAadharNo());
+            pstmt.setString(15, party.getRoutes());
 
             pstmt.executeUpdate();
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
@@ -98,14 +97,13 @@ public class PartyDAO {
             pstmt.setString(7, party.getEmail());
             pstmt.setString(8, party.getPan());
             pstmt.setString(9, party.getGstin());
-            pstmt.setString(10, "");
-            pstmt.setString(11, party.getOwnerName());
-            pstmt.setString(12, party.getCstNo());
-            pstmt.setString(13, party.getTanNo());
-            pstmt.setString(14, party.getTds());
-            pstmt.setString(15, party.getAadharNo());
-            pstmt.setString(16, party.getRoutes());
-            pstmt.setInt(17, party.getId());
+            pstmt.setString(10, party.getOwnerName());
+            pstmt.setString(11, party.getCstNo());
+            pstmt.setString(12, party.getTanNo());
+            pstmt.setString(13, party.getTds());
+            pstmt.setString(14, party.getAadharNo());
+            pstmt.setString(15, party.getRoutes());
+            pstmt.setInt(16, party.getId());
 
             pstmt.executeUpdate();
             log.info("Party updated: {}", party.getName());
