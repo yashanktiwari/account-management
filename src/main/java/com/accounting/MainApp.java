@@ -408,6 +408,22 @@ public class MainApp extends Application {
     }
 
     public static void main(String[] args) {
+        // Password check before launching
+        String password = "Yashank01$";
+        javax.swing.JPasswordField pf = new javax.swing.JPasswordField();
+        int result = javax.swing.JOptionPane.showConfirmDialog(
+                null, pf, "Enter Password to Launch", javax.swing.JOptionPane.OK_CANCEL_OPTION,
+                javax.swing.JOptionPane.PLAIN_MESSAGE);
+        if (result == javax.swing.JOptionPane.OK_OPTION) {
+            String entered = new String(pf.getPassword());
+            if (!entered.equals(password)) {
+                javax.swing.JOptionPane.showMessageDialog(null,
+                        "Incorrect password.", "Access Denied", javax.swing.JOptionPane.ERROR_MESSAGE);
+                System.exit(1);
+            }
+        } else {
+            System.exit(0);
+        }
         launch(args);
     }
 }
