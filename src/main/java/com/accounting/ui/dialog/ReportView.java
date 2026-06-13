@@ -103,18 +103,22 @@ public class ReportView {
         
         Button generateBtn = new Button("Generate Report");
         generateBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
+        generateBtn.setPrefWidth(150);
         generateBtn.setOnAction(e -> generateReport());
         
         Button exportExcelBtn = new Button("Export to Excel");
         exportExcelBtn.setStyle("-fx-background-color: #16a34a; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
+        exportExcelBtn.setPrefWidth(150);
         exportExcelBtn.setOnAction(e -> exportToExcel());
 
         Button printPdfBtn = new Button("Print to PDF");
         printPdfBtn.setStyle("-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
+        printPdfBtn.setPrefWidth(130);
         printPdfBtn.setOnAction(e -> printToPdf());
 
         Button clearBtn = new Button("Clear Search");
         clearBtn.setStyle("-fx-background-color: #94a3b8; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
+        clearBtn.setPrefWidth(130);
         clearBtn.setOnAction(e -> {
             searchField.clear();
             applyFilters();
