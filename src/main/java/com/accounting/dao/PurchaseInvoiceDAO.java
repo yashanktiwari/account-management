@@ -213,24 +213,30 @@ public class PurchaseInvoiceDAO {
     private void saveLineItem(int invoiceId, InvoiceLineItem item) throws Exception {
         ensureLineItemColumns();
         String sql = """
-                INSERT INTO invoice_line_items (invoice_id, date, lr_no, container_no, vehicle_no, from_location,
-                to_location, type, basic_freight, detention_charge, other_charges, total)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO invoice_line_items (invoice_id, date, description, unit, quantity, rate, remark,
+                lr_no, container_no, vehicle_no, from_location, to_location, type, basic_freight,
+                detention_charge, other_charges, total)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, invoiceId);
             pstmt.setString(2, item.getDate());
-            pstmt.setString(3, item.getLrNo());
-            pstmt.setString(4, item.getContainerNo());
-            pstmt.setString(5, item.getVehicleNo());
-            pstmt.setString(6, item.getFrom());
-            pstmt.setString(7, item.getTo());
-            pstmt.setString(8, item.getType());
-            pstmt.setDouble(9, item.getBasicFreight());
-            pstmt.setDouble(10, item.getDetentionCharge());
-            pstmt.setDouble(11, item.getOtherCharges());
-            pstmt.setDouble(12, item.getTotal());
+            pstmt.setString(3, item.getDescription());
+            pstmt.setString(4, item.getUnit());
+            pstmt.setDouble(5, item.getQuantity());
+            pstmt.setDouble(6, item.getRate());
+            pstmt.setString(7, item.getRemark());
+            pstmt.setString(8, item.getLrNo());
+            pstmt.setString(9, item.getContainerNo());
+            pstmt.setString(10, item.getVehicleNo());
+            pstmt.setString(11, item.getFrom());
+            pstmt.setString(12, item.getTo());
+            pstmt.setString(13, item.getType());
+            pstmt.setDouble(14, item.getBasicFreight());
+            pstmt.setDouble(15, item.getDetentionCharge());
+            pstmt.setDouble(16, item.getOtherCharges());
+            pstmt.setDouble(17, item.getTotal());
             pstmt.executeUpdate();
         }
     }
@@ -248,6 +254,21 @@ public class PurchaseInvoiceDAO {
             try (Statement stmt = conn.createStatement()) {
                 if (!existing.contains("date")) {
                     stmt.executeUpdate("ALTER TABLE invoice_line_items ADD COLUMN date VARCHAR(20)");
+                }
+                if (!existing.contains("description")) {
+                    stmt.executeUpdate("ALTER TABLE invoice_line_items ADD COLUMN description VARCHAR(255)");
+                }
+                if (!existing.contains("unit")) {
+                    stmt.executeUpdate("ALTER TABLE invoice_line_items ADD COLUMN unit VARCHAR(100)");
+                }
+                if (!existing.contains("quantity")) {
+                    stmt.executeUpdate("ALTER TABLE invoice_line_items ADD COLUMN quantity DOUBLE DEFAULT 0");
+                }
+                if (!existing.contains("rate")) {
+                    stmt.executeUpdate("ALTER TABLE invoice_line_items ADD COLUMN rate DOUBLE DEFAULT 0");
+                }
+                if (!existing.contains("remark")) {
+                    stmt.executeUpdate("ALTER TABLE invoice_line_items ADD COLUMN remark VARCHAR(255)");
                 }
                 if (!existing.contains("other_charges")) {
                     stmt.executeUpdate("ALTER TABLE invoice_line_items ADD COLUMN other_charges DOUBLE DEFAULT 0");
@@ -359,6 +380,11 @@ public class PurchaseInvoiceDAO {
         item.setId(rs.getInt("id"));
         item.setInvoiceId(rs.getInt("invoice_id"));
         item.setDate(rs.getString("date"));
+        try { item.setDescription(rs.getString("description")); } catch (Exception ignored) {}
+        try { item.setUnit(rs.getString("unit")); } catch (Exception ignored) {}
+        try { item.setQuantity(rs.getDouble("quantity")); } catch (Exception ignored) {}
+        try { item.setRate(rs.getDouble("rate")); } catch (Exception ignored) {}
+        try { item.setRemark(rs.getString("remark")); } catch (Exception ignored) {}
         item.setLrNo(rs.getString("lr_no"));
         item.setContainerNo(rs.getString("container_no"));
         item.setVehicleNo(rs.getString("vehicle_no"));

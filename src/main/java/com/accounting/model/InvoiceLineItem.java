@@ -5,6 +5,11 @@ public class InvoiceLineItem {
     private int id;
     private int invoiceId;
     private String date;
+    private String description;
+    private String unit;
+    private double quantity;
+    private double rate;
+    private String remark;
     private String lrNo;
     private String containerNo;
     private String vehicleNo;
@@ -40,6 +45,30 @@ public class InvoiceLineItem {
 
     public String getDate() { return date; }
     public void setDate(String date) { this.date = date; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public String getUnit() { return unit; }
+    public void setUnit(String unit) { this.unit = unit; }
+
+    public double getQuantity() { return quantity; }
+    public void setQuantity(double quantity) {
+        this.quantity = quantity;
+        recalculatePurchaseAmount();
+    }
+
+    public double getRate() { return rate; }
+    public void setRate(double rate) {
+        this.rate = rate;
+        recalculatePurchaseAmount();
+    }
+
+    public double getAmount() { return total; }
+    public void setAmount(double amount) { this.total = amount; }
+
+    public String getRemark() { return remark; }
+    public void setRemark(String remark) { this.remark = remark; }
 
     public String getLrNo() { return lrNo; }
     public void setLrNo(String lrNo) { this.lrNo = lrNo; }
@@ -82,5 +111,9 @@ public class InvoiceLineItem {
 
     private void recalculateTotal() {
         this.total = basicFreight + detentionCharge + otherCharges;
+    }
+
+    private void recalculatePurchaseAmount() {
+        this.total = quantity * rate;
     }
 }

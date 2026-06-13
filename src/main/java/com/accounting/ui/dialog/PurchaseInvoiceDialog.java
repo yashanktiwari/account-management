@@ -27,7 +27,6 @@ import javafx.stage.Modality;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import javafx.util.converter.DoubleStringConverter;
 import org.controlsfx.control.textfield.TextFields;
 import org.slf4j.Logger;
 
@@ -53,10 +52,8 @@ public class PurchaseInvoiceDialog {
     private TextField remarksField;
     private CheckBox sgstCheckBox;
     private CheckBox cgstCheckBox;
-    private CheckBox igstCheckBox;
     private TextField sgstValueField;
     private TextField cgstValueField;
-    private TextField igstValueField;
     private ComboBox<String> creditDebitCombo;
     private TextField accountNameField;
     private TextField paidByField;
@@ -163,8 +160,12 @@ public class PurchaseInvoiceDialog {
             bankNameField.setText(invoice.getBankName());
             bankAccountField.setText(invoice.getBankAccount());
             ifscCodeField.setText(invoice.getIfscCode());
-            loadingUnloadingChargesField.setText(String.format("%.2f", invoice.getLoadingUnloadingCharges()));
-            weighBridgeChargesField.setText(String.format("%.2f", invoice.getWeighBridgeCharges()));
+            if (loadingUnloadingChargesField != null) {
+                loadingUnloadingChargesField.setText("0.00");
+            }
+            if (weighBridgeChargesField != null) {
+                weighBridgeChargesField.setText("0.00");
+            }
 
             // Supplier details
             supplierField.setText(invoice.getPartyName()); // Load supplier name
@@ -177,9 +178,6 @@ public class PurchaseInvoiceDialog {
             sgstValueField.setText(sgstCheckBox.isSelected() ? "9" : "0");
             cgstCheckBox.setSelected(invoice.getCgstAmount() > 0);
             cgstValueField.setText(cgstCheckBox.isSelected() ? "9" : "0");
-            igstCheckBox.setSelected(invoice.getIgstAmount() > 0);
-            igstValueField.setText(igstCheckBox.isSelected() ? "18" : "0");
-
             // Load line items
             lineItems.setAll(invoice.getLineItems());
             lineItemTable.setItems(lineItems);
@@ -508,18 +506,6 @@ public class PurchaseInvoiceDialog {
         grid.add(label(""), 2, 0);
         grid.add(cgstBox, 3, 0);
 
-        igstCheckBox = new CheckBox("IGST");
-        igstValueField = new TextField("0");
-        igstValueField.setPrefWidth(80);
-        igstValueField.setEditable(false);
-        igstCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
-            igstValueField.setText(newVal ? "18" : "0");
-            updateTotal();
-        });
-        HBox igstBox = new HBox(10, igstCheckBox, igstValueField);
-        grid.add(label(""), 0, 1);
-        grid.add(igstBox, 1, 1);
-
         return grid;
     }
 
@@ -560,29 +546,10 @@ public class PurchaseInvoiceDialog {
         grid.add(label("IFSC Code"), 0, 2);
         grid.add(ifscCodeField, 1, 2);
 
-        // Loading & Unloading Charges
         loadingUnloadingChargesField = new TextField();
-        loadingUnloadingChargesField.setPromptText("0");
-        loadingUnloadingChargesField.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
-                loadingUnloadingChargesField.setText(oldVal);
-            }
-            updateTotal();
-        });
-        grid.add(label("Loading/Unloading Charges"), 2, 3);
-        grid.add(loadingUnloadingChargesField, 3, 3);
-
-        // Weigh Bridge Charges
         weighBridgeChargesField = new TextField();
-        weighBridgeChargesField.setPromptText("0");
-        weighBridgeChargesField.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
-                weighBridgeChargesField.setText(oldVal);
-            }
-            updateTotal();
-        });
-        grid.add(label("Weigh Bridge Charges"), 0, 3);
-        grid.add(weighBridgeChargesField, 1, 3);
+        loadingUnloadingChargesField.setText("0");
+        weighBridgeChargesField.setText("0");
 
         // Remarks
         remarksField = new TextField();
@@ -629,66 +596,38 @@ public class PurchaseInvoiceDialog {
         sectionTitle.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
 
         // Input fields for new line item
-        TextField lrNoField = new TextField();
-        setupUppercaseListener(lrNoField);
-        VBox lrNoBox = new VBox(4, new Label("LR No"), lrNoField);
-        HBox.setHgrow(lrNoBox, Priority.ALWAYS);
+        TextField descriptionField = new TextField();
+        setupUppercaseListener(descriptionField);
+        VBox descriptionBox = new VBox(4, new Label("Description"), descriptionField);
+        HBox.setHgrow(descriptionBox, Priority.ALWAYS);
 
-        DatePicker rowDatePicker = new DatePicker();
-        VBox dateBox = new VBox(4, new Label("Date"), rowDatePicker);
-        HBox.setHgrow(dateBox, Priority.ALWAYS);
+        TextField unitField = new TextField();
+        setupUppercaseListener(unitField);
+        VBox unitBox = new VBox(4, new Label("Unit"), unitField);
+        HBox.setHgrow(unitBox, Priority.ALWAYS);
 
-        TextField containerNoField = new TextField();
-        setupUppercaseListener(containerNoField);
-        VBox containerBox = new VBox(4, new Label("Container No"), containerNoField);
-        HBox.setHgrow(containerBox, Priority.ALWAYS);
-
-        TextField vehicleNoField = new TextField();
-        setupUppercaseListener(vehicleNoField);
-        VBox vehicleBox = new VBox(4, new Label("Vehicle No"), vehicleNoField);
-        HBox.setHgrow(vehicleBox, Priority.ALWAYS);
-
-        TextField fromField = new TextField();
-        setupUppercaseListener(fromField);
-        VBox fromBox = new VBox(4, new Label("From"), fromField);
-        HBox.setHgrow(fromBox, Priority.ALWAYS);
-
-        TextField toField = new TextField();
-        setupUppercaseListener(toField);
-        VBox toBox = new VBox(4, new Label("To"), toField);
-        HBox.setHgrow(toBox, Priority.ALWAYS);
-
-        TextField typeField = new TextField();
-        setupUppercaseListener(typeField);
-        VBox typeBox = new VBox(4, new Label("Type"), typeField);
-        HBox.setHgrow(typeBox, Priority.ALWAYS);
-
-        TextField freightField = new TextField();
-        freightField.textProperty().addListener((obs, oldVal, newVal) -> {
+        TextField quantityField = new TextField();
+        quantityField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
-                freightField.setText(oldVal);
+                quantityField.setText(oldVal);
             }
         });
-        VBox freightBox = new VBox(4, new Label("Basic Freight"), freightField);
-        HBox.setHgrow(freightBox, Priority.ALWAYS);
+        VBox quantityBox = new VBox(4, new Label("Quantity"), quantityField);
+        HBox.setHgrow(quantityBox, Priority.ALWAYS);
 
-        TextField detentionField = new TextField();
-        detentionField.textProperty().addListener((obs, oldVal, newVal) -> {
+        TextField rateField = new TextField();
+        rateField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
-                detentionField.setText(oldVal);
+                rateField.setText(oldVal);
             }
         });
-        VBox detentionBox = new VBox(4, new Label("Detention Charge"), detentionField);
-        HBox.setHgrow(detentionBox, Priority.ALWAYS);
+        VBox rateBox = new VBox(4, new Label("Rate"), rateField);
+        HBox.setHgrow(rateBox, Priority.ALWAYS);
 
-        TextField otherChargesField = new TextField();
-        otherChargesField.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
-                otherChargesField.setText(oldVal);
-            }
-        });
-        VBox otherChargesBox = new VBox(4, new Label("Other Charges"), otherChargesField);
-        HBox.setHgrow(otherChargesBox, Priority.ALWAYS);
+        TextField remarkField = new TextField();
+        setupUppercaseListener(remarkField);
+        VBox remarkBox = new VBox(4, new Label("Remark"), remarkField);
+        HBox.setHgrow(remarkBox, Priority.ALWAYS);
 
         Button addRowBtn = new Button("+ Add Row");
         addRowBtn.setStyle("-fx-padding: 4 12 4 12; -fx-font-size: 12px;");
@@ -697,7 +636,7 @@ public class PurchaseInvoiceDialog {
         addRowBtn.setWrapText(false);
         VBox.setVgrow(addRowBtn, Priority.ALWAYS);
 
-        HBox inputRow = new HBox(8, dateBox, lrNoBox, containerBox, vehicleBox, fromBox, toBox, typeBox, freightBox, detentionBox, otherChargesBox, addRowBtn);
+        HBox inputRow = new HBox(8, descriptionBox, unitBox, quantityBox, rateBox, remarkBox, addRowBtn);
         inputRow.setPadding(new Insets(12));
         inputRow.setAlignment(Pos.BOTTOM_CENTER);
         inputRow.setStyle("-fx-background-color: #f5f5f5; -fx-border-color: #e2e8f0; -fx-border-radius: 4;");
@@ -712,90 +651,31 @@ public class PurchaseInvoiceDialog {
         srNoCol.setPrefWidth(45);
         srNoCol.setEditable(false);
 
-        // Date column (auto-filled, read-only)
-        TableColumn<InvoiceLineItem, String> dateCol = new TableColumn<>("Date");
-        dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
-        dateCol.setPrefWidth(100);
-        dateCol.setEditable(false);
+        TableColumn<InvoiceLineItem, String> descriptionCol = new TableColumn<>("Description");
+        descriptionCol.setCellValueFactory(new PropertyValueFactory<>("description"));
+        descriptionCol.setPrefWidth(240);
 
-        TableColumn<InvoiceLineItem, String> lrNoCol = new TableColumn<>("LR No");
-        lrNoCol.setCellValueFactory(new PropertyValueFactory<>("lrNo"));
-        lrNoCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        lrNoCol.setOnEditCommit(e -> e.getRowValue().setLrNo(e.getNewValue()));
-        lrNoCol.setPrefWidth(70);
-        lrNoCol.setEditable(true);
+        TableColumn<InvoiceLineItem, String> unitCol = new TableColumn<>("Unit");
+        unitCol.setCellValueFactory(new PropertyValueFactory<>("unit"));
+        unitCol.setPrefWidth(100);
 
-        TableColumn<InvoiceLineItem, String> containerCol = new TableColumn<>("Container No");
-        containerCol.setCellValueFactory(new PropertyValueFactory<>("containerNo"));
-        containerCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        containerCol.setOnEditCommit(e -> e.getRowValue().setContainerNo(e.getNewValue()));
-        containerCol.setPrefWidth(100);
-        containerCol.setEditable(true);
+        TableColumn<InvoiceLineItem, Double> quantityCol = new TableColumn<>("Quantity");
+        quantityCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
+        quantityCol.setPrefWidth(90);
 
-        TableColumn<InvoiceLineItem, String> vehicleCol = new TableColumn<>("Vehicle No");
-        vehicleCol.setCellValueFactory(new PropertyValueFactory<>("vehicleNo"));
-        vehicleCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        vehicleCol.setOnEditCommit(e -> e.getRowValue().setVehicleNo(e.getNewValue()));
-        vehicleCol.setPrefWidth(100);
-        vehicleCol.setEditable(true);
+        TableColumn<InvoiceLineItem, Double> rateCol = new TableColumn<>("Rate");
+        rateCol.setCellValueFactory(new PropertyValueFactory<>("rate"));
+        rateCol.setPrefWidth(90);
 
-        TableColumn<InvoiceLineItem, String> fromCol = new TableColumn<>("From");
-        fromCol.setCellValueFactory(new PropertyValueFactory<>("from"));
-        fromCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        fromCol.setOnEditCommit(e -> e.getRowValue().setFrom(e.getNewValue()));
-        fromCol.setPrefWidth(100);
-        fromCol.setEditable(true);
+        TableColumn<InvoiceLineItem, Double> amountCol = new TableColumn<>("Amount");
+        amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
+        amountCol.setPrefWidth(110);
 
-        TableColumn<InvoiceLineItem, String> toCol = new TableColumn<>("To");
-        toCol.setCellValueFactory(new PropertyValueFactory<>("to"));
-        toCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        toCol.setOnEditCommit(e -> e.getRowValue().setTo(e.getNewValue()));
-        toCol.setPrefWidth(100);
-        toCol.setEditable(true);
+        TableColumn<InvoiceLineItem, String> remarkCol = new TableColumn<>("Remark");
+        remarkCol.setCellValueFactory(new PropertyValueFactory<>("remark"));
+        remarkCol.setPrefWidth(180);
 
-        TableColumn<InvoiceLineItem, String> typeCol = new TableColumn<>("Type");
-        typeCol.setCellValueFactory(new PropertyValueFactory<>("type"));
-        typeCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        typeCol.setOnEditCommit(e -> e.getRowValue().setType(e.getNewValue()));
-        typeCol.setPrefWidth(70);
-        typeCol.setEditable(true);
-
-        TableColumn<InvoiceLineItem, Double> freightCol = new TableColumn<>("Basic Freight");
-        freightCol.setCellValueFactory(new PropertyValueFactory<>("basicFreight"));
-        freightCol.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
-        freightCol.setOnEditCommit(e -> {
-            e.getRowValue().setBasicFreight(e.getNewValue());
-            updateTotal();
-        });
-        freightCol.setPrefWidth(115);
-        freightCol.setEditable(true);
-
-        TableColumn<InvoiceLineItem, Double> detentionCol = new TableColumn<>("Detention Charge");
-        detentionCol.setCellValueFactory(new PropertyValueFactory<>("detentionCharge"));
-        detentionCol.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
-        detentionCol.setOnEditCommit(e -> {
-            e.getRowValue().setDetentionCharge(e.getNewValue());
-            updateTotal();
-        });
-        detentionCol.setPrefWidth(130);
-        detentionCol.setEditable(true);
-
-        TableColumn<InvoiceLineItem, Double> otherChargesCol = new TableColumn<>("Other Charge");
-        otherChargesCol.setCellValueFactory(new PropertyValueFactory<>("otherCharges"));
-        otherChargesCol.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
-        otherChargesCol.setOnEditCommit(e -> {
-            e.getRowValue().setOtherCharges(e.getNewValue());
-            updateTotal();
-        });
-        otherChargesCol.setPrefWidth(120);
-        otherChargesCol.setEditable(true);
-
-        TableColumn<InvoiceLineItem, Double> totalCol = new TableColumn<>("Total");
-        totalCol.setCellValueFactory(new PropertyValueFactory<>("total"));
-        totalCol.setPrefWidth(80);
-
-        lineItemTable.getColumns().addAll(srNoCol, dateCol, lrNoCol, containerCol, vehicleCol, fromCol, toCol, typeCol,
-                freightCol, detentionCol, otherChargesCol, totalCol);
+        lineItemTable.getColumns().addAll(srNoCol, descriptionCol, unitCol, quantityCol, rateCol, amountCol, remarkCol);
 
         // Right-click context menu for deleting rows
         ContextMenu contextMenu = new ContextMenu();
@@ -828,64 +708,40 @@ public class PurchaseInvoiceDialog {
                 return;
             }
 
-            if (rowDatePicker.getValue() == null) {
-                AlertUtil.showWarning("Validation", "Please select line item date");
-                return;
-            }
-
             InvoiceLineItem item = new InvoiceLineItem();
-            item.setDate(rowDatePicker.getValue().toString());
-            item.setLrNo(lrNoField.getText().trim());
-            item.setContainerNo(containerNoField.getText().trim());
-            item.setVehicleNo(vehicleNoField.getText().trim());
-            item.setFrom(fromField.getText().trim());
-            item.setTo(toField.getText().trim());
-            item.setType(typeField.getText().trim());
+            item.setDate(invoiceDatePicker.getValue() != null ? invoiceDatePicker.getValue().toString() : LocalDate.now().toString());
+            item.setDescription(descriptionField.getText().trim());
+            item.setUnit(unitField.getText().trim());
+            item.setRemark(remarkField.getText().trim());
 
-            // Parse numeric fields (default to 0 if empty or invalid)
-            double freight = 0;
-            double detention = 0;
+            double quantity = 0;
+            double rate = 0;
             try {
-                if (!freightField.getText().trim().isEmpty()) {
-                    freight = Double.parseDouble(freightField.getText().trim());
+                if (!quantityField.getText().trim().isEmpty()) {
+                    quantity = Double.parseDouble(quantityField.getText().trim());
                 }
             } catch (NumberFormatException ex) {
                 // Ignore invalid input, default to 0
             }
             try {
-                if (!detentionField.getText().trim().isEmpty()) {
-                    detention = Double.parseDouble(detentionField.getText().trim());
+                if (!rateField.getText().trim().isEmpty()) {
+                    rate = Double.parseDouble(rateField.getText().trim());
                 }
             } catch (NumberFormatException ex) {
                 // Ignore invalid input, default to 0
             }
-            double otherChg = 0;
-            try {
-                if (!otherChargesField.getText().trim().isEmpty()) {
-                    otherChg = Double.parseDouble(otherChargesField.getText().trim());
-                }
-            } catch (NumberFormatException ex) {
-                // Ignore invalid input, default to 0
-            }
-            item.setBasicFreight(freight);
-            item.setDetentionCharge(detention);
-            item.setOtherCharges(otherChg);
-            item.setTotal(freight + detention + otherChg);
+            item.setQuantity(quantity);
+            item.setRate(rate);
+            item.setAmount(quantity * rate);
 
             lineItems.add(item);
 
-            // Clear all fields
-            lrNoField.clear();
-            containerNoField.clear();
-            vehicleNoField.clear();
-            fromField.clear();
-            toField.clear();
-            typeField.clear();
-            freightField.clear();
-            detentionField.clear();
-            otherChargesField.clear();
-            rowDatePicker.setValue(null);
-            lrNoField.requestFocus();
+            descriptionField.clear();
+            unitField.clear();
+            quantityField.clear();
+            rateField.clear();
+            remarkField.clear();
+            descriptionField.requestFocus();
 
             updateTotal();
         });
@@ -950,24 +806,11 @@ public class PurchaseInvoiceDialog {
     }
 
     private void updateTotal() {
-        double lineItemsTotal = lineItems.stream().mapToDouble(InvoiceLineItem::getTotal).sum();
-        double loadingCharges = 0;
-        double weighBridgeCharges = 0;
-        try {
-            loadingCharges = loadingUnloadingChargesField != null && !loadingUnloadingChargesField.getText().trim().isEmpty()
-                    ? Double.parseDouble(loadingUnloadingChargesField.getText().trim()) : 0;
-        } catch (NumberFormatException ignored) {}
-        try {
-            weighBridgeCharges = weighBridgeChargesField != null && !weighBridgeChargesField.getText().trim().isEmpty()
-                    ? Double.parseDouble(weighBridgeChargesField.getText().trim()) : 0;
-        } catch (NumberFormatException ignored) {}
-        double taxable = lineItemsTotal + loadingCharges + weighBridgeCharges;
+        double taxable = lineItems.stream().mapToDouble(InvoiceLineItem::getAmount).sum();
         
-        // Calculate GST based on checkbox states
         double sgst = sgstCheckBox.isSelected() ? taxable * 0.09 : 0;
         double cgst = cgstCheckBox.isSelected() ? taxable * 0.09 : 0;
-        double igst = igstCheckBox.isSelected() ? taxable * 0.18 : 0;
-        double totalGst = sgst + cgst + igst;
+        double totalGst = sgst + cgst;
         double netAmount = taxable + totalGst;
 
         totalLabel.setText(String.format("%.2f", netAmount));
@@ -1021,30 +864,19 @@ public class PurchaseInvoiceDialog {
         invoice.setSupplierAddress(supplierAddressField.getText());
         invoice.setSupplierContactNumber(supplierContactNumberField.getText());
         invoice.setSupplierGstNo(supplierGstNoField.getText());
-        try {
-            invoice.setLoadingUnloadingCharges(loadingUnloadingChargesField.getText().trim().isEmpty() ? 0 : Double.parseDouble(loadingUnloadingChargesField.getText().trim()));
-        } catch (NumberFormatException ex) {
-            invoice.setLoadingUnloadingCharges(0);
-        }
-        try {
-            invoice.setWeighBridgeCharges(weighBridgeChargesField.getText().trim().isEmpty() ? 0 : Double.parseDouble(weighBridgeChargesField.getText().trim()));
-        } catch (NumberFormatException ex) {
-            invoice.setWeighBridgeCharges(0);
-        }
+        invoice.setLoadingUnloadingCharges(0);
+        invoice.setWeighBridgeCharges(0);
 
-        double total = lineItems.stream().mapToDouble(InvoiceLineItem::getTotal).sum()
-            + invoice.getLoadingUnloadingCharges() + invoice.getWeighBridgeCharges();
+        double total = lineItems.stream().mapToDouble(InvoiceLineItem::getAmount).sum();
         invoice.setTaxableAmount(total);
 
-        // Calculate GST amounts based on checkbox states
         double sgst = sgstCheckBox.isSelected() ? total * 0.09 : 0;
         double cgst = cgstCheckBox.isSelected() ? total * 0.09 : 0;
-        double igst = igstCheckBox.isSelected() ? total * 0.18 : 0;
-        double totalGst = sgst + cgst + igst;
+        double totalGst = sgst + cgst;
 
         invoice.setSgstAmount(sgst);
         invoice.setCgstAmount(cgst);
-        invoice.setIgstAmount(igst);
+        invoice.setIgstAmount(0);
         invoice.setTotalGst(totalGst);
         invoice.setNetAmount(total + totalGst);
 

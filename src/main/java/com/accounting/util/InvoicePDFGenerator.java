@@ -110,8 +110,8 @@ public class InvoicePDFGenerator {
             
             if (allItems.size() <= maxItemsFirstPage) {
                 // All items fit on first page
-                addLineItemsTable(document, allItems);
-                addBankAndGSTDetails(document, invoice);
+                addPurchaseLineItemsTable(document, allItems);
+                addPurchaseTotalsDetails(document, invoice);
                 addTermsAndSignature(document);
                 if (footerImage == null) {
                     addTextBasedFooter(document);
@@ -120,8 +120,8 @@ public class InvoicePDFGenerator {
                 // Need multiple pages
                 // First page: invoice details + first chunk of items + static footer
                 java.util.List<InvoiceLineItem> firstPageItems = allItems.subList(0, Math.min(maxItemsFirstPage, allItems.size()));
-                addLineItemsTable(document, firstPageItems);
-                addBankAndGSTDetails(document, invoice);
+                addPurchaseLineItemsTable(document, firstPageItems);
+                addPurchaseTotalsDetails(document, invoice);
                 addTermsAndSignature(document);
                 if (footerImage == null) {
                     addTextBasedFooter(document);
@@ -153,9 +153,9 @@ public class InvoicePDFGenerator {
                     
                     int remainingEnd = Math.min(remainingStart + maxItemsSubsequentPage, allItems.size());
                     java.util.List<InvoiceLineItem> pageItems = allItems.subList(remainingStart, remainingEnd);
-                    addLineItemsTable(document, pageItems);
+                    addPurchaseLineItemsTable(document, pageItems);
                     
-                    addBankAndGSTDetails(document, invoice);
+                    addPurchaseTotalsDetails(document, invoice);
                     addTermsAndSignature(document);
                     if (footerImage == null) {
                         addTextBasedFooter(document);
@@ -592,6 +592,84 @@ public class InvoicePDFGenerator {
         document.add(table);
     }
 
+    private static void addPurchaseLineItemsTable(Document document, java.util.List<InvoiceLineItem> lineItems) throws DocumentException {
+        PdfPTable table = new PdfPTable(7);
+        table.setWidthPercentage(100);
+        table.setWidths(new float[]{0.5f, 2.8f, 0.9f, 0.9f, 1.0f, 1.1f, 1.5f});
+        table.setSpacingBefore(6);
+
+        addTableHeader(table, "Sr No.");
+        addTableHeader(table, "Description");
+        addTableHeader(table, "Unit");
+        addTableHeader(table, "Quantity");
+        addTableHeader(table, "Rate");
+        addTableHeader(table, "Amount");
+        addTableHeader(table, "Remark");
+
+        int srNo = 1;
+        double totalAmount = 0;
+        for (InvoiceLineItem item : lineItems) {
+            double amount = item.getAmount();
+            addTableCellCenter(table, String.valueOf(srNo++));
+            addTableCellLeft(table, item.getDescription() != null ? item.getDescription() : "");
+            addTableCellCenter(table, item.getUnit() != null ? item.getUnit() : "");
+            addTableCellRight(table, formatAmount(item.getQuantity()));
+            addTableCellRight(table, formatAmount(item.getRate()));
+            addTableCellRight(table, formatAmount(amount));
+            addTableCellLeft(table, item.getRemark() != null ? item.getRemark() : "");
+            totalAmount += amount;
+        }
+
+        PdfPCell totalLabelCell = new PdfPCell(new Phrase("Total", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8f)));
+        totalLabelCell.setColspan(5);
+        totalLabelCell.setBorder(Rectangle.BOX);
+        totalLabelCell.setPadding(2f);
+        totalLabelCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        totalLabelCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        table.addCell(totalLabelCell);
+
+        PdfPCell totalValueCell = new PdfPCell(new Phrase(formatAmount(totalAmount), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8f)));
+        totalValueCell.setBorder(Rectangle.BOX);
+        totalValueCell.setPadding(2f);
+        totalValueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        totalValueCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        table.addCell(totalValueCell);
+
+        PdfPCell totalRemarkCell = new PdfPCell(new Phrase("", FontFactory.getFont(FontFactory.HELVETICA, 8f)));
+        totalRemarkCell.setBorder(Rectangle.BOX);
+        totalRemarkCell.setPadding(2f);
+        table.addCell(totalRemarkCell);
+
+        document.add(table);
+    }
+
+    private static void addPurchaseTotalsDetails(Document document, PurchaseInvoice invoice) throws DocumentException {
+        Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
+        Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
+
+        PdfPTable totalsTable = new PdfPTable(2);
+        totalsTable.setWidthPercentage(38);
+        totalsTable.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        totalsTable.setWidths(new float[]{1.4f, 1f});
+        totalsTable.setSpacingBefore(8);
+
+        addSummaryRow(totalsTable, "Total", formatAmount(invoice.getTaxableAmount()), headerFont, normalFont);
+        addSummaryRow(totalsTable, "SGST", formatAmount(invoice.getSgstAmount()), headerFont, normalFont);
+        addSummaryRow(totalsTable, "CGST", formatAmount(invoice.getCgstAmount()), headerFont, normalFont);
+        addSummaryRow(totalsTable, "Total", formatAmount(invoice.getNetAmount()), headerFont, headerFont);
+
+        document.add(totalsTable);
+
+        PdfPTable remarksTable = new PdfPTable(1);
+        remarksTable.setWidthPercentage(100);
+        PdfPCell remarksCell = new PdfPCell(new Phrase("Remarks - " + (invoice.getRemarks() != null ? invoice.getRemarks() : ""), normalFont));
+        remarksCell.setBorder(Rectangle.BOX);
+        remarksCell.setPadding(3);
+        remarksTable.setSpacingBefore(6);
+        remarksTable.addCell(remarksCell);
+        document.add(remarksTable);
+    }
+
     private static void addBankAndGSTDetails(Document document, Object invoice) throws DocumentException {
         double taxableAmount = 0;
         double sgstAmount = 0;
@@ -1005,6 +1083,17 @@ public class InvoicePDFGenerator {
         table.addCell(cell);
     }
 
+    private static void addTableCellLeft(PdfPTable table, String text) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA, 7f)));
+        cell.setBorder(Rectangle.BOX);
+        cell.setPadding(2f);
+        cell.setMinimumHeight(15f);
+        cell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setNoWrap(false);
+        table.addCell(cell);
+    }
+
     private static void addTableCellRight(PdfPTable table, String text) {
         PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA, 7f)));
         cell.setBorder(Rectangle.BOX);
@@ -1031,6 +1120,29 @@ public class InvoicePDFGenerator {
             }
         } catch (Exception ignored) {}
         return date;
+    }
+
+    private static void addSummaryRow(PdfPTable table, String label, String value, Font labelFont, Font valueFont) {
+        PdfPCell labelCell = new PdfPCell(new Phrase(label, labelFont));
+        labelCell.setBorder(Rectangle.BOX);
+        labelCell.setPadding(4);
+        labelCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        labelCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        table.addCell(labelCell);
+
+        PdfPCell valueCell = new PdfPCell(new Phrase(value, valueFont));
+        valueCell.setBorder(Rectangle.BOX);
+        valueCell.setPadding(4);
+        valueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        valueCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        table.addCell(valueCell);
+    }
+
+    private static String formatAmount(double value) {
+        if (Math.abs(value - Math.rint(value)) < 0.000001d) {
+            return String.format("%.0f", value);
+        }
+        return String.format("%.2f", value);
     }
 
     private static double parseAdvanceAmount(String remarks) {
