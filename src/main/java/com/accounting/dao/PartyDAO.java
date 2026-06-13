@@ -48,36 +48,27 @@ public class PartyDAO {
                 pan, gstin, credit_limit, opening_balance, balance_type, nature_of_payment, bank_name,
                 bank_account, ifsc_code, remarks, owner_name, cst_no, tan_no, tds, aadhar_no, routes,
                 created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                VALUES (?, 'CUSTOMER', '', ?, ?, ?, ?, ?, ?, ?, ?, '', '', '', '', '', '', '', '', ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                     ensurePartyColumns(conn);
             pstmt.setString(1, party.getName());
-            pstmt.setString(2, party.getType() != null ? party.getType() : "CUSTOMER");
-            pstmt.setString(3, party.getMailingName());
-            pstmt.setString(4, party.getAddress());
-            pstmt.setString(5, party.getCity());
-            pstmt.setString(6, party.getState());
-            pstmt.setString(7, party.getPincode());
-            pstmt.setString(8, party.getMobile());
-            pstmt.setString(9, party.getEmail());
-            pstmt.setString(10, party.getPan());
-            pstmt.setString(11, party.getGstin());
-            pstmt.setString(12, party.getCreditLimit());
-            pstmt.setString(13, party.getOpeningBalance());
-            pstmt.setString(14, party.getBalanceType());
-            pstmt.setString(15, party.getNatureOfPayment());
-            pstmt.setString(16, party.getBankName());
-            pstmt.setString(17, party.getBankAccount());
-            pstmt.setString(18, party.getIfscCode());
-            pstmt.setString(19, party.getRemarks());
-            pstmt.setString(20, party.getOwnerName());
-            pstmt.setString(21, party.getCstNo());
-            pstmt.setString(22, party.getTanNo());
-            pstmt.setString(23, party.getTds());
-            pstmt.setString(24, party.getAadharNo());
-            pstmt.setString(25, party.getRoutes());
+            pstmt.setString(2, party.getAddress());
+            pstmt.setString(3, party.getCity());
+            pstmt.setString(4, party.getState());
+            pstmt.setString(5, party.getPincode());
+            pstmt.setString(6, party.getMobile());
+            pstmt.setString(7, party.getEmail());
+            pstmt.setString(8, party.getPan());
+            pstmt.setString(9, party.getGstin());
+            pstmt.setString(10, party.getRemarks());
+            pstmt.setString(11, party.getOwnerName());
+            pstmt.setString(12, party.getCstNo());
+            pstmt.setString(13, party.getTanNo());
+            pstmt.setString(14, party.getTds());
+            pstmt.setString(15, party.getAadharNo());
+            pstmt.setString(16, party.getRoutes());
 
             pstmt.executeUpdate();
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
@@ -89,9 +80,9 @@ public class PartyDAO {
 
     public void update(Party party) throws Exception {
         String sql = """
-                UPDATE parties SET name=?, type=?, mailing_name=?, address=?, city=?, state=?, pincode=?,
-                mobile=?, email=?, pan=?, gstin=?, credit_limit=?, opening_balance=?, balance_type=?,
-                nature_of_payment=?, bank_name=?, bank_account=?, ifsc_code=?, remarks=?,
+                UPDATE parties SET name=?, type='CUSTOMER', mailing_name='', address=?, city=?, state=?, pincode=?,
+                mobile=?, email=?, pan=?, gstin=?, credit_limit='', opening_balance='', balance_type='',
+                nature_of_payment='', bank_name='', bank_account='', ifsc_code='', remarks=?,
                 owner_name=?, cst_no=?, tan_no=?, tds=?, aadhar_no=?, routes=?, updated_at=NOW()
                 WHERE id=?
                 """;
@@ -99,31 +90,22 @@ public class PartyDAO {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
                     ensurePartyColumns(conn);
             pstmt.setString(1, party.getName());
-            pstmt.setString(2, party.getType() != null ? party.getType() : "CUSTOMER");
-            pstmt.setString(3, party.getMailingName());
-            pstmt.setString(4, party.getAddress());
-            pstmt.setString(5, party.getCity());
-            pstmt.setString(6, party.getState());
-            pstmt.setString(7, party.getPincode());
-            pstmt.setString(8, party.getMobile());
-            pstmt.setString(9, party.getEmail());
-            pstmt.setString(10, party.getPan());
-            pstmt.setString(11, party.getGstin());
-            pstmt.setString(12, party.getCreditLimit());
-            pstmt.setString(13, party.getOpeningBalance());
-            pstmt.setString(14, party.getBalanceType());
-            pstmt.setString(15, party.getNatureOfPayment());
-            pstmt.setString(16, party.getBankName());
-            pstmt.setString(17, party.getBankAccount());
-            pstmt.setString(18, party.getIfscCode());
-            pstmt.setString(19, party.getRemarks());
-            pstmt.setString(20, party.getOwnerName());
-            pstmt.setString(21, party.getCstNo());
-            pstmt.setString(22, party.getTanNo());
-            pstmt.setString(23, party.getTds());
-            pstmt.setString(24, party.getAadharNo());
-            pstmt.setString(25, party.getRoutes());
-            pstmt.setInt(26, party.getId());
+            pstmt.setString(2, party.getAddress());
+            pstmt.setString(3, party.getCity());
+            pstmt.setString(4, party.getState());
+            pstmt.setString(5, party.getPincode());
+            pstmt.setString(6, party.getMobile());
+            pstmt.setString(7, party.getEmail());
+            pstmt.setString(8, party.getPan());
+            pstmt.setString(9, party.getGstin());
+            pstmt.setString(10, party.getRemarks());
+            pstmt.setString(11, party.getOwnerName());
+            pstmt.setString(12, party.getCstNo());
+            pstmt.setString(13, party.getTanNo());
+            pstmt.setString(14, party.getTds());
+            pstmt.setString(15, party.getAadharNo());
+            pstmt.setString(16, party.getRoutes());
+            pstmt.setInt(17, party.getId());
 
             pstmt.executeUpdate();
             log.info("Party updated: {}", party.getName());

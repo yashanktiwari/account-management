@@ -18,12 +18,10 @@ public class PartyExcelImporter {
 
     private static final Logger log = AppLogger.get(PartyExcelImporter.class);
 
-    // Column headers for the Excel template
+    // Column headers for the Excel template - only fields used in PartyMasterDialog
     private static final String[] COLUMN_HEADERS = {
-        "Name", "Type", "Mailing Name", "Address", "City", "State", "Pincode",
-        "Mobile", "Email", "PAN", "GSTIN", "Credit Limit", "Opening Balance",
-        "Balance Type", "Nature of Payment", "Bank Name", "Bank Account", "IFSC Code",
-        "Remarks", "Owner Name", "CST No", "TAN No", "TDS", "Aadhar No", "Routes"
+        "Company Name", "Owner Name", "Mobile", "Email", "Address", "State", "City",
+        "Pin Code", "GST", "PAN", "CST No", "TAN No", "TDS", "Aadhar No", "Routes"
     };
 
     /**
@@ -36,31 +34,21 @@ public class PartyExcelImporter {
             Sheet sheet = workbook.createSheet("Party Import Template");
 
             // Define column widths
-            sheet.setColumnWidth(0, 25 * 256);  // Name
-            sheet.setColumnWidth(1, 15 * 256);  // Type
-            sheet.setColumnWidth(2, 20 * 256);  // Mailing Name
-            sheet.setColumnWidth(3, 30 * 256);  // Address
-            sheet.setColumnWidth(4, 20 * 256);  // City
+            sheet.setColumnWidth(0, 25 * 256);  // Company Name
+            sheet.setColumnWidth(1, 20 * 256);  // Owner Name
+            sheet.setColumnWidth(2, 15 * 256);  // Mobile
+            sheet.setColumnWidth(3, 25 * 256);  // Email
+            sheet.setColumnWidth(4, 30 * 256);  // Address
             sheet.setColumnWidth(5, 15 * 256);  // State
-            sheet.setColumnWidth(6, 12 * 256);  // Pincode
-            sheet.setColumnWidth(7, 15 * 256);  // Mobile
-            sheet.setColumnWidth(8, 25 * 256);  // Email
-            sheet.setColumnWidth(9, 15 * 256);  // PAN
-            sheet.setColumnWidth(10, 20 * 256); // GSTIN
-            sheet.setColumnWidth(11, 15 * 256); // Credit Limit
-            sheet.setColumnWidth(12, 15 * 256); // Opening Balance
-            sheet.setColumnWidth(13, 15 * 256); // Balance Type
-            sheet.setColumnWidth(14, 20 * 256); // Nature of Payment
-            sheet.setColumnWidth(15, 20 * 256); // Bank Name
-            sheet.setColumnWidth(16, 20 * 256); // Bank Account
-            sheet.setColumnWidth(17, 18 * 256); // IFSC Code
-            sheet.setColumnWidth(18, 30 * 256); // Remarks
-            sheet.setColumnWidth(19, 20 * 256); // Owner Name
-            sheet.setColumnWidth(20, 15 * 256); // CST No
-            sheet.setColumnWidth(21, 15 * 256); // TAN No
-            sheet.setColumnWidth(22, 12 * 256); // TDS
-            sheet.setColumnWidth(23, 18 * 256); // Aadhar No
-            sheet.setColumnWidth(24, 30 * 256); // Routes
+            sheet.setColumnWidth(6, 20 * 256);  // City
+            sheet.setColumnWidth(7, 12 * 256);  // Pin Code
+            sheet.setColumnWidth(8, 20 * 256); // GST
+            sheet.setColumnWidth(9, 15 * 256); // PAN
+            sheet.setColumnWidth(10, 15 * 256); // CST No
+            sheet.setColumnWidth(11, 15 * 256); // TAN No
+            sheet.setColumnWidth(12, 12 * 256); // TDS
+            sheet.setColumnWidth(13, 18 * 256); // Aadhar No
+            sheet.setColumnWidth(14, 30 * 256); // Routes
 
             // Create header style
             CellStyle headerStyle = workbook.createCellStyle();
@@ -94,7 +82,7 @@ public class PartyExcelImporter {
             org.apache.poi.ss.usermodel.Cell instructionCell = instructionRow.createCell(0);
             instructionCell.setCellValue("Instructions:\n" +
                 "- Fill in the party details in the columns below\n" +
-                "- 'Name' is mandatory\n" +
+                "- 'Company Name' is mandatory\n" +
                 "- 'Routes' should be pipe-separated (e.g., Route1|Route2|Route3)\n" +
                 "- Leave optional fields blank if not applicable\n" +
                 "- Delete this instruction row before importing");
@@ -112,10 +100,9 @@ public class PartyExcelImporter {
             // Add sample data row
             Row sampleRow = sheet.createRow(2);
             String[] sampleData = {
-                "Sample Company Pvt Ltd", "CUSTOMER", "Sample Company", "123 Main Street", "Mumbai", "Maharashtra",
-                "400001", "9876543210", "sample@example.com", "ABCDE1234F", "29ABCDE1234F1Z5",
-                "100000", "50000", "Cr", "NEFT", "HDFC Bank", "1234567890", "HDFC0001234",
-                "Sample remarks", "John Doe", "CST123456", "TAN789012", "10", "1234-5678-9012",
+                "Sample Company Pvt Ltd", "John Doe", "9876543210", "sample@example.com",
+                "123 Main Street", "Maharashtra", "Mumbai", "400001", "29ABCDE1234F1Z5",
+                "ABCDE1234F", "CST123456", "TAN789012", "10", "1234-5678-9012",
                 "Route1|Route2|Route3"
             };
             for (int i = 0; i < sampleData.length; i++) {
@@ -183,7 +170,7 @@ public class PartyExcelImporter {
 
     private static Party mapRowToParty(Row row) {
         Party party = new Party();
-        
+
         // Helper method to safely get string value from cell
         java.util.function.Function<Integer, String> getCellValue = (colIndex) -> {
             org.apache.poi.ss.usermodel.Cell cell = row.getCell(colIndex);
@@ -202,31 +189,21 @@ public class PartyExcelImporter {
             }
         };
 
-        party.setName(getCellValue.apply(0));           // Name (mandatory)
-        party.setType(getCellValue.apply(1));            // Type
-        party.setMailingName(getCellValue.apply(2));     // Mailing Name
-        party.setAddress(getCellValue.apply(3));         // Address
-        party.setCity(getCellValue.apply(4));            // City
-        party.setState(getCellValue.apply(5));           // State
-        party.setPincode(getCellValue.apply(6));         // Pincode
-        party.setMobile(getCellValue.apply(7));          // Mobile
-        party.setEmail(getCellValue.apply(8));           // Email
-        party.setPan(getCellValue.apply(9));             // PAN
-        party.setGstin(getCellValue.apply(10));          // GSTIN
-        party.setCreditLimit(getCellValue.apply(11));    // Credit Limit
-        party.setOpeningBalance(getCellValue.apply(12)); // Opening Balance
-        party.setBalanceType(getCellValue.apply(13));    // Balance Type
-        party.setNatureOfPayment(getCellValue.apply(14)); // Nature of Payment
-        party.setBankName(getCellValue.apply(15));       // Bank Name
-        party.setBankAccount(getCellValue.apply(16));    // Bank Account
-        party.setIfscCode(getCellValue.apply(17));       // IFSC Code
-        party.setRemarks(getCellValue.apply(18));        // Remarks
-        party.setOwnerName(getCellValue.apply(19));      // Owner Name
-        party.setCstNo(getCellValue.apply(20));         // CST No
-        party.setTanNo(getCellValue.apply(21));         // TAN No
-        party.setTds(getCellValue.apply(22));           // TDS
-        party.setAadharNo(getCellValue.apply(23));       // Aadhar No
-        party.setRoutes(getCellValue.apply(24));        // Routes (pipe-separated)
+        party.setName(getCellValue.apply(0));           // Company Name (mandatory)
+        party.setOwnerName(getCellValue.apply(1));      // Owner Name
+        party.setMobile(getCellValue.apply(2));         // Mobile
+        party.setEmail(getCellValue.apply(3));          // Email
+        party.setAddress(getCellValue.apply(4));        // Address
+        party.setState(getCellValue.apply(5));          // State
+        party.setCity(getCellValue.apply(6));           // City
+        party.setPincode(getCellValue.apply(7));        // Pin Code
+        party.setGstin(getCellValue.apply(8));          // GST
+        party.setPan(getCellValue.apply(9));            // PAN
+        party.setCstNo(getCellValue.apply(10));        // CST No
+        party.setTanNo(getCellValue.apply(11));         // TAN No
+        party.setTds(getCellValue.apply(12));          // TDS
+        party.setAadharNo(getCellValue.apply(13));      // Aadhar No
+        party.setRoutes(getCellValue.apply(14));        // Routes (pipe-separated)
         party.setCreatedAt(LocalDateTime.now());
         party.setUpdatedAt(LocalDateTime.now());
 
