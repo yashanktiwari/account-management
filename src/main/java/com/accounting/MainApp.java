@@ -43,7 +43,6 @@ public class MainApp extends Application {
     private Button lorryReceiptBtn;
     private Button reportsBtn;
     private Button ledgerBtn;
-    private Button queryBuilderBtn;
 
     public static Stage getPrimaryStage() {
         return primaryStage;
@@ -172,7 +171,6 @@ public class MainApp extends Application {
 
         reportsBtn = sidebarButton("Reports", this::showReports);
         ledgerBtn = sidebarButton("Party Ledger", this::showLedger);
-        queryBuilderBtn = sidebarButton("Custom Reports", this::showQueryBuilder);
 
         Label settingsTitle = new Label("Settings");
         settingsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
@@ -186,7 +184,7 @@ public class MainApp extends Application {
                 invoicesTitle, purchaseInvoiceBtn, saleInvoiceBtn,
                 receiptsTitle, purchaseReceiptBtn, saleReceiptBtn,
                 slipsTitle, loadingSlipBtn, lorryReceiptBtn,
-                reportsTitle, reportsBtn, ledgerBtn, queryBuilderBtn,
+                reportsTitle, reportsBtn, ledgerBtn,
                 settingsTitle, dbBtn, invoiceBtn
         );
 
@@ -263,10 +261,6 @@ public class MainApp extends Application {
 
     private void showLedger() {
         showContent(new LedgerView().createContent());
-    }
-
-    private void showQueryBuilder() {
-        showContent(new QueryBuilderView().createContent());
     }
 
     private void showCompanySettings() {
