@@ -3,6 +3,9 @@ package com.accounting.ui.dialog;
 import com.accounting.dao.ReportDAO;
 import com.accounting.util.AlertUtil;
 import com.accounting.util.AppExecutor;
+import com.lowagie.text.Font;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.PageSize;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -459,7 +462,7 @@ public class ReportView {
                     String[] headers = {"Sr. No", "Type", "Transaction No", "Date", "Party", "Amount"};
                     for (String header : headers) {
                         com.lowagie.text.pdf.PdfPCell cell = new com.lowagie.text.pdf.PdfPCell(new com.lowagie.text.Phrase(header, headerFont));
-                        cell.setBackgroundColor(com.lowagie.text.Color.LIGHT_GRAY);
+                        cell.setBackgroundColor(new com.lowagie.text.Color(192, 192, 192));
                         table.addCell(cell);
                     }
 
