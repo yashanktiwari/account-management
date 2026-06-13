@@ -142,20 +142,16 @@ public class ReportView {
         sectionTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
 
         resultTable = new TableView<>();
-        resultTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+        resultTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
 
         filteredTransactions = new FilteredList<>(allTransactions);
         resultTable.setItems(filteredTransactions);
 
         setupTableColumns("All Transactions");
 
-        // Wrap table in ScrollPane for proper scrolling
-        ScrollPane scrollPane = new ScrollPane(resultTable);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setFitToHeight(true);
-        VBox.setVgrow(scrollPane, Priority.ALWAYS);
+        VBox.setVgrow(resultTable, Priority.ALWAYS);
 
-        section.getChildren().addAll(sectionTitle, scrollPane);
+        section.getChildren().addAll(sectionTitle, resultTable);
         return section;
     }
 
@@ -253,6 +249,8 @@ public class ReportView {
             return;
         }
 
+        resultCountLabel.setText("Loading...");
+
         AppExecutor.submit(() -> {
             try {
                 ReportDAO.ReportResult result = reportDAO.generateReport("All Transactions", from, to, null, null);
@@ -261,9 +259,13 @@ public class ReportView {
                     allTransactions.clear();
                     allTransactions.addAll(result.getRows());
                     applyFilters();
+                    System.out.println("Loaded " + result.getRows().size() + " transactions");
                 });
             } catch (Exception e) {
-                Platform.runLater(() -> AlertUtil.showError("Error", "Failed to generate report: " + e.getMessage()));
+                Platform.runLater(() -> {
+                    AlertUtil.showError("Error", "Failed to generate report: " + e.getMessage());
+                    e.printStackTrace();
+                });
             }
         });
     }
