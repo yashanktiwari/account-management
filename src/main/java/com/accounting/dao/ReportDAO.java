@@ -98,7 +98,7 @@ public class ReportDAO {
                 WHERE payment_date BETWEEN ? AND ?
                 UNION ALL
                 SELECT 'Loading Slip' as transaction_type, slip_no as transaction_no, slip_date as date,
-                       NULL as party, freight as amount, 'SLIP' as type
+                       NULL as party, freight_amount as amount, 'SLIP' as type
                 FROM loading_slips
                 WHERE slip_date BETWEEN ? AND ?
                 UNION ALL
@@ -285,7 +285,7 @@ public class ReportDAO {
         if (vehicle != null) {
             sql = """
                 SELECT slip_date as date, vehicle_no, 'Loading Slip' as type,
-                       CONCAT('LS-', slip_no) as reference, freight as amount
+                       CONCAT('LS-', slip_no) as reference, freight_amount as amount
                 FROM loading_slips
                 WHERE slip_date BETWEEN ? AND ? AND vehicle_no = ?
 
@@ -301,7 +301,7 @@ public class ReportDAO {
         } else {
             sql = """
                 SELECT slip_date as date, vehicle_no, 'Loading Slip' as type,
-                       CONCAT('LS-', slip_no) as reference, freight as amount
+                       CONCAT('LS-', slip_no) as reference, freight_amount as amount
                 FROM loading_slips
                 WHERE slip_date BETWEEN ? AND ?
 
@@ -509,7 +509,7 @@ public class ReportDAO {
 
         String sql = """
             SELECT slip_date as date, CONCAT('LS-', slip_no) as reference,
-                   CONCAT('Loading Slip - ', station, ' to ', to_location) as description, freight as amount
+                   CONCAT('Loading Slip - ', station, ' to ', to_location) as description, freight_amount as amount
             FROM loading_slips
             WHERE slip_date BETWEEN ? AND ?
 
