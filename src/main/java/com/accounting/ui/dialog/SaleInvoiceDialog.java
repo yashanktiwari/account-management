@@ -11,6 +11,7 @@ import com.accounting.model.SaleInvoice;
 import com.accounting.util.AlertUtil;
 import com.accounting.util.AppExecutor;
 import com.accounting.util.AppLogger;
+import com.accounting.util.ScreenUtil;
 import com.accounting.util.NotificationUtil;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -93,7 +94,15 @@ public class SaleInvoiceDialog {
             stage.setOnHidden(e -> onClose.run());
         }
 
-        Scene scene = new Scene(createContent(), 1320, 860);
+        ScreenUtil.DialogSize size = ScreenUtil.getResponsiveSize(1320, 860);
+        
+        Parent content = createContent();
+        ScrollPane scrollPane = new ScrollPane(content);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setStyle("-fx-background-color: transparent;");
+        
+        Scene scene = new Scene(scrollPane, size.width, size.height);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );

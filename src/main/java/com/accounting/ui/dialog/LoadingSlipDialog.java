@@ -66,7 +66,15 @@ public class LoadingSlipDialog {
             stage.setOnHidden(e -> onClose.run());
         }
 
-        Scene scene = new Scene(createContent(), 950, 620);
+        ScreenUtil.DialogSize size = ScreenUtil.getResponsiveSize(950, 620);
+        
+        Parent content = createContent();
+        ScrollPane scrollPane = new ScrollPane(content);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setStyle("-fx-background-color: transparent;");
+        
+        Scene scene = new Scene(scrollPane, size.width, size.height);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );

@@ -11,6 +11,7 @@ import javafx.scene.control.ListView;
 import javafx.stage.Popup;
 import javafx.stage.Window;
 import com.accounting.util.AlertUtil;
+import com.accounting.util.ScreenUtil;
 import com.accounting.util.AppExecutor;
 import com.accounting.util.AppLogger;
 import com.accounting.util.NotificationUtil;
@@ -68,7 +69,15 @@ public class SaleReceiptDialog {
             stage.setOnHidden(e -> onClose.run());
         }
 
-        Scene scene = new Scene(createContent(), 600, 600);
+        ScreenUtil.DialogSize size = ScreenUtil.getResponsiveSize(600, 600);
+        
+        Parent content = createContent();
+        ScrollPane scrollPane = new ScrollPane(content);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setStyle("-fx-background-color: transparent;");
+        
+        Scene scene = new Scene(scrollPane, size.width, size.height);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );

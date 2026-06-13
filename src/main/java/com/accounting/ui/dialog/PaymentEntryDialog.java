@@ -7,6 +7,7 @@ import com.accounting.model.Account;
 import com.accounting.model.Invoice;
 import com.accounting.model.Payment;
 import com.accounting.util.AlertUtil;
+import com.accounting.util.ScreenUtil;
 import com.accounting.util.AppExecutor;
 import com.accounting.util.NotificationUtil;
 import javafx.application.Platform;
@@ -64,7 +65,15 @@ public class PaymentEntryDialog {
         stage.initModality(Modality.NONE);
         if (owner != null) stage.initOwner(owner);
 
-        Scene scene = new Scene(createContent(), 700, 650);
+        ScreenUtil.DialogSize size = ScreenUtil.getResponsiveSize(700, 650);
+        
+        Parent content = createContent();
+        ScrollPane scrollPane = new ScrollPane(content);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setStyle("-fx-background-color: transparent;");
+        
+        Scene scene = new Scene(scrollPane, size.width, size.height);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );

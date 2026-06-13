@@ -3,6 +3,7 @@ package com.accounting.ui.dialog;
 import com.accounting.dao.AccountDAO;
 import com.accounting.model.Account;
 import com.accounting.util.AlertUtil;
+import com.accounting.util.ScreenUtil;
 import com.accounting.util.AppExecutor;
 import com.accounting.util.NotificationUtil;
 import javafx.application.Platform;
@@ -77,7 +78,15 @@ public class AccountEntryDialog {
             stage.setOnHidden(e -> onClose.run());
         }
 
-        Scene scene = new Scene(createContent(), 780, 600);
+        ScreenUtil.DialogSize size = ScreenUtil.getResponsiveSize(780, 600);
+        
+        Parent content = createContent();
+        ScrollPane scrollPane = new ScrollPane(content);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setStyle("-fx-background-color: transparent;");
+        
+        Scene scene = new Scene(scrollPane, size.width, size.height);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );

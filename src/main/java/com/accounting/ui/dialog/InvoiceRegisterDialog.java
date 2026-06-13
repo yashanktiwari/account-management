@@ -3,6 +3,7 @@ package com.accounting.ui.dialog;
 import com.accounting.dao.InvoiceDAO;
 import com.accounting.model.Invoice;
 import com.accounting.util.AlertUtil;
+import com.accounting.util.ScreenUtil;
 import com.accounting.util.AppExecutor;
 import com.accounting.util.ExportUtil;
 import com.accounting.util.NotificationUtil;
@@ -54,12 +55,22 @@ public class InvoiceRegisterDialog {
         stage.initModality(Modality.NONE);
         if (owner != null) stage.initOwner(owner);
 
-        Scene scene = new Scene(createContent(), 1050, 600);
+        ScreenUtil.DialogSize size = ScreenUtil.getResponsiveSize(1050, 600);
+        
+        Parent content = createContent();
+        ScrollPane scrollPane = new ScrollPane(content);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setStyle("-fx-background-color: transparent;");
+        
+        Scene scene = new Scene(scrollPane, size.width, size.height);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );
         stage.setScene(scene);
-        stage.setMaximized(true);
+        if (!ScreenUtil.isSmallScreen()) {
+            stage.setMaximized(true);
+        }
         stage.show();
     }
 

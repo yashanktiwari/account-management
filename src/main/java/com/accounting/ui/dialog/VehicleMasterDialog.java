@@ -3,6 +3,7 @@ package com.accounting.ui.dialog;
 import com.accounting.dao.VehicleDAO;
 import com.accounting.model.Vehicle;
 import com.accounting.util.AlertUtil;
+import com.accounting.util.ScreenUtil;
 import com.accounting.util.AppExecutor;
 import com.accounting.util.ExportUtil;
 import com.accounting.util.NotificationUtil;
@@ -53,7 +54,15 @@ public class VehicleMasterDialog {
             stage.setOnHidden(e -> onClose.run());
         }
 
-        Scene scene = new Scene(createContent(), 450, 600);
+        ScreenUtil.DialogSize size = ScreenUtil.getResponsiveSize(450, 600);
+        
+        Parent content = createContent();
+        ScrollPane scrollPane = new ScrollPane(content);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setStyle("-fx-background-color: transparent;");
+        
+        Scene scene = new Scene(scrollPane, size.width, size.height);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );

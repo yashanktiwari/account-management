@@ -6,6 +6,7 @@ import com.accounting.util.AlertUtil;
 import com.accounting.util.AppExecutor;
 import com.accounting.util.AppLogger;
 import com.accounting.util.NotificationUtil;
+import com.accounting.util.ScreenUtil;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -107,14 +108,20 @@ public class PartyMasterDialog {
         stage.setTitle(partyToEdit == null ? "Add Party" : "Edit Party");
         stage.initModality(Modality.NONE);
         stage.setResizable(true);
-        stage.setMinWidth(880);
-        stage.setMinHeight(740);
         if (owner != null) stage.initOwner(owner);
         if (onClose != null) {
             stage.setOnHidden(e -> onClose.run());
         }
 
-        Scene scene = new Scene(createContent(), 920, 760);
+        ScreenUtil.DialogSize size = ScreenUtil.getResponsiveSize(920, 760);
+        
+        Parent content = createContent();
+        ScrollPane scrollPane = new ScrollPane(content);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setStyle("-fx-background-color: transparent;");
+        
+        Scene scene = new Scene(scrollPane, size.width, size.height);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/global.css")).toExternalForm()
         );
