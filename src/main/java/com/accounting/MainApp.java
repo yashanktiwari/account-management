@@ -408,21 +408,30 @@ public class MainApp extends Application {
     }
 
     public static void main(String[] args) {
-        // Password check before launching
-        String password = "Yashank01$";
-        javax.swing.JPasswordField pf = new javax.swing.JPasswordField();
-        int result = javax.swing.JOptionPane.showConfirmDialog(
-                null, pf, "Enter Password to Launch", javax.swing.JOptionPane.OK_CANCEL_OPTION,
-                javax.swing.JOptionPane.PLAIN_MESSAGE);
-        if (result == javax.swing.JOptionPane.OK_OPTION) {
-            String entered = new String(pf.getPassword());
-            if (!entered.equals(password)) {
-                javax.swing.JOptionPane.showMessageDialog(null,
-                        "Incorrect password.", "Access Denied", javax.swing.JOptionPane.ERROR_MESSAGE);
-                System.exit(1);
+        // Check if this is the first launch
+        java.util.prefs.Preferences prefs = java.util.prefs.Preferences.userNodeForPackage(MainApp.class);
+        boolean isFirstLaunch = prefs.getBoolean("first_launch", true);
+        
+        if (isFirstLaunch) {
+            // Password check only on first launch
+            String password = "Yashank01$";
+            javax.swing.JPasswordField pf = new javax.swing.JPasswordField();
+            int result = javax.swing.JOptionPane.showConfirmDialog(
+                    null, pf, "Enter Password to Launch (First Time Setup)", 
+                    javax.swing.JOptionPane.OK_CANCEL_OPTION,
+                    javax.swing.JOptionPane.PLAIN_MESSAGE);
+            if (result == javax.swing.JOptionPane.OK_OPTION) {
+                String entered = new String(pf.getPassword());
+                if (!entered.equals(password)) {
+                    javax.swing.JOptionPane.showMessageDialog(null,
+                            "Incorrect password.", "Access Denied", javax.swing.JOptionPane.ERROR_MESSAGE);
+                    System.exit(1);
+                }
+                // Mark as no longer first launch
+                prefs.putBoolean("first_launch", false);
+            } else {
+                System.exit(0);
             }
-        } else {
-            System.exit(0);
         }
         launch(args);
     }
