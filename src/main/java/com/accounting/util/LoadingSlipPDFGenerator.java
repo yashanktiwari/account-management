@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import java.awt.Color;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
 
 public class LoadingSlipPDFGenerator {
@@ -273,11 +274,15 @@ public class LoadingSlipPDFGenerator {
 
     private static Image loadScaledImage(String name, float contentWidth) {
         try {
-            File imageFile = findImageFile(IMAGES_FOLDER, name);
-            if (imageFile.exists()) {
-                Image image = Image.getInstance(imageFile.getAbsolutePath());
-                image.scaleAbsolute(contentWidth, image.getHeight() * contentWidth / image.getWidth());
-                return image;
+            String resourcePath = findResourcePath(name);
+            if (resourcePath != null) {
+                InputStream is = LoadingSlipPDFGenerator.class.getResourceAsStream(resourcePath);
+                if (is != null) {
+                    byte[] imageBytes = is.readAllBytes();
+                    Image image = Image.getInstance(imageBytes);
+                    image.scaleAbsolute(contentWidth, image.getHeight() * contentWidth / image.getWidth());
+                    return image;
+                }
             }
         } catch (Exception e) {
             log.error("Failed to load image: " + name, e);
@@ -287,14 +292,18 @@ public class LoadingSlipPDFGenerator {
 
     private static Image loadImageFitToBox(String name, float maxWidth, float maxHeight) {
         try {
-            File imageFile = findImageFile(IMAGES_FOLDER, name);
-            if (imageFile.exists()) {
-                Image image = Image.getInstance(imageFile.getAbsolutePath());
-                float w = image.getWidth();
-                float h = image.getHeight();
-                float scale = Math.min(maxWidth / w, maxHeight / h);
-                image.scaleAbsolute(w * scale, h * scale);
-                return image;
+            String resourcePath = findResourcePath(name);
+            if (resourcePath != null) {
+                InputStream is = LoadingSlipPDFGenerator.class.getResourceAsStream(resourcePath);
+                if (is != null) {
+                    byte[] imageBytes = is.readAllBytes();
+                    Image image = Image.getInstance(imageBytes);
+                    float w = image.getWidth();
+                    float h = image.getHeight();
+                    float scale = Math.min(maxWidth / w, maxHeight / h);
+                    image.scaleAbsolute(w * scale, h * scale);
+                    return image;
+                }
             }
         } catch (Exception e) {
             log.error("Failed to load image: " + name, e);
@@ -302,15 +311,15 @@ public class LoadingSlipPDFGenerator {
         return null;
     }
 
-    private static File findImageFile(String folder, String name) {
+    private static String findResourcePath(String name) {
         String[] extensions = {".png", ".PNG", ".jpg", ".JPG", ".jpeg", ".JPEG"};
         for (String ext : extensions) {
-            File file = new File(folder + "/" + name + ext);
-            if (file.exists()) {
-                return file;
+            String path = "/images/" + name + ext;
+            if (LoadingSlipPDFGenerator.class.getResource(path) != null) {
+                return path;
             }
         }
-        return new File(folder + "/" + name + ".png");
+        return null;
     }
 
     private static void addTextBasedHeader(Document document) throws DocumentException {

@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import java.awt.Color;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
 
 public class LorryReceiptPDFGenerator {
@@ -541,16 +542,16 @@ public class LorryReceiptPDFGenerator {
         Paragraph toPayLine = new Paragraph();
         toPayLine.add(new Chunk("To Pay Rs. ", F_BOLD_9));
         toPayLine.add(new Chunk(lr.getToPayRs() > 0 ? String.format("%.2f", lr.getToPayRs()) : "________________________", F_NORM_9));
-        toPayLine.add(new Chunk("     Adv. Paid Rs. ", F_BOLD_9));
+        toPayLine.add(new Chunk("     Advance Paid Rs. ", F_BOLD_9));
         toPayLine.add(new Chunk(lr.getAdvPaidRs() > 0 ? String.format("%.2f", lr.getAdvPaidRs()) : "________________________", F_NORM_9));
         discCell.addElement(toPayLine);
 
         discCell.addElement(spacer(4));
 
         Paragraph invLine = new Paragraph();
-        invLine.add(new Chunk("Inv. No. ", F_BOLD_9));
+        invLine.add(new Chunk("Invoice No. ", F_BOLD_9));
         invLine.add(new Chunk(s(lr.getInvNo()).isEmpty() ? "________________________" : s(lr.getInvNo()), F_NORM_9));
-        invLine.add(new Chunk("          Inv. Date ", F_BOLD_9));
+        invLine.add(new Chunk("          Invoice Date ", F_BOLD_9));
         invLine.add(new Chunk(lr.getInvDate() != null ? lr.getInvDate().format(DATE_FORMATTER) : "________________________", F_NORM_9));
         discCell.addElement(invLine);
 
@@ -618,18 +619,30 @@ public class LorryReceiptPDFGenerator {
     }
 
     private static Image loadImage(String name) {
-        String[] extensions = {".jpg", ".JPG", ".jpeg", ".JPEG", ".png", ".PNG"};
-        for (String ext : extensions) {
-            File f = new File(IMAGES_FOLDER + "/" + name + ext);
-            if (f.exists()) {
-                try {
-                    return Image.getInstance(f.getAbsolutePath());
-                } catch (Exception e) {
-                    log.error("Failed to load image: " + name + ext, e);
+        try {
+            String resourcePath = findResourcePath(name);
+            if (resourcePath != null) {
+                InputStream is = LorryReceiptPDFGenerator.class.getResourceAsStream(resourcePath);
+                if (is != null) {
+                    byte[] imageBytes = is.readAllBytes();
+                    return Image.getInstance(imageBytes);
                 }
             }
+        } catch (Exception e) {
+            log.error("Failed to load image: " + name, e);
         }
         log.warn("Image not found: {}", name);
+        return null;
+    }
+
+    private static String findResourcePath(String name) {
+        String[] extensions = {".png", ".PNG", ".jpg", ".JPG", ".jpeg", ".JPEG"};
+        for (String ext : extensions) {
+            String path = "/images/" + name + ext;
+            if (LorryReceiptPDFGenerator.class.getResource(path) != null) {
+                return path;
+            }
+        }
         return null;
     }
 
