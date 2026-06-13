@@ -13,7 +13,10 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
+import javafx.stage.FileChooser;
+import javafx.stage.Window;
 
+import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -98,9 +101,13 @@ public class ReportView {
         generateBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
         generateBtn.setOnAction(e -> generateReport());
         
-        Button exportBtn = new Button("Export to CSV");
-        exportBtn.setStyle("-fx-background-color: #64748b; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
-        exportBtn.setOnAction(e -> exportReport());
+        Button exportExcelBtn = new Button("Export to Excel");
+        exportExcelBtn.setStyle("-fx-background-color: #16a34a; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
+        exportExcelBtn.setOnAction(e -> exportToExcel());
+
+        Button printPdfBtn = new Button("Print to PDF");
+        printPdfBtn.setStyle("-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
+        printPdfBtn.setOnAction(e -> printToPdf());
 
         Button clearBtn = new Button("Clear Search");
         clearBtn.setStyle("-fx-background-color: #94a3b8; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
@@ -109,7 +116,7 @@ public class ReportView {
             applyFilters();
         });
 
-        HBox buttonBox = new HBox(10, generateBtn, exportBtn, clearBtn);
+        HBox buttonBox = new HBox(10, generateBtn, exportExcelBtn, printPdfBtn, clearBtn);
         buttonBox.setAlignment(Pos.CENTER_LEFT);
 
         grid.add(buttonBox, 0, 2, 4, 1);
@@ -335,5 +342,146 @@ public class ReportView {
             return "\"" + value.replace("\"", "\"\"") + "\"";
         }
         return value;
+    }
+
+    private void exportToExcel() {
+        if (filteredTransactions.isEmpty()) {
+            AlertUtil.showWarning("Export", "No data to export");
+            return;
+        }
+
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Export to Excel");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Excel Files", "*.xlsx"));
+        fc.setInitialFileName("transactions_report.xlsx");
+
+        Window window = resultTable.getScene().getWindow();
+        File file = fc.showSaveDialog(window);
+
+        if (file != null) {
+            AppExecutor.submit(() -> {
+                try {
+                    // Simple Excel export using Apache POI
+                    org.apache.poi.ss.usermodel.Workbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook();
+                    org.apache.poi.ss.usermodel.Sheet sheet = workbook.createSheet("Transactions");
+
+                    // Header row
+                    org.apache.poi.ss.usermodel.Row header = sheet.createRow(0);
+                    String[] columns = {"Sr. No", "Type", "Transaction No", "Date", "Party", "Amount"};
+                    
+                    org.apache.poi.ss.usermodel.CellStyle headerStyle = workbook.createCellStyle();
+                    headerStyle.setFillForegroundColor(org.apache.poi.ss.usermodel.IndexedColors.GREY_25_PERCENT.getIndex());
+                    headerStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
+                    org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
+                    headerFont.setBold(true);
+                    headerStyle.setFont(headerFont);
+
+                    for (int i = 0; i < columns.length; i++) {
+                        org.apache.poi.ss.usermodel.Cell cell = header.createCell(i);
+                        cell.setCellValue(columns[i]);
+                        cell.setCellStyle(headerStyle);
+                    }
+
+                    // Data rows
+                    int rowNum = 1;
+                    for (ReportDAO.ReportRow row : filteredTransactions) {
+                        org.apache.poi.ss.usermodel.Row dataRow = sheet.createRow(rowNum++);
+                        dataRow.createCell(0).setCellValue(row.getSerialNo());
+                        dataRow.createCell(1).setCellValue(formatTransactionType(row.getTransactionType()));
+                        dataRow.createCell(2).setCellValue(row.getTransactionNo());
+                        dataRow.createCell(3).setCellValue(row.getDate());
+                        dataRow.createCell(4).setCellValue(row.getParty() != null ? row.getParty() : "");
+                        dataRow.createCell(5).setCellValue(row.getAmount() != null ? row.getAmount() : 0);
+                    }
+
+                    // Auto-size columns
+                    for (int i = 0; i < columns.length; i++) {
+                        sheet.autoSizeColumn(i);
+                    }
+
+                    try (java.io.FileOutputStream fos = new java.io.FileOutputStream(file)) {
+                        workbook.write(fos);
+                    }
+                    workbook.close();
+
+                    Platform.runLater(() -> AlertUtil.showInfo("Export", "Report exported successfully to " + file.getAbsolutePath()));
+                } catch (Exception e) {
+                    Platform.runLater(() -> AlertUtil.showError("Export Error", "Failed to export: " + e.getMessage()));
+                }
+            });
+        }
+    }
+
+    private void printToPdf() {
+        if (filteredTransactions.isEmpty()) {
+            AlertUtil.showWarning("Print", "No data to print");
+            return;
+        }
+
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Save as PDF");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
+        fc.setInitialFileName("transactions_report.pdf");
+
+        Window window = resultTable.getScene().getWindow();
+        File file = fc.showSaveDialog(window);
+
+        if (file != null) {
+            AppExecutor.submit(() -> {
+                try {
+                    com.lowagie.text.Document document = new com.lowagie.text.Document(com.lowagie.text.PageSize.A4.rotate());
+                    com.lowagie.text.pdf.PdfWriter.getInstance(document, new java.io.FileOutputStream(file));
+                    document.open();
+
+                    // Title
+                    com.lowagie.text.Font titleFont = com.lowagie.text.FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
+                    com.lowagie.text.Paragraph title = new com.lowagie.text.Paragraph("All Transactions Report", titleFont);
+                    title.setAlignment(com.lowagie.text.Element.ALIGN_CENTER);
+                    document.add(title);
+                    document.add(new com.lowagie.text.Paragraph(" "));
+
+                    // Date range
+                    com.lowagie.text.Font normalFont = com.lowagie.text.FontFactory.getFont(FontFactory.HELVETICA, 10);
+                    com.lowagie.text.Paragraph dateRange = new com.lowagie.text.Paragraph(
+                        "From: " + fromDate.getValue().format(DATE_FORMATTER) + 
+                        " To: " + toDate.getValue().format(DATE_FORMATTER), 
+                        normalFont
+                    );
+                    document.add(dateRange);
+                    document.add(new com.lowagie.text.Paragraph(" "));
+
+                    // Table
+                    com.lowagie.text.pdf.PdfPTable table = new com.lowagie.text.pdf.PdfPTable(6);
+                    table.setWidthPercentage(100);
+
+                    // Headers
+                    com.lowagie.text.Font headerFont = com.lowagie.text.FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
+                    String[] headers = {"Sr. No", "Type", "Transaction No", "Date", "Party", "Amount"};
+                    for (String header : headers) {
+                        com.lowagie.text.pdf.PdfPCell cell = new com.lowagie.text.pdf.PdfPCell(new com.lowagie.text.Phrase(header, headerFont));
+                        cell.setBackgroundColor(com.lowagie.text.Color.LIGHT_GRAY);
+                        table.addCell(cell);
+                    }
+
+                    // Data
+                    com.lowagie.text.Font dataFont = com.lowagie.text.FontFactory.getFont(FontFactory.HELVETICA, 9);
+                    for (ReportDAO.ReportRow row : filteredTransactions) {
+                        table.addCell(new com.lowagie.text.pdf.PdfPCell(new com.lowagie.text.Phrase(String.valueOf(row.getSerialNo()), dataFont)));
+                        table.addCell(new com.lowagie.text.pdf.PdfPCell(new com.lowagie.text.Phrase(formatTransactionType(row.getTransactionType()), dataFont)));
+                        table.addCell(new com.lowagie.text.pdf.PdfPCell(new com.lowagie.text.Phrase(row.getTransactionNo() != null ? row.getTransactionNo() : "", dataFont)));
+                        table.addCell(new com.lowagie.text.pdf.PdfPCell(new com.lowagie.text.Phrase(row.getDate() != null ? row.getDate() : "", dataFont)));
+                        table.addCell(new com.lowagie.text.pdf.PdfPCell(new com.lowagie.text.Phrase(row.getParty() != null ? row.getParty() : "", dataFont)));
+                        table.addCell(new com.lowagie.text.pdf.PdfPCell(new com.lowagie.text.Phrase(row.getAmount() != null ? String.format("%.2f", row.getAmount()) : "0.00", dataFont)));
+                    }
+
+                    document.add(table);
+                    document.close();
+
+                    Platform.runLater(() -> AlertUtil.showInfo("Print", "PDF saved successfully to " + file.getAbsolutePath()));
+                } catch (Exception e) {
+                    Platform.runLater(() -> AlertUtil.showError("Print Error", "Failed to generate PDF: " + e.getMessage()));
+                }
+            });
+        }
     }
 }
