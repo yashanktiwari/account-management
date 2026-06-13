@@ -48,7 +48,7 @@ public class PartyDAO {
                 pan, gstin, credit_limit, opening_balance, balance_type, nature_of_payment, bank_name,
                 bank_account, ifsc_code, remarks, owner_name, cst_no, tan_no, tds, aadhar_no, routes,
                 created_at, updated_at)
-                VALUES (?, 'CUSTOMER', '', ?, ?, ?, ?, ?, ?, ?, ?, '', '', '', '', '', '', '', '', ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                VALUES (?, 'CUSTOMER', NULL, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -79,9 +79,9 @@ public class PartyDAO {
 
     public void update(Party party) throws Exception {
         String sql = """
-                UPDATE parties SET name=?, type='CUSTOMER', mailing_name='', address=?, city=?, state=?, pincode=?,
-                mobile=?, email=?, pan=?, gstin=?, credit_limit='', opening_balance='', balance_type='',
-                nature_of_payment='', bank_name='', bank_account='', ifsc_code='', remarks='',
+                UPDATE parties SET name=?, type='CUSTOMER', mailing_name=NULL, address=?, city=?, state=?, pincode=?,
+                mobile=?, email=?, pan=?, gstin=?, credit_limit=NULL, opening_balance=NULL, balance_type=NULL,
+                nature_of_payment=NULL, bank_name=NULL, bank_account=NULL, ifsc_code=NULL, remarks=NULL,
                 owner_name=?, cst_no=?, tan_no=?, tds=?, aadhar_no=?, routes=?, updated_at=NOW()
                 WHERE id=?
                 """;
