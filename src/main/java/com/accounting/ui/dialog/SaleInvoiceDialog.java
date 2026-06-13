@@ -372,19 +372,19 @@ public class SaleInvoiceDialog {
         grid.add(paymentModeCombo, 3, 0);
 
         // Bank Name
-        bankNameField = new TextField();
+        bankNameField = new TextField("AXIS BANK");
         setupUppercaseListener(bankNameField);
         grid.add(label("Bank Name"), 0, 1);
         grid.add(bankNameField, 1, 1);
 
         // Bank Account
-        bankAccountField = new TextField();
+        bankAccountField = new TextField("922020026748406");
         setupUppercaseListener(bankAccountField);
         grid.add(label("Bank A/c"), 2, 1);
         grid.add(bankAccountField, 3, 1);
 
         // IFSC Code
-        ifscCodeField = new TextField();
+        ifscCodeField = new TextField("UTIB0000460");
         setupUppercaseListener(ifscCodeField);
         grid.add(label("IFSC Code"), 0, 2);
         grid.add(ifscCodeField, 1, 2);
