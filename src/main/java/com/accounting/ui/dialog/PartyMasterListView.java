@@ -200,8 +200,41 @@ public class PartyMasterListView {
         });
         table.getColumns().add(balanceCol);
         
-        table.getColumns().add(col("Created At",   "createdAt",  170));
-        table.getColumns().add(col("Updated At",   "updatedAt",  170));
+        // Created At column with custom date formatting
+        TableColumn<Party, java.time.LocalDateTime> createdAtCol = new TableColumn<>("Created At");
+        createdAtCol.setCellValueFactory(new PropertyValueFactory<>("createdAt"));
+        createdAtCol.setPrefWidth(170);
+        createdAtCol.setCellFactory(col -> new TableCell<Party, java.time.LocalDateTime>() {
+            @Override
+            protected void updateItem(java.time.LocalDateTime item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm a");
+                    setText(item.format(formatter));
+                }
+            }
+        });
+        table.getColumns().add(createdAtCol);
+        
+        // Updated At column with custom date formatting
+        TableColumn<Party, java.time.LocalDateTime> updatedAtCol = new TableColumn<>("Updated At");
+        updatedAtCol.setCellValueFactory(new PropertyValueFactory<>("updatedAt"));
+        updatedAtCol.setPrefWidth(170);
+        updatedAtCol.setCellFactory(col -> new TableCell<Party, java.time.LocalDateTime>() {
+            @Override
+            protected void updateItem(java.time.LocalDateTime item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm a");
+                    setText(item.format(formatter));
+                }
+            }
+        });
+        table.getColumns().add(updatedAtCol);
 
         table.setItems(rows);
         
