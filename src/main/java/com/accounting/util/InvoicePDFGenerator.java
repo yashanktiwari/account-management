@@ -490,7 +490,7 @@ public class InvoicePDFGenerator {
 
         gstTable.addCell(createCell("GSTIN - " + (invoice.getSupplierGstNo() != null ? invoice.getSupplierGstNo() : ""), false));
         gstTable.addCell(createCell("PAN No", false));
-        gstTable.addCell(createCell("", false));
+        gstTable.addCell(createCell(invoice.getPanNo() != null ? invoice.getPanNo() : "", false));
         gstTable.addCell(createCell("State Code", false));
         gstTable.addCell(createCell("27", false));
 
@@ -547,7 +547,7 @@ public class InvoicePDFGenerator {
 
         gstTable.addCell(createCell("GSTIN - " + (invoice.getRcvrGstin() != null ? invoice.getRcvrGstin() : ""), false));
         gstTable.addCell(createCell("PAN No", false));
-        gstTable.addCell(createCell("", false));
+        gstTable.addCell(createCell(invoice.getPanNo() != null ? invoice.getPanNo() : "", false));
         gstTable.addCell(createCell("State Code", false));
         gstTable.addCell(createCell("27", false));
 

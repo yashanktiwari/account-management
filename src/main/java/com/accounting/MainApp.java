@@ -157,8 +157,8 @@ public class MainApp extends Application {
         Label receiptsTitle = new Label("Receipts");
         receiptsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
 
-        purchaseReceiptBtn = sidebarButton("Purchase Receipt", this::showPurchaseReceipt);
-        saleReceiptBtn = sidebarButton("Sale Receipt", this::showSaleReceipt);
+        purchaseReceiptBtn = sidebarButton("Money Received", this::showPurchaseReceipt);
+        saleReceiptBtn = sidebarButton("Money Paid", this::showSaleReceipt);
 
         Label slipsTitle = new Label("Slips");
         slipsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");

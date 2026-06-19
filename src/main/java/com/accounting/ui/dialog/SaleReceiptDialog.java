@@ -49,6 +49,9 @@ public class SaleReceiptDialog {
     private DatePicker chequeDatePicker;
     private TextField bankNameField;
     private TextField remarksField;
+    private TextField tdsPercentageField;
+    private TextField tdsAmountField;
+    private TextField kasarAmountField;
     private Runnable onClose;
 
     public SaleReceiptDialog() {
@@ -155,6 +158,37 @@ public class SaleReceiptDialog {
         remarksField = new TextField();
         grid.add(label("Remarks"), 0, 8);
         grid.add(remarksField, 1, 8);
+
+        tdsPercentageField = new TextField();
+        tdsPercentageField.setPromptText("0.00");
+        tdsPercentageField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
+                tdsPercentageField.setText(oldVal);
+            } else {
+                calculateTdsAmount();
+            }
+        });
+        grid.add(label("TDS %"), 0, 9);
+        grid.add(tdsPercentageField, 1, 9);
+
+        tdsAmountField = new TextField();
+        tdsAmountField.setPromptText("0.00");
+        tdsAmountField.setEditable(false);
+        tdsAmountField.setStyle("-fx-background-color: #f0f0f0;");
+        grid.add(label("TDS Amount"), 0, 10);
+        grid.add(tdsAmountField, 1, 10);
+
+        kasarAmountField = new TextField();
+        kasarAmountField.setPromptText("0.00");
+        kasarAmountField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
+                kasarAmountField.setText(oldVal);
+            }
+        });
+        grid.add(label("Kasar Amount"), 0, 11);
+        grid.add(kasarAmountField, 1, 11);
+
+        amountField.textProperty().addListener((obs, oldVal, newVal) -> calculateTdsAmount());
 
         paymentModeCombo.setOnAction(e -> {
             boolean isCheque = "CHEQUE".equals(paymentModeCombo.getValue());
@@ -335,7 +369,28 @@ public class SaleReceiptDialog {
         chequeDatePicker.setValue(receipt.getChequeDate());
         bankNameField.setText(receipt.getBankName());
         remarksField.setText(receipt.getRemarks());
+        tdsPercentageField.setText(String.valueOf(receipt.getTdsPercentage()));
+        tdsAmountField.setText(String.format("%.2f", receipt.getTdsAmount()));
+        kasarAmountField.setText(String.valueOf(receipt.getKasarAmount()));
         partyField.setText(receipt.getPartyName());
+    }
+
+    private void calculateTdsAmount() {
+        try {
+            String amountStr = amountField.getText().trim();
+            String tdsPercentageStr = tdsPercentageField.getText().trim();
+            
+            if (!amountStr.isEmpty() && !tdsPercentageStr.isEmpty()) {
+                double amount = Double.parseDouble(amountStr);
+                double tdsPercentage = Double.parseDouble(tdsPercentageStr);
+                double tdsAmount = (amount * tdsPercentage) / 100.0;
+                tdsAmountField.setText(String.format("%.2f", tdsAmount));
+            } else {
+                tdsAmountField.setText("0.00");
+            }
+        } catch (NumberFormatException e) {
+            tdsAmountField.setText("0.00");
+        }
     }
 
     private void saveReceipt() {
@@ -388,6 +443,23 @@ public class SaleReceiptDialog {
             receipt.setChequeDate(chequeDatePicker.getValue());
             receipt.setBankName(bankNameField.getText());
             receipt.setRemarks(remarksField.getText());
+            
+            try {
+                receipt.setTdsPercentage(tdsPercentageField.getText().trim().isEmpty() ? 0 : Double.parseDouble(tdsPercentageField.getText().trim()));
+            } catch (NumberFormatException ex) {
+                receipt.setTdsPercentage(0);
+            }
+            try {
+                receipt.setTdsAmount(tdsAmountField.getText().trim().isEmpty() ? 0 : Double.parseDouble(tdsAmountField.getText().trim()));
+            } catch (NumberFormatException ex) {
+                receipt.setTdsAmount(0);
+            }
+            try {
+                receipt.setKasarAmount(kasarAmountField.getText().trim().isEmpty() ? 0 : Double.parseDouble(kasarAmountField.getText().trim()));
+            } catch (NumberFormatException ex) {
+                receipt.setKasarAmount(0);
+            }
+            
             receipt.setStatus("SAVED");
 
             AppExecutor.submit(() -> {

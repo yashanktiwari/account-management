@@ -15,6 +15,9 @@ public class PurchaseReceipt {
     private LocalDate chequeDate;
     private String bankName;
     private String remarks;
+    private double tdsPercentage;
+    private double tdsAmount;
+    private double kasarAmount;
     private String status; // DRAFT, SAVED, PRINTED
     private LocalDate createdAt;
     private LocalDate updatedAt;
@@ -53,6 +56,15 @@ public class PurchaseReceipt {
 
     public String getRemarks() { return remarks; }
     public void setRemarks(String remarks) { this.remarks = remarks; }
+
+    public double getTdsPercentage() { return tdsPercentage; }
+    public void setTdsPercentage(double tdsPercentage) { this.tdsPercentage = tdsPercentage; }
+
+    public double getTdsAmount() { return tdsAmount; }
+    public void setTdsAmount(double tdsAmount) { this.tdsAmount = tdsAmount; }
+
+    public double getKasarAmount() { return kasarAmount; }
+    public void setKasarAmount(double kasarAmount) { this.kasarAmount = kasarAmount; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

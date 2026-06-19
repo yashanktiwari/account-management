@@ -14,11 +14,36 @@ public class SaleReceiptDAO {
 
     private static final Logger log = get(SaleReceiptDAO.class);
 
+    private void ensureReceiptColumns() throws Exception {
+        try (Connection conn = DBConnection.getConnection()) {
+            DatabaseMetaData meta = conn.getMetaData();
+            List<String> existing = new ArrayList<>();
+            try (ResultSet rs = meta.getColumns(conn.getCatalog(), null, "sale_receipts", null)) {
+                while (rs.next()) {
+                    existing.add(rs.getString("COLUMN_NAME").toLowerCase());
+                }
+            }
+
+            try (Statement stmt = conn.createStatement()) {
+                if (!existing.contains("tds_percentage")) {
+                    stmt.executeUpdate("ALTER TABLE sale_receipts ADD COLUMN tds_percentage DOUBLE DEFAULT 0");
+                }
+                if (!existing.contains("tds_amount")) {
+                    stmt.executeUpdate("ALTER TABLE sale_receipts ADD COLUMN tds_amount DOUBLE DEFAULT 0");
+                }
+                if (!existing.contains("kasar_amount")) {
+                    stmt.executeUpdate("ALTER TABLE sale_receipts ADD COLUMN kasar_amount DOUBLE DEFAULT 0");
+                }
+            }
+        }
+    }
+
     public void save(SaleReceipt receipt) throws Exception {
+        ensureReceiptColumns();
         String sql = """
                 INSERT INTO sale_receipts (receipt_no, receipt_date, party_id, party_name, amount,
-                payment_mode, cheque_no, cheque_date, bank_name, remarks, status, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                payment_mode, cheque_no, cheque_date, bank_name, remarks, tds_percentage, tds_amount, kasar_amount, status, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -32,7 +57,10 @@ public class SaleReceiptDAO {
             pstmt.setDate(8, receipt.getChequeDate() != null ? java.sql.Date.valueOf(receipt.getChequeDate()) : null);
             pstmt.setString(9, receipt.getBankName());
             pstmt.setString(10, receipt.getRemarks());
-            pstmt.setString(11, receipt.getStatus());
+            pstmt.setDouble(11, receipt.getTdsPercentage());
+            pstmt.setDouble(12, receipt.getTdsAmount());
+            pstmt.setDouble(13, receipt.getKasarAmount());
+            pstmt.setString(14, receipt.getStatus());
 
             pstmt.executeUpdate();
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
@@ -43,10 +71,11 @@ public class SaleReceiptDAO {
     }
 
     public void update(SaleReceipt receipt) throws Exception {
+        ensureReceiptColumns();
         String sql = """
                 UPDATE sale_receipts SET receipt_no=?, receipt_date=?, party_id=?, party_name=?,
                 amount=?, payment_mode=?, cheque_no=?, cheque_date=?, bank_name=?, remarks=?,
-                status=?, updated_at=NOW() WHERE id=?
+                tds_percentage=?, tds_amount=?, kasar_amount=?, status=?, updated_at=NOW() WHERE id=?
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -60,8 +89,11 @@ public class SaleReceiptDAO {
             pstmt.setDate(8, receipt.getChequeDate() != null ? java.sql.Date.valueOf(receipt.getChequeDate()) : null);
             pstmt.setString(9, receipt.getBankName());
             pstmt.setString(10, receipt.getRemarks());
-            pstmt.setString(11, receipt.getStatus());
-            pstmt.setInt(12, receipt.getId());
+            pstmt.setDouble(11, receipt.getTdsPercentage());
+            pstmt.setDouble(12, receipt.getTdsAmount());
+            pstmt.setDouble(13, receipt.getKasarAmount());
+            pstmt.setString(14, receipt.getStatus());
+            pstmt.setInt(15, receipt.getId());
 
             pstmt.executeUpdate();
             log.info("Sale receipt updated: {}", receipt.getReceiptNo());
@@ -158,6 +190,9 @@ public class SaleReceiptDAO {
         r.setChequeDate(rs.getDate("cheque_date") != null ? rs.getDate("cheque_date").toLocalDate() : null);
         r.setBankName(rs.getString("bank_name"));
         r.setRemarks(rs.getString("remarks"));
+        try { r.setTdsPercentage(rs.getDouble("tds_percentage")); } catch (Exception ignored) {}
+        try { r.setTdsAmount(rs.getDouble("tds_amount")); } catch (Exception ignored) {}
+        try { r.setKasarAmount(rs.getDouble("kasar_amount")); } catch (Exception ignored) {}
         r.setStatus(rs.getString("status"));
         r.setCreatedAt(rs.getDate("created_at").toLocalDate());
         r.setUpdatedAt(rs.getDate("updated_at").toLocalDate());
