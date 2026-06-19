@@ -64,6 +64,7 @@ public class SaleInvoiceDialog {
     private TextField rcvrAddressField;
     private TextField rcvrContactField;
     private TextField rcvrGstinField;
+    private TextField panNoField;
     private ComboBox<String> creditDebitCombo;
     private TextField accountNameField;
     private TextField paidByField;
@@ -73,6 +74,7 @@ public class SaleInvoiceDialog {
     private TextField ifscCodeField;
     private TextField loadingUnloadingChargesField;
     private TextField weighBridgeChargesField;
+    private TextField advanceAmountField;
     private boolean loadingData = false;
     private Runnable onClose;
 
@@ -189,11 +191,13 @@ public class SaleInvoiceDialog {
         ifscCodeField.setText(invoice.getIfscCode());
         loadingUnloadingChargesField.setText(String.format("%.2f", invoice.getLoadingUnloadingCharges()));
         weighBridgeChargesField.setText(String.format("%.2f", invoice.getWeighBridgeCharges()));
+        advanceAmountField.setText(String.format("%.2f", invoice.getAdvanceAmount()));
 
         // Receiver details
         rcvrAddressField.setText(invoice.getRcvrAddress());
         rcvrContactField.setText(invoice.getRcvrContactNo());
         rcvrGstinField.setText(invoice.getRcvrGstin());
+        panNoField.setText(invoice.getPanNo());
 
         // Set GST checkboxes based on values
         sgstCheckBox.setSelected(invoice.getSgstAmount() > 0);
@@ -413,6 +417,17 @@ public class SaleInvoiceDialog {
         grid.add(label("Weigh Bridge Charges"), 0, 3);
         grid.add(weighBridgeChargesField, 1, 3);
 
+        // Advance Amount
+        advanceAmountField = new TextField();
+        advanceAmountField.setPromptText("0");
+        advanceAmountField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.isEmpty() && !newVal.matches("\\d*\\.?\\d*")) {
+                advanceAmountField.setText(oldVal);
+            }
+        });
+        grid.add(label("Advance Amount"), 0, 4);
+        grid.add(advanceAmountField, 1, 4);
+
         // Remarks
         remarksField = new TextField();
         setupUppercaseListener(remarksField);
@@ -446,6 +461,12 @@ public class SaleInvoiceDialog {
         setupUppercaseListener(rcvrGstinField);
         grid.add(label("GSTIN"), 2, 1);
         grid.add(rcvrGstinField, 3, 1);
+
+        // PAN No.
+        panNoField = new TextField();
+        setupUppercaseListener(panNoField);
+        grid.add(label("PAN No"), 0, 2);
+        grid.add(panNoField, 1, 2);
 
         return grid;
     }
@@ -787,6 +808,8 @@ public class SaleInvoiceDialog {
             rcvrAddressField.setText(party.getAddress());
             rcvrContactField.setText(party.getMobile());
             rcvrGstinField.setText(party.getGstin());
+            panNoField.setText(party.getPan());
+            accountNameField.setText(party.getOwnerName());
             // Don't auto-fill paidBy, bank details - let user choose
         }
     }
@@ -957,6 +980,7 @@ public class SaleInvoiceDialog {
         invoice.setRcvrAddress(rcvrAddressField.getText());
         invoice.setRcvrContactNo(rcvrContactField.getText());
         invoice.setRcvrGstin(rcvrGstinField.getText());
+        invoice.setPanNo(panNoField.getText());
         invoice.setCreditDebit(creditDebitCombo.getValue());
         invoice.setAccountName(accountNameField.getText());
         invoice.setPaidBy(paidByField.getText());
@@ -973,6 +997,11 @@ public class SaleInvoiceDialog {
             invoice.setWeighBridgeCharges(weighBridgeChargesField.getText().trim().isEmpty() ? 0 : Double.parseDouble(weighBridgeChargesField.getText().trim()));
         } catch (NumberFormatException ex) {
             invoice.setWeighBridgeCharges(0);
+        }
+        try {
+            invoice.setAdvanceAmount(advanceAmountField.getText().trim().isEmpty() ? 0 : Double.parseDouble(advanceAmountField.getText().trim()));
+        } catch (NumberFormatException ex) {
+            invoice.setAdvanceAmount(0);
         }
         invoice.setLineItems(new java.util.ArrayList<>(lineItems));
         invoice.setStatus("SAVED");
