@@ -279,9 +279,10 @@ public class SaleInvoiceListView {
                 LocalDate startDate = startDatePicker.getValue();
                 LocalDate endDate = endDatePicker.getValue();
                 List<SaleInvoice> data = dao.getAll(startDate, endDate);
+                ObservableList<SaleInvoice> observableData = FXCollections.observableArrayList(data);
                 Platform.runLater(() -> {
-                    rows.setAll(data);
-                    updateStats(data);
+                    rows.setAll(observableData);
+                    updateStats(rows);
                 });
             } catch (Exception ignored) {
                 Platform.runLater(() -> {

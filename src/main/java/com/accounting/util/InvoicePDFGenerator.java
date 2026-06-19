@@ -58,7 +58,7 @@ public class InvoicePDFGenerator {
             PdfPTable titleTable = new PdfPTable(1);
             titleTable.setWidthPercentage(100);
 
-            Paragraph origDup = new Paragraph(copyLabel, FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 11));
+            Paragraph origDup = new Paragraph(copyLabel, FontFactory.getFont(FontFactory.TIMES_ROMAN, 11, Font.BOLD));
             origDup.setAlignment(Element.ALIGN_RIGHT);
             PdfPCell origDupCell = new PdfPCell(origDup);
             origDupCell.setBorder(Rectangle.NO_BORDER);
@@ -66,7 +66,7 @@ public class InvoicePDFGenerator {
             origDupCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
             titleTable.addCell(origDupCell);
 
-            Paragraph title = new Paragraph("Tax Invoice", FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 14, Color.WHITE));
+            Paragraph title = new Paragraph("Tax Invoice", FontFactory.getFont(FontFactory.TIMES_ROMAN, 14, Color.WHITE, Font.BOLD));
             title.setAlignment(Element.ALIGN_CENTER);
             PdfPCell titleCell = new PdfPCell(title);
             titleCell.setBackgroundColor(new Color(0, 51, 102));
@@ -136,14 +136,14 @@ public class InvoicePDFGenerator {
                     // Add title on each page
                     PdfPTable titleTable2 = new PdfPTable(1);
                     titleTable2.setWidthPercentage(100);
-                    Paragraph origDup2 = new Paragraph(copyLabel, FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 11));
+                    Paragraph origDup2 = new Paragraph(copyLabel, FontFactory.getFont(FontFactory.TIMES_ROMAN, 11, Font.BOLD));
                     origDup2.setAlignment(Element.ALIGN_RIGHT);
                     PdfPCell origDupCell2 = new PdfPCell(origDup2);
                     origDupCell2.setBorder(Rectangle.NO_BORDER);
                     origDupCell2.setPadding(2);
                     origDupCell2.setHorizontalAlignment(Element.ALIGN_RIGHT);
                     titleTable2.addCell(origDupCell2);
-                    Paragraph title2 = new Paragraph("Tax Invoice (Continued)", FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 14, Color.WHITE));
+                    Paragraph title2 = new Paragraph("Tax Invoice (Continued)", FontFactory.getFont(FontFactory.TIMES_ROMAN, 14, Color.WHITE, Font.BOLD));
                     title2.setAlignment(Element.ALIGN_CENTER);
                     PdfPCell titleCell2 = new PdfPCell(title2);
                     titleCell2.setBackgroundColor(new Color(0, 51, 102));
@@ -211,7 +211,7 @@ public class InvoicePDFGenerator {
             PdfPTable titleTable = new PdfPTable(1);
             titleTable.setWidthPercentage(100);
 
-            Paragraph origDup = new Paragraph(copyLabel, FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 11));
+            Paragraph origDup = new Paragraph(copyLabel, FontFactory.getFont(FontFactory.TIMES_ROMAN, 11, Font.BOLD));
             origDup.setAlignment(Element.ALIGN_RIGHT);
             PdfPCell origDupCell = new PdfPCell(origDup);
             origDupCell.setBorder(Rectangle.NO_BORDER);
@@ -219,7 +219,7 @@ public class InvoicePDFGenerator {
             origDupCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
             titleTable.addCell(origDupCell);
 
-            Paragraph title = new Paragraph("Tax Invoice", FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 14, Color.WHITE));
+            Paragraph title = new Paragraph("Tax Invoice", FontFactory.getFont(FontFactory.TIMES_ROMAN, 14, Color.WHITE, Font.BOLD));
             title.setAlignment(Element.ALIGN_CENTER);
             PdfPCell titleCell = new PdfPCell(title);
             titleCell.setBackgroundColor(new Color(0, 51, 102));
@@ -289,14 +289,14 @@ public class InvoicePDFGenerator {
                     // Add title on each page
                     PdfPTable titleTable2 = new PdfPTable(1);
                     titleTable2.setWidthPercentage(100);
-                    Paragraph origDup2 = new Paragraph(copyLabel, FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 11));
+                    Paragraph origDup2 = new Paragraph(copyLabel, FontFactory.getFont(FontFactory.TIMES_ROMAN, 11, Font.BOLD));
                     origDup2.setAlignment(Element.ALIGN_RIGHT);
                     PdfPCell origDupCell2 = new PdfPCell(origDup2);
                     origDupCell2.setBorder(Rectangle.NO_BORDER);
                     origDupCell2.setPadding(2);
                     origDupCell2.setHorizontalAlignment(Element.ALIGN_RIGHT);
                     titleTable2.addCell(origDupCell2);
-                    Paragraph title2 = new Paragraph("Tax Invoice (Continued)", FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 14, Color.WHITE));
+                    Paragraph title2 = new Paragraph("Tax Invoice (Continued)", FontFactory.getFont(FontFactory.TIMES_ROMAN, 14, Color.WHITE, Font.BOLD));
                     title2.setAlignment(Element.ALIGN_CENTER);
                     PdfPCell titleCell2 = new PdfPCell(title2);
                     titleCell2.setBackgroundColor(new Color(0, 51, 102));
@@ -419,7 +419,7 @@ public class InvoicePDFGenerator {
         headerTable.setWidths(new float[]{1, 3, 2});
 
         // Logo placeholder
-        PdfPCell logoCell = new PdfPCell(new Phrase("SE", FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 36, new Color(0, 51, 153))));
+        PdfPCell logoCell = new PdfPCell(new Phrase("SE", FontFactory.getFont(FontFactory.TIMES_ROMAN, 36, new Color(0, 51, 153), Font.BOLD)));
         logoCell.setBorder(Rectangle.NO_BORDER);
         logoCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         logoCell.setHorizontalAlignment(Element.ALIGN_CENTER);
@@ -427,8 +427,8 @@ public class InvoicePDFGenerator {
 
         // Company name
         Paragraph companyName = new Paragraph();
-        companyName.add(new Chunk("SIHAG ", FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 24, new Color(0, 51, 153))));
-        companyName.add(new Chunk("ENTERPRISE", FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 24, new Color(204, 0, 0))));
+        companyName.add(new Chunk("SIHAG ", FontFactory.getFont(FontFactory.TIMES_ROMAN, 24, new Color(0, 51, 153), Font.BOLD)));
+        companyName.add(new Chunk("ENTERPRISE", FontFactory.getFont(FontFactory.TIMES_ROMAN, 24, new Color(204, 0, 0), Font.BOLD)));
         PdfPCell nameCell = new PdfPCell(companyName);
         nameCell.setBorder(Rectangle.NO_BORDER);
         nameCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
@@ -437,9 +437,9 @@ public class InvoicePDFGenerator {
         // PAN and GSTIN
         Paragraph panGstin = new Paragraph();
         panGstin.add(new Chunk("PAN : ", FontFactory.getFont(FontFactory.TIMES_ROMAN, 10)));
-        panGstin.add(new Chunk("DYHPD9230H\n", FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 10, new Color(204, 0, 0))));
+        panGstin.add(new Chunk("DYHPD9230H\n", FontFactory.getFont(FontFactory.TIMES_ROMAN, 10, new Color(204, 0, 0), Font.BOLD)));
         panGstin.add(new Chunk("GSTIN : ", FontFactory.getFont(FontFactory.TIMES_ROMAN, 10)));
-        panGstin.add(new Chunk("24DYHPD9230H1ZJ", FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 10, new Color(204, 0, 0))));
+        panGstin.add(new Chunk("24DYHPD9230H1ZJ", FontFactory.getFont(FontFactory.TIMES_ROMAN, 10, new Color(204, 0, 0), Font.BOLD)));
         PdfPCell panGstinCell = new PdfPCell(panGstin);
         panGstinCell.setBorder(Rectangle.NO_BORDER);
         panGstinCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
@@ -473,7 +473,7 @@ public class InvoicePDFGenerator {
         billedToTable.addCell(createCell("........Billed To..........", true));
         Paragraph namePara = new Paragraph();
         namePara.add(new Chunk("Name - ", FontFactory.getFont(FontFactory.TIMES_ROMAN, 10)));
-        namePara.add(new Chunk(invoice.getPartyName() != null ? invoice.getPartyName() : "", FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 10)));
+        namePara.add(new Chunk(invoice.getPartyName() != null ? invoice.getPartyName() : "", FontFactory.getFont(FontFactory.TIMES_ROMAN, 10, Font.BOLD)));
         PdfPCell nameCell = new PdfPCell(namePara);
         nameCell.setBorder(Rectangle.BOX);
         nameCell.setPadding(3);
@@ -530,7 +530,7 @@ public class InvoicePDFGenerator {
         billedToTable.addCell(createCell("........Billed To..........", true));
         Paragraph namePara = new Paragraph();
         namePara.add(new Chunk("Name - ", FontFactory.getFont(FontFactory.TIMES_ROMAN, 10)));
-        namePara.add(new Chunk(invoice.getPartyName() != null ? invoice.getPartyName() : "", FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 10)));
+        namePara.add(new Chunk(invoice.getPartyName() != null ? invoice.getPartyName() : "", FontFactory.getFont(FontFactory.TIMES_ROMAN, 10, Font.BOLD)));
         PdfPCell nameCell = new PdfPCell(namePara);
         nameCell.setBorder(Rectangle.BOX);
         nameCell.setPadding(3);
@@ -616,7 +616,7 @@ public class InvoicePDFGenerator {
         emptyCell.setMinimumHeight(15f);
         table.addCell(emptyCell);
 
-        PdfPCell totalValueCell = new PdfPCell(new Phrase(String.format("%.2f", totalAmount), FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 7f)));
+        PdfPCell totalValueCell = new PdfPCell(new Phrase(String.format("%.2f", totalAmount), FontFactory.getFont(FontFactory.TIMES_ROMAN, 7f, Font.BOLD)));
         totalValueCell.setBorder(Rectangle.BOX);
         totalValueCell.setPadding(2f);
         totalValueCell.setMinimumHeight(15f);
@@ -655,7 +655,7 @@ public class InvoicePDFGenerator {
             totalAmount += amount;
         }
 
-        PdfPCell totalLabelCell = new PdfPCell(new Phrase("Total", FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 8f)));
+        PdfPCell totalLabelCell = new PdfPCell(new Phrase("Total", FontFactory.getFont(FontFactory.TIMES_ROMAN, 8f, Font.BOLD)));
         totalLabelCell.setColspan(5);
         totalLabelCell.setBorder(Rectangle.BOX);
         totalLabelCell.setPadding(2f);
@@ -663,7 +663,7 @@ public class InvoicePDFGenerator {
         totalLabelCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(totalLabelCell);
 
-        PdfPCell totalValueCell = new PdfPCell(new Phrase(formatAmount(totalAmount), FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 8f)));
+        PdfPCell totalValueCell = new PdfPCell(new Phrase(formatAmount(totalAmount), FontFactory.getFont(FontFactory.TIMES_ROMAN, 8f, Font.BOLD)));
         totalValueCell.setBorder(Rectangle.BOX);
         totalValueCell.setPadding(2f);
         totalValueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
@@ -679,7 +679,7 @@ public class InvoicePDFGenerator {
     }
 
     private static void addPurchaseTotalsDetails(Document document, PurchaseInvoice invoice) throws DocumentException {
-        Font headerFont = FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 10);
+        Font headerFont = FontFactory.getFont(FontFactory.TIMES_ROMAN, 10, Font.BOLD);
         Font normalFont = FontFactory.getFont(FontFactory.TIMES_ROMAN, 10);
 
         PdfPTable totalsTable = new PdfPTable(2);
@@ -744,7 +744,7 @@ public class InvoicePDFGenerator {
         double advanceAmount = parseAdvanceAmount(remarks);
         double payableAmount = Math.max(0, netAmount - advanceAmount);
 
-        Font headerFont = FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 10);
+        Font headerFont = FontFactory.getFont(FontFactory.TIMES_ROMAN, 10, Font.BOLD);
         Font normalFont = FontFactory.getFont(FontFactory.TIMES_ROMAN, 10);
 
         // 5-column row-based table: Bank | GST Label | GST Value | Others Label | Others Value
@@ -836,7 +836,7 @@ public class InvoicePDFGenerator {
         rupeesCell.setBorder(Rectangle.BOX);
         rupeesCell.setPadding(3);
         Paragraph rupeesPara = new Paragraph();
-        rupeesPara.add(new Chunk("Rupees - ", FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 10)));
+        rupeesPara.add(new Chunk("Rupees - ", FontFactory.getFont(FontFactory.TIMES_ROMAN, 10, Font.BOLD)));
         rupeesPara.add(new Chunk(convertNumberToWords(payableAmount) + " Only.", FontFactory.getFont(FontFactory.TIMES_ROMAN, 10)));
         rupeesCell.addElement(rupeesPara);
         rupeesTable.addCell(rupeesCell);
@@ -856,7 +856,7 @@ public class InvoicePDFGenerator {
                                        String gstLabel, String gstValue,
                                        String othersLabel, String othersValue) {
         Font normalFont = FontFactory.getFont(FontFactory.TIMES_ROMAN, 10);
-        Font boldFont = FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 10);
+        Font boldFont = FontFactory.getFont(FontFactory.TIMES_ROMAN, 10, Font.BOLD);
 
         PdfPCell bankCell = new PdfPCell(new Phrase(bankText, bankBold ? boldFont : normalFont));
         bankCell.setBorder(Rectangle.BOX);
@@ -953,7 +953,7 @@ public class InvoicePDFGenerator {
         termsCell.setBorder(Rectangle.BOX);
         termsCell.setPadding(0.5f);
         Paragraph termsPara = new Paragraph();
-        termsPara.add(new Chunk("Terms and Condition\n", FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 10)));
+        termsPara.add(new Chunk("Terms and Condition\n", FontFactory.getFont(FontFactory.TIMES_ROMAN, 10, Font.BOLD)));
         termsPara.add(new Chunk("1. Subject to Mundra jurisdiction\n", FontFactory.getFont(FontFactory.TIMES_ROMAN, 8)));
         termsPara.add(new Chunk("2. In case of any correction in the bill, The same may be information with in\n", FontFactory.getFont(FontFactory.TIMES_ROMAN, 8)));
         termsPara.add(new Chunk("07 Days of its Submission, after that no changes will be accepted\n", FontFactory.getFont(FontFactory.TIMES_ROMAN, 8)));
@@ -998,7 +998,7 @@ public class InvoicePDFGenerator {
 
         // Add "For SIHAG ENTERPRISE" text (without comma)
         Paragraph signPara = new Paragraph();
-        signPara.add(new Chunk("For SIHAG ENTERPRISE", FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 10)));
+        signPara.add(new Chunk("For SIHAG ENTERPRISE", FontFactory.getFont(FontFactory.TIMES_ROMAN, 10, Font.BOLD)));
         signPara.setAlignment(Element.ALIGN_CENTER);
         signPara.setSpacingAfter(5f);
         PdfPCell textCell = new PdfPCell(signPara);
@@ -1073,14 +1073,14 @@ public class InvoicePDFGenerator {
             FontFactory.getFont(FontFactory.TIMES_ROMAN, 9, new Color(0, 51, 153))));
         contact.add(new Chunk("📞", FontFactory.getFont(FontFactory.TIMES_ROMAN, 10, new Color(204, 0, 0))));
         contact.add(new Chunk(" 9033 777 516 | 94260 36076", 
-            FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 9, new Color(204, 0, 0))));
+            FontFactory.getFont(FontFactory.TIMES_ROMAN, 9, new Color(204, 0, 0), Font.BOLD)));
         contact.setAlignment(Element.ALIGN_CENTER);
         contact.setSpacingBefore(5);
         document.add(contact);
     }
 
     private static void addDetailCell(PdfPTable table, String label, String value, boolean bold) {
-        Font font = bold ? FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 10) : FontFactory.getFont(FontFactory.TIMES_ROMAN, 10);
+        Font font = bold ? FontFactory.getFont(FontFactory.TIMES_ROMAN, 10, Font.BOLD) : FontFactory.getFont(FontFactory.TIMES_ROMAN, 10);
         PdfPCell cell = new PdfPCell(new Phrase(label + " " + value, font));
         cell.setBorder(Rectangle.BOX);
         cell.setPadding(3);
@@ -1089,7 +1089,7 @@ public class InvoicePDFGenerator {
     }
 
     private static PdfPCell createCell(String text, boolean bold) {
-        Font font = bold ? FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 10) : FontFactory.getFont(FontFactory.TIMES_ROMAN, 10);
+        Font font = bold ? FontFactory.getFont(FontFactory.TIMES_ROMAN, 10, Font.BOLD) : FontFactory.getFont(FontFactory.TIMES_ROMAN, 10);
         PdfPCell cell = new PdfPCell(new Phrase(text, font));
         cell.setBorder(Rectangle.BOX);
         cell.setPadding(3);
@@ -1098,7 +1098,7 @@ public class InvoicePDFGenerator {
     }
 
     private static void addTableHeader(PdfPTable table, String text) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.TIMES_ROMAN_BOLD, 7f)));
+        PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.TIMES_ROMAN, 7f, Font.BOLD)));
         cell.setBackgroundColor(new Color(220, 220, 220));
         cell.setBorder(Rectangle.BOX);
         cell.setPadding(2f);
