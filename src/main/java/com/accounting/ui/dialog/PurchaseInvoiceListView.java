@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.prefs.Preferences;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 public class PurchaseInvoiceListView {
@@ -33,6 +34,10 @@ public class PurchaseInvoiceListView {
     private final ObservableList<PurchaseInvoice> rows = FXCollections.observableArrayList();
     private TableView<PurchaseInvoice> table;
     private TextField searchField;
+    private DatePicker startDatePicker;
+    private DatePicker endDatePicker;
+    private Label rowCountLabel;
+    private Label totalAmountLabel;
     private final Set<String> searchTerms = new HashSet<>();
     private final ObservableList<String> searchTagsList = FXCollections.observableArrayList();
     private Timer debounceTimer;
@@ -83,8 +88,29 @@ public class PurchaseInvoiceListView {
             searchField.clear();
             searchTerms.clear();
             searchTagsList.clear();
+            startDatePicker.setValue(null);
+            endDatePicker.setValue(null);
             loadRows();
         });
+
+        // Date filter
+        startDatePicker = new DatePicker();
+        startDatePicker.setPromptText("Start Date");
+        startDatePicker.setPrefWidth(120);
+
+        endDatePicker = new DatePicker();
+        endDatePicker.setPromptText("End Date");
+        endDatePicker.setPrefWidth(120);
+
+        Button filterBtn = new Button("Filter");
+        filterBtn.setOnAction(e -> loadRows());
+
+        // Row count and total amount labels
+        rowCountLabel = new Label("Total: 0");
+        rowCountLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
+
+        totalAmountLabel = new Label("Total Amount: ₹0.00");
+        totalAmountLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #dc2626;");
 
         HBox tagsContainer = new HBox(8);
         tagsContainer.setAlignment(Pos.CENTER_LEFT);
@@ -106,6 +132,12 @@ public class PurchaseInvoiceListView {
         HBox searchControls = new HBox(10, new Label("Search:"), searchField, clearBtn);
         searchControls.setAlignment(Pos.CENTER_LEFT);
 
+        HBox dateControls = new HBox(10, new Label("Date:"), startDatePicker, new Label("to"), endDatePicker, filterBtn);
+        dateControls.setAlignment(Pos.CENTER_LEFT);
+
+        HBox statsControls = new HBox(15, rowCountLabel, totalAmountLabel);
+        statsControls.setAlignment(Pos.CENTER_RIGHT);
+
         HBox searchRow = new HBox(10);
         searchRow.setAlignment(Pos.CENTER_LEFT);
         searchRow.getChildren().addAll(searchControls, tagsContainer);
@@ -114,7 +146,7 @@ public class PurchaseInvoiceListView {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        HBox topBar = new HBox(10, searchRow, spacer, addBtn, refreshBtn);
+        HBox topBar = new HBox(10, searchRow, dateControls, statsControls, spacer, addBtn, refreshBtn);
         topBar.setAlignment(Pos.CENTER_LEFT);
 
         table = new TableView<>();
@@ -131,7 +163,23 @@ public class PurchaseInvoiceListView {
         table.getColumns().add(col("Invoice Date", "invoiceDate", 120));
         table.getColumns().add(col("Party Name", "partyName", 200));
         table.getColumns().add(col("Voucher Type", "voucherType", 120));
-        table.getColumns().add(col("Total Amount", "netAmount", 120));
+        
+        // Total Amount column with custom cell factory for 2 decimal places
+        TableColumn<PurchaseInvoice, Double> totalAmountCol = new TableColumn<>("Total Amount");
+        totalAmountCol.setCellValueFactory(new PropertyValueFactory<>("netAmount"));
+        totalAmountCol.setPrefWidth(120);
+        totalAmountCol.setCellFactory(col -> new TableCell<PurchaseInvoice, Double>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("%.2f", item));
+                }
+            }
+        });
+        table.getColumns().add(totalAmountCol);
         table.getColumns().add(col("Remarks", "remarks", 200));
 
         // Created At column with custom date formatting
@@ -220,55 +268,70 @@ public class PurchaseInvoiceListView {
     private void loadRows() {
         AppExecutor.submit(() -> {
             try {
-                List<PurchaseInvoice> data = dao.getAll();
-                Platform.runLater(() -> rows.setAll(data));
+                LocalDate startDate = startDatePicker.getValue();
+                LocalDate endDate = endDatePicker.getValue();
+                List<PurchaseInvoice> data = dao.getAll(startDate, endDate);
+                Platform.runLater(() -> {
+                    rows.setAll(data);
+                    updateStats(data);
+                });
             } catch (Exception ignored) {
-                Platform.runLater(rows::clear);
+                Platform.runLater(() -> {
+                    rows.clear();
+                    updateStats(rows);
+                });
             }
         });
+    }
+
+    private void updateStats(ObservableList<PurchaseInvoice> data) {
+        rowCountLabel.setText("Total: " + data.size());
+        double total = data.stream().mapToDouble(PurchaseInvoice::getNetAmount).sum();
+        totalAmountLabel.setText("Total Amount: ₹" + String.format("%.2f", total));
     }
 
     private void searchRows() {
         String liveSearchText = searchField.getText().trim();
         
-        if (searchTerms.isEmpty() && liveSearchText.isEmpty()) {
+        if (searchTerms.isEmpty() && liveSearchText.isEmpty() && startDatePicker.getValue() == null && endDatePicker.getValue() == null) {
             loadRows();
             return;
         }
         
         AppExecutor.submit(() -> {
             try {
-                List<PurchaseInvoice> data = null;
+                LocalDate startDate = startDatePicker.getValue();
+                LocalDate endDate = endDatePicker.getValue();
+                List<PurchaseInvoice> data = dao.getAll(startDate, endDate);
                 
                 // If there are search terms (chips), use AND logic
                 if (!searchTerms.isEmpty()) {
-                    data = dao.searchAllColumns(searchTerms.iterator().next());
+                    List<PurchaseInvoice> termResults = dao.searchAllColumns(searchTerms.iterator().next());
                     for (String term : searchTerms) {
-                        List<PurchaseInvoice> termResults = dao.searchAllColumns(term);
-                        data.retainAll(termResults);
+                        List<PurchaseInvoice> results = dao.searchAllColumns(term);
+                        termResults.retainAll(results);
                     }
+                    data.retainAll(termResults);
                 }
                 
                 // If there's live search text, apply it as additional filter
                 if (!liveSearchText.isEmpty()) {
                     List<PurchaseInvoice> liveResults = dao.searchAllColumns(liveSearchText);
-                    if (data == null) {
-                        data = liveResults;
-                    } else {
-                        data.retainAll(liveResults);
-                    }
-                }
-                
-                if (data == null) {
-                    data = new java.util.ArrayList<>();
+                    data.retainAll(liveResults);
                 }
                 
                 final List<PurchaseInvoice> finalData = data;
-                System.out.println("Search - Terms: " + searchTerms + ", Live text: '" + liveSearchText + "', Results: " + finalData.size());
-                Platform.runLater(() -> rows.setAll(finalData));
+                System.out.println("Search - Terms: " + searchTerms + ", Live text: '" + liveSearchText + "', Date: " + startDate + " to " + endDate + ", Results: " + finalData.size());
+                Platform.runLater(() -> {
+                    rows.setAll(finalData);
+                    updateStats(rows);
+                });
             } catch (Exception e) {
                 e.printStackTrace();
-                Platform.runLater(rows::clear);
+                Platform.runLater(() -> {
+                    rows.clear();
+                    updateStats(rows);
+                });
             }
         });
     }

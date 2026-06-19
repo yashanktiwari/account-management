@@ -240,11 +240,32 @@ public class SaleInvoiceDAO {
     }
 
     public List<SaleInvoice> getAll() throws Exception {
+        return getAll(null, null);
+    }
+
+    public List<SaleInvoice> getAll(LocalDate startDate, LocalDate endDate) throws Exception {
         String sql = "SELECT * FROM sale_invoices ORDER BY id DESC";
+        if (startDate != null && endDate != null) {
+            sql += " WHERE invoice_date BETWEEN ? AND ?";
+        } else if (startDate != null) {
+            sql += " WHERE invoice_date >= ?";
+        } else if (endDate != null) {
+            sql += " WHERE invoice_date <= ?";
+        }
+        
         List<SaleInvoice> invoices = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            int paramIndex = 1;
+            if (startDate != null) {
+                pstmt.setDate(paramIndex++, java.sql.Date.valueOf(startDate));
+            }
+            if (endDate != null) {
+                pstmt.setDate(paramIndex++, java.sql.Date.valueOf(endDate));
+            }
+            
+            ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 SaleInvoice inv = mapInvoice(rs);
                 inv.setLineItems(getLineItems(inv.getId()));

@@ -6,6 +6,7 @@ import com.accounting.model.PurchaseInvoice;
 import org.slf4j.Logger;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -141,11 +142,32 @@ public class PurchaseInvoiceDAO {
     }
 
     public List<PurchaseInvoice> getAll() throws Exception {
+        return getAll(null, null);
+    }
+
+    public List<PurchaseInvoice> getAll(LocalDate startDate, LocalDate endDate) throws Exception {
         String sql = "SELECT * FROM purchase_invoices ORDER BY id DESC";
+        if (startDate != null && endDate != null) {
+            sql += " WHERE invoice_date BETWEEN ? AND ?";
+        } else if (startDate != null) {
+            sql += " WHERE invoice_date >= ?";
+        } else if (endDate != null) {
+            sql += " WHERE invoice_date <= ?";
+        }
+        
         List<PurchaseInvoice> invoices = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            int paramIndex = 1;
+            if (startDate != null) {
+                pstmt.setDate(paramIndex++, java.sql.Date.valueOf(startDate));
+            }
+            if (endDate != null) {
+                pstmt.setDate(paramIndex++, java.sql.Date.valueOf(endDate));
+            }
+            
+            ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 PurchaseInvoice inv = mapInvoice(rs);
                 inv.setLineItems(getLineItems(inv.getId()));
