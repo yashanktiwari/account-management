@@ -32,6 +32,8 @@ public class PurchaseInvoice {
     private String supplierGstNo;
     private double loadingUnloadingCharges;
     private double weighBridgeCharges;
+    private double advanceAmount;
+    private String panNo;
     private String status; // DRAFT, SAVED, PRINTED
     private LocalDate createdAt;
     private LocalDate updatedAt;
@@ -116,6 +118,12 @@ public class PurchaseInvoice {
 
     public double getWeighBridgeCharges() { return weighBridgeCharges; }
     public void setWeighBridgeCharges(double weighBridgeCharges) { this.weighBridgeCharges = weighBridgeCharges; }
+
+    public double getAdvanceAmount() { return advanceAmount; }
+    public void setAdvanceAmount(double advanceAmount) { this.advanceAmount = advanceAmount; }
+
+    public String getPanNo() { return panNo; }
+    public void setPanNo(String panNo) { this.panNo = panNo; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
