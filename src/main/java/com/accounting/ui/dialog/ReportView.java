@@ -37,6 +37,8 @@ public class ReportView {
     private DatePicker toDate;
     private TextField searchField;
     private Label resultCountLabel;
+    private Label totalReceivableLabel;
+    private Label totalPayableLabel;
 
     public Parent createContent() {
         VBox root = new VBox(16);
@@ -135,7 +137,18 @@ public class ReportView {
 
         resultCountLabel = new Label("No results");
         resultCountLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
+        
+        totalReceivableLabel = new Label("Total Receivable: ₹0.00");
+        totalReceivableLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #16a34a;");
+        
+        totalPayableLabel = new Label("Total Payable: ₹0.00");
+        totalPayableLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #dc2626;");
+        
+        HBox totalsBox = new HBox(30, totalReceivableLabel, totalPayableLabel);
+        totalsBox.setAlignment(Pos.CENTER_LEFT);
+        
         grid.add(resultCountLabel, 0, 3, 4, 1);
+        grid.add(totalsBox, 0, 4, 4, 1);
         
         section.getChildren().addAll(sectionTitle, grid);
         return section;
@@ -327,6 +340,24 @@ public class ReportView {
         } else {
             resultCountLabel.setText("Showing " + filtered + " of " + total + " transaction(s)");
         }
+        
+        // Calculate totals
+        double totalReceivable = 0.0;
+        double totalPayable = 0.0;
+        
+        for (ReportDAO.ReportRow row : filteredTransactions) {
+            if (row.getAmount() != null) {
+                String type = row.getTransactionType();
+                if ("PURCHASE_RECEIPT".equals(type)) {
+                    totalReceivable += row.getAmount();
+                } else if ("SALE_RECEIPT".equals(type)) {
+                    totalPayable += row.getAmount();
+                }
+            }
+        }
+        
+        totalReceivableLabel.setText(String.format("Total Receivable: ₹%.2f", totalReceivable));
+        totalPayableLabel.setText(String.format("Total Payable: ₹%.2f", totalPayable));
     }
 
     private void exportReport() {
