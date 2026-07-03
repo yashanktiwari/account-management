@@ -49,7 +49,6 @@ public class VehicleMasterDialog {
         stage = new Stage();
         stage.setTitle("Vehicle Master");
         stage.initModality(Modality.NONE);
-        if (owner != null) stage.initOwner(owner);
         if (onClose != null) {
             stage.setOnHidden(e -> onClose.run());
         }

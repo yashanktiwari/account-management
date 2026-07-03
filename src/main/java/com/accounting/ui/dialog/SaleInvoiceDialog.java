@@ -91,7 +91,6 @@ public class SaleInvoiceDialog {
         stage = new Stage();
         stage.setTitle("Sale Invoice");
         stage.initModality(Modality.NONE);
-        if (owner != null) stage.initOwner(owner);
         if (onClose != null) {
             stage.setOnHidden(e -> onClose.run());
         }

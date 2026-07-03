@@ -20,10 +20,13 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.Popup;
+import javafx.stage.Window;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class LedgerView {
 
@@ -33,7 +36,11 @@ public class LedgerView {
     private final LedgerDAO ledgerDAO = new LedgerDAO();
     private final PartyDAO partyDAO = new PartyDAO();
 
-    private ComboBox<Party> partyComboBox;
+    private TextField partyField;
+    private Popup partyPopup;
+    private ListView<String> partyListView;
+    private final ObservableList<Party> allParties = FXCollections.observableArrayList();
+    private Party selectedParty;
     private DatePicker fromDate;
     private DatePicker toDate;
     private TableView<LedgerDAO.LedgerEntry> ledgerTable;
@@ -76,28 +83,13 @@ public class LedgerView {
         section.setPadding(new Insets(12));
         section.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
 
-        // Party selector
+        // Party selector with autocomplete
         Label partyLabel = new Label("Party:");
         partyLabel.setStyle("-fx-font-weight: bold;");
-        partyComboBox = new ComboBox<>();
-        partyComboBox.setPromptText("Select a party...");
-        partyComboBox.setPrefWidth(350);
-
-        // Custom cell factory to show party name
-        partyComboBox.setCellFactory(lv -> new ListCell<>() {
-            @Override
-            protected void updateItem(Party item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? "" : item.getName());
-            }
-        });
-        partyComboBox.setButtonCell(new ListCell<>() {
-            @Override
-            protected void updateItem(Party item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? "" : item.getName());
-            }
-        });
+        partyField = new TextField();
+        partyField.setPromptText("Type to search party...");
+        partyField.setPrefWidth(350);
+        setupPartyAutocomplete();
 
         // Date pickers
         Label fromLabel = new Label("From:");
@@ -124,7 +116,7 @@ public class LedgerView {
         grid.setHgap(12);
         grid.setVgap(8);
         grid.add(partyLabel, 0, 0);
-        grid.add(partyComboBox, 1, 0, 3, 1);
+        grid.add(partyField, 1, 0, 3, 1);
         grid.add(fromLabel, 0, 1);
         grid.add(fromDate, 1, 1);
         grid.add(toLabel, 2, 1);
@@ -277,13 +269,121 @@ public class LedgerView {
         };
     }
 
+    private void setupPartyAutocomplete() {
+        partyPopup = new Popup();
+        partyPopup.setAutoHide(true);
+
+        partyListView = new ListView<>();
+        partyListView.setFocusTraversable(false);
+        partyListView.setStyle("-fx-background-color: white; -fx-border-color: #ccc; -fx-border-width: 1;");
+
+        partyPopup.getContent().add(partyListView);
+
+        partyField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal == null || newVal.isBlank()) {
+                partyPopup.hide();
+                return;
+            }
+
+            List<String> filtered = allParties.stream()
+                    .filter(p -> p.getName() != null && p.getName().toLowerCase().contains(newVal.toLowerCase()))
+                    .map(Party::getName)
+                    .sorted(String::compareToIgnoreCase)
+                    .collect(Collectors.toList());
+
+            if (filtered.isEmpty()) {
+                partyPopup.hide();
+                return;
+            }
+
+            partyListView.getItems().clear();
+            partyListView.getItems().addAll(filtered);
+
+            int visibleRows = Math.min(filtered.size(), 10);
+            partyListView.setPrefHeight(visibleRows * 26 + 2);
+            partyListView.setPrefWidth(partyField.getWidth());
+
+            if (!partyPopup.isShowing()) {
+                javafx.geometry.Point2D p = partyField.localToScreen(0, partyField.getHeight());
+                if (p != null) {
+                    Window owner = partyField.getScene().getWindow();
+                    if (owner != null) {
+                        partyPopup.show(owner, p.getX(), p.getY());
+                    }
+                }
+            }
+        });
+
+        partyListView.setOnMouseClicked(e -> {
+            String sel = partyListView.getSelectionModel().getSelectedItem();
+            if (sel != null) {
+                partyField.setText(sel);
+                selectPartyByName(sel);
+                partyPopup.hide();
+            }
+        });
+
+        partyField.setOnKeyPressed(event -> {
+            switch (event.getCode()) {
+                case DOWN -> {
+                    if (partyPopup.isShowing() && !partyListView.getItems().isEmpty()) {
+                        partyListView.requestFocus();
+                        if (partyListView.getSelectionModel().isEmpty()) {
+                            partyListView.getSelectionModel().selectFirst();
+                        }
+                    }
+                }
+                case ESCAPE -> partyPopup.hide();
+                case TAB -> {
+                    if (partyPopup.isShowing() && !partyListView.getItems().isEmpty()) {
+                        String first = partyListView.getItems().get(0);
+                        partyField.setText(first);
+                        selectPartyByName(first);
+                        partyPopup.hide();
+                    }
+                }
+                case ENTER -> {
+                    if (partyPopup.isShowing() && !partyListView.getItems().isEmpty()) {
+                        String sel = partyListView.getSelectionModel().getSelectedItem();
+                        if (sel == null) sel = partyListView.getItems().get(0);
+                        partyField.setText(sel);
+                        selectPartyByName(sel);
+                        partyPopup.hide();
+                    }
+                }
+            }
+        });
+
+        partyListView.setOnKeyPressed(event -> {
+            switch (event.getCode()) {
+                case ENTER -> {
+                    String sel = partyListView.getSelectionModel().getSelectedItem();
+                    if (sel != null) {
+                        partyField.setText(sel);
+                        selectPartyByName(sel);
+                        partyField.requestFocus();
+                    }
+                    partyPopup.hide();
+                }
+                case ESCAPE -> {
+                    partyPopup.hide();
+                    partyField.requestFocus();
+                }
+            }
+        });
+    }
+
+    private void selectPartyByName(String name) {
+        selectedParty = allParties.stream()
+                .filter(p -> p.getName() != null && p.getName().equalsIgnoreCase(name))
+                .findFirst().orElse(null);
+    }
+
     private void loadParties() {
         AppExecutor.submit(() -> {
             try {
                 List<Party> parties = partyDAO.getAll();
-                Platform.runLater(() -> {
-                    partyComboBox.setItems(FXCollections.observableArrayList(parties));
-                });
+                Platform.runLater(() -> allParties.setAll(parties));
             } catch (Exception e) {
                 Platform.runLater(() ->
                     AlertUtil.showError("Error", "Failed to load parties: " + e.getMessage()));
@@ -292,7 +392,9 @@ public class LedgerView {
     }
 
     private void generateLedger() {
-        Party selectedParty = partyComboBox.getSelectionModel().getSelectedItem();
+        if (selectedParty == null) {
+            selectPartyByName(partyField.getText().trim());
+        }
         if (selectedParty == null) {
             AlertUtil.showWarning("Ledger", "Please select a party.");
             return;

@@ -101,7 +101,6 @@ public class LorryReceiptDialog {
         stage = new Stage();
         stage.setTitle("Lorry Receipt (LR)");
         stage.initModality(Modality.NONE);
-        if (owner != null) stage.initOwner(owner);
         if (onClose != null) {
             stage.setOnHidden(e -> onClose.run());
         }

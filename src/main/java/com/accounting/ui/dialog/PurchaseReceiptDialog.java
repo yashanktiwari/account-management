@@ -67,7 +67,6 @@ public class PurchaseReceiptDialog {
         stage = new Stage();
         stage.setTitle("Purchase Receipt");
         stage.initModality(Modality.NONE);
-        if (owner != null) stage.initOwner(owner);
         if (onClose != null) {
             stage.setOnHidden(e -> onClose.run());
         }

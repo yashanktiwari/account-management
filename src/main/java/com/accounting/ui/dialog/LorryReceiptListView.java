@@ -133,8 +133,8 @@ public class LorryReceiptListView {
         table.getColumns().add(col("To", "toLocation", 110));
         table.getColumns().add(col("Consignor", "consignorName", 150));
         table.getColumns().add(col("Consignee", "consigneeName", 150));
-        table.getColumns().add(col("Freight", "freight", 90));
-        table.getColumns().add(col("Total", "total", 90));
+        table.getColumns().add(amountCol("Freight", "freight", 90));
+        table.getColumns().add(amountCol("Total", "total", 90));
         table.getColumns().add(col("Remarks", "remarks", 200));
 
         TableColumn<LorryReceipt, Object> createdAtCol = new TableColumn<>("Created At");
@@ -309,6 +309,27 @@ public class LorryReceiptListView {
         TableColumn<LorryReceipt, Object> column = new TableColumn<>(title);
         column.setCellValueFactory(new PropertyValueFactory<>(property));
         column.setPrefWidth(width);
+        return column;
+    }
+
+    private TableColumn<LorryReceipt, Object> amountCol(String title, String property, double width) {
+        TableColumn<LorryReceipt, Object> column = new TableColumn<>(title);
+        column.setCellValueFactory(new PropertyValueFactory<>(property));
+        column.setPrefWidth(width);
+        column.setCellFactory(c -> new TableCell<LorryReceipt, Object>() {
+            @Override
+            protected void updateItem(Object item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else if (item instanceof Number) {
+                    setText(String.format("%.2f", ((Number) item).doubleValue()));
+                } else {
+                    setText(item.toString());
+                }
+                setAlignment(Pos.CENTER_RIGHT);
+            }
+        });
         return column;
     }
 

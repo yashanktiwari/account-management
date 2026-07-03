@@ -177,6 +177,7 @@ public class PurchaseInvoiceListView {
                 } else {
                     setText(String.format("%.2f", item));
                 }
+                setAlignment(Pos.CENTER_RIGHT);
             }
         });
         table.getColumns().add(totalAmountCol);

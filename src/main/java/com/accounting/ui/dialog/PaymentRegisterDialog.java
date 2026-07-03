@@ -48,7 +48,6 @@ public class PaymentRegisterDialog {
         stage = new Stage();
         stage.setTitle("Payment Register");
         stage.initModality(Modality.NONE);
-        if (owner != null) stage.initOwner(owner);
 
         ScreenUtil.DialogSize size = ScreenUtil.getResponsiveSize(900, 600);
         

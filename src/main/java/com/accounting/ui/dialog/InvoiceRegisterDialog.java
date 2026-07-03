@@ -53,7 +53,6 @@ public class InvoiceRegisterDialog {
         stage = new Stage();
         stage.setTitle("Invoice Register");
         stage.initModality(Modality.NONE);
-        if (owner != null) stage.initOwner(owner);
 
         ScreenUtil.DialogSize size = ScreenUtil.getResponsiveSize(1050, 600);
         

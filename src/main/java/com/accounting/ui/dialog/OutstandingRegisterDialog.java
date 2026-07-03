@@ -52,7 +52,6 @@ public class OutstandingRegisterDialog {
         stage = new Stage();
         stage.setTitle("Outstanding Register");
         stage.initModality(Modality.NONE);
-        if (owner != null) stage.initOwner(owner);
 
         ScreenUtil.DialogSize size = ScreenUtil.getResponsiveSize(1000, 650);
         

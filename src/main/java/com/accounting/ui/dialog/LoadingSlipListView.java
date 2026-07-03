@@ -134,9 +134,9 @@ public class LoadingSlipListView {
         table.getColumns().add(col("Vehicle No", "vehicleNo", 120));
         table.getColumns().add(col("Station", "station", 120));
         table.getColumns().add(col("To", "toLocation", 120));
-        table.getColumns().add(col("Freight", "freightAmount", 120));
-        table.getColumns().add(col("Advance", "advanceAmount", 120));
-        table.getColumns().add(col("Balance", "balanceAmount", 120));
+        table.getColumns().add(amountCol("Freight", "freightAmount", 120));
+        table.getColumns().add(amountCol("Advance", "advanceAmount", 120));
+        table.getColumns().add(amountCol("Balance", "balanceAmount", 120));
         table.getColumns().add(col("Remarks", "remarks", 200));
 
         // Created At column with custom date formatting
@@ -324,6 +324,27 @@ public class LoadingSlipListView {
         TableColumn<LoadingSlip, Object> column = new TableColumn<>(title);
         column.setCellValueFactory(new PropertyValueFactory<>(property));
         column.setPrefWidth(width);
+        return column;
+    }
+
+    private TableColumn<LoadingSlip, Object> amountCol(String title, String property, double width) {
+        TableColumn<LoadingSlip, Object> column = new TableColumn<>(title);
+        column.setCellValueFactory(new PropertyValueFactory<>(property));
+        column.setPrefWidth(width);
+        column.setCellFactory(c -> new TableCell<LoadingSlip, Object>() {
+            @Override
+            protected void updateItem(Object item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else if (item instanceof Number) {
+                    setText(String.format("%.2f", ((Number) item).doubleValue()));
+                } else {
+                    setText(item.toString());
+                }
+                setAlignment(Pos.CENTER_RIGHT);
+            }
+        });
         return column;
     }
 

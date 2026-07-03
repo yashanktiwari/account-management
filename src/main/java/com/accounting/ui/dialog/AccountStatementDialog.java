@@ -54,7 +54,6 @@ public class AccountStatementDialog {
         stage = new Stage();
         stage.setTitle("A/c Statement");
         stage.initModality(Modality.NONE);
-        if (owner != null) stage.initOwner(owner);
 
         ScreenUtil.DialogSize size = ScreenUtil.getResponsiveSize(1050, 650);
         

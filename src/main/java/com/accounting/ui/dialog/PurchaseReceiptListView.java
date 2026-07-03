@@ -34,7 +34,7 @@ public class PurchaseReceiptListView {
         VBox root = new VBox(10);
         root.setPadding(new Insets(16));
 
-        Label heading = new Label("Purchase Receipt List");
+        Label heading = new Label("Money Received Transactions List");
         heading.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
 
         Button addBtn = new Button("New Purchase Receipt");
@@ -79,7 +79,24 @@ public class PurchaseReceiptListView {
         table.getColumns().add(col("Receipt No", "receiptNo", 120));
         table.getColumns().add(col("Receipt Date", "receiptDate", 120));
         table.getColumns().add(col("Party", "partyName", 200));
-        table.getColumns().add(col("Amount", "amount", 120));
+        TableColumn<PurchaseReceipt, Object> amountCol = new TableColumn<>("Amount");
+        amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
+        amountCol.setPrefWidth(120);
+        amountCol.setCellFactory(c -> new TableCell<PurchaseReceipt, Object>() {
+            @Override
+            protected void updateItem(Object item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else if (item instanceof Number) {
+                    setText(String.format("%.2f", ((Number) item).doubleValue()));
+                } else {
+                    setText(item.toString());
+                }
+                setAlignment(Pos.CENTER_RIGHT);
+            }
+        });
+        table.getColumns().add(amountCol);
         table.getColumns().add(col("Payment Mode", "paymentMode", 120));
         table.getColumns().add(col("Remarks", "remarks", 200));
 

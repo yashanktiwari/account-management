@@ -62,7 +62,6 @@ public class LoadingSlipDialog {
         stage = new Stage();
         stage.setTitle("Loading Slip");
         stage.initModality(Modality.NONE);
-        if (owner != null) stage.initOwner(owner);
         if (onClose != null) {
             stage.setOnHidden(e -> onClose.run());
         }

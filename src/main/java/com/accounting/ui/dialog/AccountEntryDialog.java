@@ -73,7 +73,6 @@ public class AccountEntryDialog {
         stage = new Stage();
         stage.setTitle(isCustomer() ? "Customer" : "Supplier");
         stage.initModality(Modality.NONE);
-        if (owner != null) stage.initOwner(owner);
         if (onClose != null) {
             stage.setOnHidden(e -> onClose.run());
         }

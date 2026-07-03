@@ -108,7 +108,6 @@ public class PartyMasterDialog {
         stage.setTitle(partyToEdit == null ? "Add Party" : "Edit Party");
         stage.initModality(Modality.NONE);
         stage.setResizable(true);
-        if (owner != null) stage.initOwner(owner);
         if (onClose != null) {
             stage.setOnHidden(e -> onClose.run());
         }
