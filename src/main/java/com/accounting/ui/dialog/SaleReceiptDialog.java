@@ -92,9 +92,25 @@ public class SaleReceiptDialog {
         root.setPadding(new Insets(10));
 
         GridPane form = createForm();
-
-        root.getChildren().addAll(form);
         VBox.setVgrow(form, Priority.ALWAYS);
+
+        Button saveBtn = new Button("Save");
+        saveBtn.setStyle("-fx-padding: 6 16 6 16; -fx-font-size: 12px; -fx-background-color: #16a34a; -fx-text-fill: white; -fx-background-radius: 4;");
+        saveBtn.setOnAction(e -> saveReceipt());
+
+        Button printBtn = new Button("Print");
+        printBtn.setStyle("-fx-padding: 6 16 6 16; -fx-font-size: 12px; -fx-background-color: #0891b2; -fx-text-fill: white; -fx-background-radius: 4;");
+        printBtn.setOnAction(e -> printReceipt());
+
+        Button closeBtn = new Button("Close");
+        closeBtn.setStyle("-fx-padding: 6 16 6 16; -fx-font-size: 12px; -fx-background-radius: 4;");
+        closeBtn.setOnAction(e -> stage.close());
+
+        HBox btnRow = new HBox(8, saveBtn, printBtn, closeBtn);
+        btnRow.setAlignment(Pos.CENTER_RIGHT);
+        btnRow.setPadding(new Insets(8, 0, 0, 0));
+
+        root.getChildren().addAll(form, btnRow);
 
         return root;
     }
@@ -196,25 +212,6 @@ public class SaleReceiptDialog {
             chequeDatePicker.setDisable(!isCheque);
             bankNameField.setDisable(!isCheque);
         });
-
-        Button saveBtn = new Button("Save");
-        saveBtn.setStyle("-fx-padding: 6 16 6 16; -fx-font-size: 12px; -fx-background-color: #16a34a; -fx-text-fill: white; -fx-background-radius: 4;");
-        saveBtn.setOnAction(e -> saveReceipt());
-
-        Button printBtn = new Button("Print");
-        printBtn.setStyle("-fx-padding: 6 16 6 16; -fx-font-size: 12px; -fx-background-color: #0891b2; -fx-text-fill: white; -fx-background-radius: 4;");
-        printBtn.setOnAction(e -> printReceipt());
-
-        Button closeBtn = new Button("Close");
-        closeBtn.setStyle("-fx-padding: 6 16 6 16; -fx-font-size: 12px; -fx-background-radius: 4;");
-        closeBtn.setOnAction(e -> stage.close());
-
-        Region btnSpacer = new Region();
-        HBox.setHgrow(btnSpacer, Priority.ALWAYS);
-        HBox btnRow = new HBox(8, btnSpacer, saveBtn, printBtn, closeBtn);
-        btnRow.setAlignment(Pos.CENTER_RIGHT);
-        GridPane.setHgrow(btnRow, Priority.ALWAYS);
-        grid.add(btnRow, 0, 12, 2, 1);
 
         loadParties();
         return grid;
