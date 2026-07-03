@@ -37,6 +37,9 @@ public class ReportView {
     private DatePicker toDate;
     private TextField searchField;
     private Label resultCountLabel;
+    private Label receivableAmountLabel;
+    private Label payableAmountLabel;
+    private Label netPositionAmountLabel;
 
     public Parent createContent() {
         VBox root = new VBox(16);
@@ -46,16 +49,105 @@ public class ReportView {
         Label title = new Label("All Transactions Report");
         title.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
 
+        HBox summaryCards = buildSummaryCards();
+
         VBox filterSection = buildFilterSection();
 
         VBox tableSection = buildTableSection();
 
-        root.getChildren().addAll(title, filterSection, tableSection);
+        root.getChildren().addAll(title, summaryCards, filterSection, tableSection);
 
         // Auto-generate report on load
         generateReport();
 
         return root;
+    }
+
+    private HBox buildSummaryCards() {
+        HBox cardsContainer = new HBox(16);
+        cardsContainer.setAlignment(Pos.CENTER);
+        
+        // Total Receivable Card
+        VBox receivableCard = createSummaryCard(
+            "Total Receivable",
+            "₹0.00",
+            "#16a34a",
+            "#dcfce7",
+            e -> showPartyWiseReceivable()
+        );
+        receivableAmountLabel = (Label) ((VBox) receivableCard.getChildren().get(0)).getChildren().get(1);
+        
+        // Total Payable Card
+        VBox payableCard = createSummaryCard(
+            "Total Payable",
+            "₹0.00",
+            "#dc2626",
+            "#fee2e2",
+            e -> showPartyWisePayable()
+        );
+        payableAmountLabel = (Label) ((VBox) payableCard.getChildren().get(0)).getChildren().get(1);
+        
+        // Net Position Card
+        VBox netPositionCard = createSummaryCard(
+            "Net Position",
+            "₹0.00",
+            "#2563eb",
+            "#dbeafe",
+            null
+        );
+        netPositionAmountLabel = (Label) ((VBox) netPositionCard.getChildren().get(0)).getChildren().get(1);
+        
+        HBox.setHgrow(receivableCard, Priority.ALWAYS);
+        HBox.setHgrow(payableCard, Priority.ALWAYS);
+        HBox.setHgrow(netPositionCard, Priority.ALWAYS);
+        
+        cardsContainer.getChildren().addAll(receivableCard, payableCard, netPositionCard);
+        return cardsContainer;
+    }
+    
+    private VBox createSummaryCard(String title, String amount, String color, String bgColor, javafx.event.EventHandler<javafx.scene.input.MouseEvent> clickHandler) {
+        VBox card = new VBox(8);
+        card.setPadding(new Insets(20));
+        card.setStyle(
+            "-fx-background-color: white; " +
+            "-fx-background-radius: 12; " +
+            "-fx-border-color: #e2e8f0; " +
+            "-fx-border-radius: 12; " +
+            "-fx-border-width: 1; " +
+            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);"
+        );
+        card.setAlignment(Pos.CENTER);
+        card.setMaxWidth(Double.MAX_VALUE);
+        
+        if (clickHandler != null) {
+            card.setOnMouseClicked(clickHandler);
+            card.setStyle(card.getStyle() + "-fx-cursor: hand;");
+            card.setOnMouseEntered(e -> card.setStyle(
+                card.getStyle().replace("dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2)", 
+                                       "dropshadow(gaussian, rgba(0,0,0,0.2), 15, 0, 0, 3)")
+            ));
+            card.setOnMouseExited(e -> card.setStyle(
+                card.getStyle().replace("dropshadow(gaussian, rgba(0,0,0,0.2), 15, 0, 0, 3)", 
+                                       "dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2)")
+            ));
+        }
+        
+        VBox content = new VBox(4);
+        content.setAlignment(Pos.CENTER);
+        
+        Label titleLabel = new Label(title);
+        titleLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #64748b; -fx-font-weight: 600;");
+        
+        Label amountLabel = new Label(amount);
+        amountLabel.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: " + color + ";");
+        
+        Label iconLabel = new Label("●");
+        iconLabel.setStyle("-fx-font-size: 40px; -fx-text-fill: " + color + "; -fx-opacity: 0.3;");
+        
+        content.getChildren().addAll(titleLabel, amountLabel);
+        card.getChildren().addAll(content);
+        
+        return card;
     }
 
     private VBox buildFilterSection() {
@@ -102,54 +194,36 @@ public class ReportView {
         grid.add(searchField, 1, 1, 3, 1);
         
         Button generateBtn = new Button("Generate Report");
-        generateBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
-        generateBtn.setMinWidth(150);
-        generateBtn.setMaxWidth(Double.MAX_VALUE);
+        generateBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 16 8 16; -fx-background-radius: 6;");
         generateBtn.setOnAction(e -> generateReport());
         
-        Button exportExcelBtn = new Button("Export to Excel");
-        exportExcelBtn.setStyle("-fx-background-color: #16a34a; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
-        exportExcelBtn.setMinWidth(150);
-        exportExcelBtn.setMaxWidth(Double.MAX_VALUE);
-        exportExcelBtn.setOnAction(e -> exportToExcel());
-
-        Button printPdfBtn = new Button("Print to PDF");
-        printPdfBtn.setStyle("-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
-        printPdfBtn.setMinWidth(130);
-        printPdfBtn.setMaxWidth(Double.MAX_VALUE);
-        printPdfBtn.setOnAction(e -> printToPdf());
-
-        Button clearBtn = new Button("Clear Search");
-        clearBtn.setStyle("-fx-background-color: #94a3b8; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
-        clearBtn.setMinWidth(130);
-        clearBtn.setMaxWidth(Double.MAX_VALUE);
-        clearBtn.setOnAction(e -> {
+        MenuButton actionsMenu = new MenuButton("Actions");
+        actionsMenu.setStyle("-fx-background-color: #64748b; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 16 8 16; -fx-background-radius: 6;");
+        
+        MenuItem exportExcelItem = new MenuItem("Export to Excel");
+        exportExcelItem.setOnAction(e -> exportToExcel());
+        
+        MenuItem printPdfItem = new MenuItem("Print to PDF");
+        printPdfItem.setOnAction(e -> printToPdf());
+        
+        MenuItem clearSearchItem = new MenuItem("Clear Search");
+        clearSearchItem.setOnAction(e -> {
             searchField.clear();
             applyFilters();
         });
-
-        HBox buttonBox = new HBox(10, generateBtn, exportExcelBtn, printPdfBtn, clearBtn);
-        buttonBox.setAlignment(Pos.CENTER_LEFT);
-
-        grid.add(buttonBox, 0, 2, 4, 1);
+        
+        actionsMenu.getItems().addAll(exportExcelItem, printPdfItem, new SeparatorMenuItem(), clearSearchItem);
 
         resultCountLabel = new Label("No results");
         resultCountLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
-        grid.add(resultCountLabel, 0, 3, 4, 1);
         
-        Button totalReceivableBtn = new Button("View Total Receivable");
-        totalReceivableBtn.setStyle("-fx-background-color: #16a34a; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
-        totalReceivableBtn.setMinWidth(180);
-        totalReceivableBtn.setOnAction(e -> showPartyWiseReceivable());
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
         
-        Button totalPayableBtn = new Button("View Total Payable");
-        totalPayableBtn.setStyle("-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
-        totalPayableBtn.setMinWidth(180);
-        totalPayableBtn.setOnAction(e -> showPartyWisePayable());
-        
-        HBox totalsBox = new HBox(10, totalReceivableBtn, totalPayableBtn);
-        totalsBox.setAlignment(Pos.CENTER_LEFT);
-        grid.add(totalsBox, 0, 4, 4, 1);
+        HBox buttonBox = new HBox(10, generateBtn, actionsMenu, spacer, resultCountLabel);
+        buttonBox.setAlignment(Pos.CENTER_LEFT);
+
+        grid.add(buttonBox, 0, 2, 4, 1);
         
         section.getChildren().addAll(sectionTitle, grid);
         return section;
@@ -340,6 +414,45 @@ public class ReportView {
             resultCountLabel.setText("Showing " + total + " transaction(s)");
         } else {
             resultCountLabel.setText("Showing " + filtered + " of " + total + " transaction(s)");
+        }
+        
+        // Calculate totals for summary cards
+        double totalReceivable = 0.0;
+        double totalPayable = 0.0;
+        
+        for (ReportDAO.ReportRow row : allTransactions) {
+            if (row.getAmount() != null) {
+                String type = row.getTransactionType();
+                if ("PURCHASE_INVOICE".equals(type)) {
+                    totalReceivable += row.getAmount();
+                } else if ("PURCHASE_RECEIPT".equals(type)) {
+                    totalReceivable -= row.getAmount();
+                } else if ("SALE_INVOICE".equals(type)) {
+                    totalPayable += row.getAmount();
+                } else if ("SALE_RECEIPT".equals(type)) {
+                    totalPayable -= row.getAmount();
+                }
+            }
+        }
+        
+        // Ensure non-negative values
+        totalReceivable = Math.max(0, totalReceivable);
+        totalPayable = Math.max(0, totalPayable);
+        
+        double netPosition = totalReceivable - totalPayable;
+        
+        // Update summary card labels
+        if (receivableAmountLabel != null) {
+            receivableAmountLabel.setText(String.format("₹%.2f", totalReceivable));
+        }
+        if (payableAmountLabel != null) {
+            payableAmountLabel.setText(String.format("₹%.2f", totalPayable));
+        }
+        if (netPositionAmountLabel != null) {
+            netPositionAmountLabel.setText(String.format("₹%.2f", netPosition));
+            // Change color based on positive/negative
+            String color = netPosition >= 0 ? "#16a34a" : "#dc2626";
+            netPositionAmountLabel.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: " + color + ";");
         }
     }
 
