@@ -37,8 +37,6 @@ public class ReportView {
     private DatePicker toDate;
     private TextField searchField;
     private Label resultCountLabel;
-    private Label totalReceivableLabel;
-    private Label totalPayableLabel;
 
     public Parent createContent() {
         VBox root = new VBox(16);
@@ -137,17 +135,20 @@ public class ReportView {
 
         resultCountLabel = new Label("No results");
         resultCountLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
-        
-        totalReceivableLabel = new Label("Total Receivable: ₹0.00");
-        totalReceivableLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #16a34a;");
-        
-        totalPayableLabel = new Label("Total Payable: ₹0.00");
-        totalPayableLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #dc2626;");
-        
-        HBox totalsBox = new HBox(30, totalReceivableLabel, totalPayableLabel);
-        totalsBox.setAlignment(Pos.CENTER_LEFT);
-        
         grid.add(resultCountLabel, 0, 3, 4, 1);
+        
+        Button totalReceivableBtn = new Button("View Total Receivable");
+        totalReceivableBtn.setStyle("-fx-background-color: #16a34a; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
+        totalReceivableBtn.setMinWidth(180);
+        totalReceivableBtn.setOnAction(e -> showPartyWiseReceivable());
+        
+        Button totalPayableBtn = new Button("View Total Payable");
+        totalPayableBtn.setStyle("-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20 8 20; -fx-background-radius: 6;");
+        totalPayableBtn.setMinWidth(180);
+        totalPayableBtn.setOnAction(e -> showPartyWisePayable());
+        
+        HBox totalsBox = new HBox(10, totalReceivableBtn, totalPayableBtn);
+        totalsBox.setAlignment(Pos.CENTER_LEFT);
         grid.add(totalsBox, 0, 4, 4, 1);
         
         section.getChildren().addAll(sectionTitle, grid);
@@ -340,24 +341,6 @@ public class ReportView {
         } else {
             resultCountLabel.setText("Showing " + filtered + " of " + total + " transaction(s)");
         }
-        
-        // Calculate totals
-        double totalReceivable = 0.0;
-        double totalPayable = 0.0;
-        
-        for (ReportDAO.ReportRow row : filteredTransactions) {
-            if (row.getAmount() != null) {
-                String type = row.getTransactionType();
-                if ("PURCHASE_RECEIPT".equals(type)) {
-                    totalReceivable += row.getAmount();
-                } else if ("SALE_RECEIPT".equals(type)) {
-                    totalPayable += row.getAmount();
-                }
-            }
-        }
-        
-        totalReceivableLabel.setText(String.format("Total Receivable: ₹%.2f", totalReceivable));
-        totalPayableLabel.setText(String.format("Total Payable: ₹%.2f", totalPayable));
     }
 
     private void exportReport() {
@@ -528,6 +511,157 @@ public class ReportView {
                     Platform.runLater(() -> AlertUtil.showError("Print Error", "Failed to generate PDF: " + e.getMessage()));
                 }
             });
+        }
+    }
+
+    private void showPartyWiseReceivable() {
+        AppExecutor.submit(() -> {
+            try {
+                // Calculate party-wise receivables: Purchase Invoices - Purchase Receipts
+                Map<String, Double> partyReceivables = new HashMap<>();
+                
+                for (ReportDAO.ReportRow row : allTransactions) {
+                    if (row.getParty() != null && row.getAmount() != null) {
+                        String party = row.getParty();
+                        double amount = row.getAmount();
+                        String type = row.getTransactionType();
+                        
+                        if ("PURCHASE_INVOICE".equals(type)) {
+                            // Money we need to receive (our sales to them)
+                            partyReceivables.put(party, partyReceivables.getOrDefault(party, 0.0) + amount);
+                        } else if ("PURCHASE_RECEIPT".equals(type)) {
+                            // Money we already received
+                            partyReceivables.put(party, partyReceivables.getOrDefault(party, 0.0) - amount);
+                        }
+                    }
+                }
+                
+                // Filter out parties with zero or negative balance
+                Map<String, Double> filteredReceivables = new HashMap<>();
+                for (Map.Entry<String, Double> entry : partyReceivables.entrySet()) {
+                    if (entry.getValue() > 0.01) { // Only positive balances
+                        filteredReceivables.put(entry.getKey(), entry.getValue());
+                    }
+                }
+                
+                Platform.runLater(() -> showPartyWiseDialog("Total Receivable - Party Wise", filteredReceivables));
+            } catch (Exception e) {
+                Platform.runLater(() -> AlertUtil.showError("Error", "Failed to calculate receivables: " + e.getMessage()));
+            }
+        });
+    }
+
+    private void showPartyWisePayable() {
+        AppExecutor.submit(() -> {
+            try {
+                // Calculate party-wise payables: Sale Invoices - Sale Receipts
+                Map<String, Double> partyPayables = new HashMap<>();
+                
+                for (ReportDAO.ReportRow row : allTransactions) {
+                    if (row.getParty() != null && row.getAmount() != null) {
+                        String party = row.getParty();
+                        double amount = row.getAmount();
+                        String type = row.getTransactionType();
+                        
+                        if ("SALE_INVOICE".equals(type)) {
+                            // Money we need to pay (our purchases from them)
+                            partyPayables.put(party, partyPayables.getOrDefault(party, 0.0) + amount);
+                        } else if ("SALE_RECEIPT".equals(type)) {
+                            // Money we already paid
+                            partyPayables.put(party, partyPayables.getOrDefault(party, 0.0) - amount);
+                        }
+                    }
+                }
+                
+                // Filter out parties with zero or negative balance
+                Map<String, Double> filteredPayables = new HashMap<>();
+                for (Map.Entry<String, Double> entry : partyPayables.entrySet()) {
+                    if (entry.getValue() > 0.01) { // Only positive balances
+                        filteredPayables.put(entry.getKey(), entry.getValue());
+                    }
+                }
+                
+                Platform.runLater(() -> showPartyWiseDialog("Total Payable - Party Wise", filteredPayables));
+            } catch (Exception e) {
+                Platform.runLater(() -> AlertUtil.showError("Error", "Failed to calculate payables: " + e.getMessage()));
+            }
+        });
+    }
+
+    private void showPartyWiseDialog(String title, Map<String, Double> partyAmounts) {
+        if (partyAmounts.isEmpty()) {
+            AlertUtil.showInfo(title, "No outstanding amounts found.");
+            return;
+        }
+
+        Alert dialog = new Alert(Alert.AlertType.INFORMATION);
+        dialog.setTitle(title);
+        dialog.setHeaderText(title);
+        
+        // Create table for party-wise amounts
+        TableView<PartyAmount> table = new TableView<>();
+        table.setPrefWidth(500);
+        table.setPrefHeight(400);
+        
+        TableColumn<PartyAmount, String> partyCol = new TableColumn<>("Party Name");
+        partyCol.setCellValueFactory(new PropertyValueFactory<>("partyName"));
+        partyCol.setPrefWidth(300);
+        
+        TableColumn<PartyAmount, Double> amountCol = new TableColumn<>("Amount");
+        amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
+        amountCol.setPrefWidth(180);
+        amountCol.setCellFactory(col -> new TableCell<PartyAmount, Double>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("₹%.2f", item));
+                    setAlignment(Pos.CENTER_RIGHT);
+                }
+            }
+        });
+        
+        table.getColumns().addAll(partyCol, amountCol);
+        
+        // Sort by amount descending
+        ObservableList<PartyAmount> data = FXCollections.observableArrayList();
+        partyAmounts.entrySet().stream()
+            .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
+            .forEach(entry -> data.add(new PartyAmount(entry.getKey(), entry.getValue())));
+        
+        table.setItems(data);
+        
+        // Calculate total
+        double total = partyAmounts.values().stream().mapToDouble(Double::doubleValue).sum();
+        Label totalLabel = new Label(String.format("Total: ₹%.2f", total));
+        totalLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10;");
+        
+        VBox content = new VBox(10, table, totalLabel);
+        content.setPadding(new Insets(10));
+        
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().setPrefWidth(550);
+        dialog.showAndWait();
+    }
+
+    // Helper class for party-wise amounts
+    public static class PartyAmount {
+        private final String partyName;
+        private final Double amount;
+
+        public PartyAmount(String partyName, Double amount) {
+            this.partyName = partyName;
+            this.amount = amount;
+        }
+
+        public String getPartyName() {
+            return partyName;
+        }
+
+        public Double getAmount() {
+            return amount;
         }
     }
 }
