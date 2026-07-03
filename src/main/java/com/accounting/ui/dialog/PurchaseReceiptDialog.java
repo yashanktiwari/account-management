@@ -88,23 +88,12 @@ public class PurchaseReceiptDialog {
     }
 
     public Parent createContent() {
-        VBox root = new VBox(12);
-        root.setPadding(new Insets(16));
-
-        Label title = new Label("Money Received Receipt");
-        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
-
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        HBox buttonsBox = createButtonsBox();
-
-        HBox titleRow = new HBox(10, title, spacer, buttonsBox);
-        titleRow.setAlignment(Pos.CENTER_LEFT);
+        VBox root = new VBox(8);
+        root.setPadding(new Insets(10));
 
         GridPane form = createForm();
 
-        root.getChildren().addAll(titleRow, form);
+        root.getChildren().addAll(form);
         VBox.setVgrow(form, Priority.ALWAYS);
 
         return root;
@@ -112,9 +101,9 @@ public class PurchaseReceiptDialog {
 
     private GridPane createForm() {
         GridPane grid = new GridPane();
-        grid.setHgap(16);
-        grid.setVgap(12);
-        grid.setPadding(new Insets(12));
+        grid.setHgap(12);
+        grid.setVgap(8);
+        grid.setPadding(new Insets(10));
         grid.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
 
         receiptNoField = new TextField();
@@ -202,28 +191,24 @@ public class PurchaseReceiptDialog {
             bankNameField.setDisable(!isCheque);
         });
 
-        loadParties();
-        return grid;
-    }
-
-    private HBox createButtonsBox() {
         Button saveBtn = new Button("Save");
-        saveBtn.setStyle("-fx-padding: 8 20 8 20; -fx-font-size: 12px; -fx-background-color: #16a34a; -fx-text-fill: white;");
+        saveBtn.setStyle("-fx-padding: 6 16 6 16; -fx-font-size: 12px; -fx-background-color: #16a34a; -fx-text-fill: white; -fx-background-radius: 4;");
         saveBtn.setOnAction(e -> saveReceipt());
 
         Button printBtn = new Button("Print");
-        printBtn.setStyle("-fx-padding: 8 20 8 20; -fx-font-size: 12px; -fx-background-color: #0891b2; -fx-text-fill: white;");
+        printBtn.setStyle("-fx-padding: 6 16 6 16; -fx-font-size: 12px; -fx-background-color: #0891b2; -fx-text-fill: white; -fx-background-radius: 4;");
         printBtn.setOnAction(e -> printReceipt());
 
         Button closeBtn = new Button("Close");
-        closeBtn.setStyle("-fx-padding: 8 20 8 20; -fx-font-size: 12px;");
+        closeBtn.setStyle("-fx-padding: 6 16 6 16; -fx-font-size: 12px; -fx-background-radius: 4;");
         closeBtn.setOnAction(e -> stage.close());
 
-        HBox box = new HBox(10, saveBtn, printBtn, closeBtn);
-        box.setAlignment(Pos.CENTER_RIGHT);
-        box.setPadding(new Insets(12));
-        box.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
-        return box;
+        HBox btnRow = new HBox(8, saveBtn, printBtn, closeBtn);
+        btnRow.setAlignment(Pos.CENTER_RIGHT);
+        grid.add(btnRow, 0, 12, 2, 1);
+
+        loadParties();
+        return grid;
     }
 
     private void setupPartyAutocomplete() {
