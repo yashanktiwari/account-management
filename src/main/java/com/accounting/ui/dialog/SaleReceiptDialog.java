@@ -105,6 +105,12 @@ public class SaleReceiptDialog {
         grid.setVgap(8);
         grid.setPadding(new Insets(10));
         grid.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
+        
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setMinWidth(100);
+        ColumnConstraints col2 = new ColumnConstraints();
+        col2.setHgrow(Priority.ALWAYS);
+        grid.getColumnConstraints().addAll(col1, col2);
 
         receiptNoField = new TextField();
         receiptNoField.setPromptText("Auto-generated");
@@ -116,7 +122,7 @@ public class SaleReceiptDialog {
         grid.add(receiptDatePicker, 1, 1);
 
         partyField = new TextField();
-        partyField.setPrefWidth(250);
+        partyField.setMaxWidth(Double.MAX_VALUE);
         partyField.setPromptText("Type to search customer...");
         setupPartyAutocomplete();
         grid.add(label("Customer"), 0, 2);
@@ -203,8 +209,11 @@ public class SaleReceiptDialog {
         closeBtn.setStyle("-fx-padding: 6 16 6 16; -fx-font-size: 12px; -fx-background-radius: 4;");
         closeBtn.setOnAction(e -> stage.close());
 
-        HBox btnRow = new HBox(8, saveBtn, printBtn, closeBtn);
+        Region btnSpacer = new Region();
+        HBox.setHgrow(btnSpacer, Priority.ALWAYS);
+        HBox btnRow = new HBox(8, btnSpacer, saveBtn, printBtn, closeBtn);
         btnRow.setAlignment(Pos.CENTER_RIGHT);
+        GridPane.setHgrow(btnRow, Priority.ALWAYS);
         grid.add(btnRow, 0, 12, 2, 1);
 
         loadParties();
