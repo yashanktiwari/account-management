@@ -129,25 +129,29 @@ public class PurchaseInvoiceListView {
             }
         });
 
-        HBox searchControls = new HBox(10, new Label("Search:"), searchField, clearBtn);
+        HBox searchControls = new HBox(8, new Label("Search:"), searchField, clearBtn);
         searchControls.setAlignment(Pos.CENTER_LEFT);
 
-        HBox dateControls = new HBox(10, new Label("Date:"), startDatePicker, new Label("to"), endDatePicker, filterBtn);
+        Region spacer1 = new Region();
+        HBox.setHgrow(spacer1, Priority.ALWAYS);
+
+        HBox row1 = new HBox(8, searchControls, tagsContainer, spacer1, addBtn, refreshBtn);
+        row1.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(tagsContainer, Priority.ALWAYS);
+
+        HBox dateControls = new HBox(8, new Label("Date:"), startDatePicker, new Label("to"), endDatePicker, filterBtn);
         dateControls.setAlignment(Pos.CENTER_LEFT);
+
+        Region spacer2 = new Region();
+        HBox.setHgrow(spacer2, Priority.ALWAYS);
 
         HBox statsControls = new HBox(15, rowCountLabel, totalAmountLabel);
         statsControls.setAlignment(Pos.CENTER_RIGHT);
 
-        HBox searchRow = new HBox(10);
-        searchRow.setAlignment(Pos.CENTER_LEFT);
-        searchRow.getChildren().addAll(searchControls, tagsContainer);
-        HBox.setHgrow(tagsContainer, Priority.ALWAYS);
+        HBox row2 = new HBox(8, dateControls, spacer2, statsControls);
+        row2.setAlignment(Pos.CENTER_LEFT);
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        HBox topBar = new HBox(10, searchRow, dateControls, statsControls, spacer, addBtn, refreshBtn);
-        topBar.setAlignment(Pos.CENTER_LEFT);
+        VBox topBar = new VBox(6, row1, row2);
 
         table = new TableView<>();
         table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);

@@ -91,14 +91,20 @@ public class SaleReceiptDialog {
         VBox root = new VBox(12);
         root.setPadding(new Insets(16));
 
-        Label title = new Label("SALE RECEIPT");
+        Label title = new Label("Money Paid Receipt");
         title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
 
-        GridPane form = createForm();
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
         HBox buttonsBox = createButtonsBox();
 
-        root.getChildren().addAll(title, form, buttonsBox);
+        HBox titleRow = new HBox(10, title, spacer, buttonsBox);
+        titleRow.setAlignment(Pos.CENTER_LEFT);
+
+        GridPane form = createForm();
+
+        root.getChildren().addAll(titleRow, form);
         VBox.setVgrow(form, Priority.ALWAYS);
 
         return root;

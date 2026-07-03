@@ -783,7 +783,7 @@ public class InvoicePDFGenerator {
             "Loading & Unloading Charges", String.format("%.2f", loadingUnloadingCharges));
 
         // Row 2
-        addBankGSTRow(table, "Bank Detail - AXIS BANK,", false,
+        addBankGSTRow(table, "Bank Detail - AXIS BANK", false,
                 "SGST 9%", String.format("%.2f", sgstAmount),
             "Weigh Bridge Charges", String.format("%.2f", weighBridgeCharges));
 

@@ -19,22 +19,29 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.time.format.DateTimeFormatter;
 
 public class SaleReceiptListView {
 
     private final SaleReceiptDAO dao = new SaleReceiptDAO();
     private final ObservableList<SaleReceipt> rows = FXCollections.observableArrayList();
+    private List<SaleReceipt> allData = new java.util.ArrayList<>();
     private TableView<SaleReceipt> table;
     private TextField searchField;
+    private DatePicker startDatePicker;
+    private DatePicker endDatePicker;
+    private Label rowCountLabel;
+    private Label totalAmountLabel;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
     public Parent createContent() {
         VBox root = new VBox(10);
         root.setPadding(new Insets(16));
 
-        Label heading = new Label("Money Paid Transactions List");
+        Label heading = new Label("Money Paid Receipts");
         heading.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
 
         Button addBtn = new Button("New Sale Receipt");
@@ -54,17 +61,50 @@ public class SaleReceiptListView {
         Button clearBtn = new Button("Clear");
         clearBtn.setOnAction(e -> {
             searchField.clear();
+            startDatePicker.setValue(null);
+            endDatePicker.setValue(null);
             loadRows();
         });
 
-        HBox searchControls = new HBox(10, new Label("Search:"), searchField, clearBtn);
+        startDatePicker = new DatePicker();
+        startDatePicker.setPromptText("Start Date");
+        startDatePicker.setPrefWidth(120);
+
+        endDatePicker = new DatePicker();
+        endDatePicker.setPromptText("End Date");
+        endDatePicker.setPrefWidth(120);
+
+        Button filterBtn = new Button("Filter");
+        filterBtn.setOnAction(e -> applyFilters());
+
+        rowCountLabel = new Label("Total: 0");
+        rowCountLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
+
+        totalAmountLabel = new Label("Total Amount: \u20B90.00");
+        totalAmountLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #dc2626;");
+
+        HBox searchControls = new HBox(8, new Label("Search:"), searchField, clearBtn);
         searchControls.setAlignment(Pos.CENTER_LEFT);
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        Region spacer1 = new Region();
+        HBox.setHgrow(spacer1, Priority.ALWAYS);
 
-        HBox topBar = new HBox(10, searchControls, spacer, addBtn, refreshBtn);
-        topBar.setAlignment(Pos.CENTER_LEFT);
+        HBox row1 = new HBox(8, searchControls, spacer1, addBtn, refreshBtn);
+        row1.setAlignment(Pos.CENTER_LEFT);
+
+        HBox dateControls = new HBox(8, new Label("Date:"), startDatePicker, new Label("to"), endDatePicker, filterBtn);
+        dateControls.setAlignment(Pos.CENTER_LEFT);
+
+        Region spacer2 = new Region();
+        HBox.setHgrow(spacer2, Priority.ALWAYS);
+
+        HBox statsControls = new HBox(15, rowCountLabel, totalAmountLabel);
+        statsControls.setAlignment(Pos.CENTER_RIGHT);
+
+        HBox row2 = new HBox(8, dateControls, spacer2, statsControls);
+        row2.setAlignment(Pos.CENTER_LEFT);
+
+        VBox topBar = new VBox(6, row1, row2);
 
         table = new TableView<>();
         table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
@@ -159,28 +199,63 @@ public class SaleReceiptListView {
         AppExecutor.submit(() -> {
             try {
                 List<SaleReceipt> data = dao.getAll();
-                Platform.runLater(() -> rows.setAll(data));
+                Platform.runLater(() -> {
+                    allData = data;
+                    applyFilters();
+                });
             } catch (Exception ignored) {
-                Platform.runLater(rows::clear);
+                Platform.runLater(() -> {
+                    allData = new java.util.ArrayList<>();
+                    rows.clear();
+                    updateStats();
+                });
             }
         });
     }
 
-    private void searchRows() {
-        String searchText = searchField.getText().trim();
-        if (searchText.isEmpty()) {
-            loadRows();
-            return;
+    private void applyFilters() {
+        List<SaleReceipt> filtered = new java.util.ArrayList<>(allData);
+
+        LocalDate start = startDatePicker.getValue();
+        LocalDate end = endDatePicker.getValue();
+        if (start != null && end != null) {
+            filtered = filtered.stream()
+                .filter(r -> r.getReceiptDate() != null
+                    && !r.getReceiptDate().isBefore(start)
+                    && !r.getReceiptDate().isAfter(end))
+                .collect(Collectors.toList());
+        } else if (start != null) {
+            filtered = filtered.stream()
+                .filter(r -> r.getReceiptDate() != null && !r.getReceiptDate().isBefore(start))
+                .collect(Collectors.toList());
+        } else if (end != null) {
+            filtered = filtered.stream()
+                .filter(r -> r.getReceiptDate() != null && !r.getReceiptDate().isAfter(end))
+                .collect(Collectors.toList());
         }
-        AppExecutor.submit(() -> {
-            try {
-                List<SaleReceipt> data = dao.searchAllColumns(searchText);
-                Platform.runLater(() -> rows.setAll(data));
-            } catch (Exception e) {
-                e.printStackTrace();
-                Platform.runLater(rows::clear);
-            }
-        });
+
+        String searchText = searchField.getText().trim().toLowerCase();
+        if (!searchText.isEmpty()) {
+            filtered = filtered.stream()
+                .filter(r -> (r.getReceiptNo() != null && r.getReceiptNo().toLowerCase().contains(searchText))
+                    || (r.getPartyName() != null && r.getPartyName().toLowerCase().contains(searchText))
+                    || (r.getRemarks() != null && r.getRemarks().toLowerCase().contains(searchText))
+                    || (r.getPaymentMode() != null && r.getPaymentMode().toLowerCase().contains(searchText)))
+                .collect(Collectors.toList());
+        }
+
+        rows.setAll(filtered);
+        updateStats();
+    }
+
+    private void searchRows() {
+        applyFilters();
+    }
+
+    private void updateStats() {
+        rowCountLabel.setText("Total: " + rows.size());
+        double total = rows.stream().mapToDouble(SaleReceipt::getAmount).sum();
+        totalAmountLabel.setText("Total Amount: \u20B9" + String.format("%.2f", total));
     }
 
     private <T, U> TableColumn<T, U> col(String title, String property, double width) {

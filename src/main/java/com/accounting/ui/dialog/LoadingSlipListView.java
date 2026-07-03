@@ -20,20 +20,27 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.prefs.Preferences;
+import java.util.stream.Collectors;
 import java.time.format.DateTimeFormatter;
 
 public class LoadingSlipListView {
 
     private final LoadingSlipDAO dao = new LoadingSlipDAO();
     private final ObservableList<LoadingSlip> rows = FXCollections.observableArrayList();
+    private List<LoadingSlip> allData = new java.util.ArrayList<>();
     private TableView<LoadingSlip> table;
     private TextField searchField;
+    private DatePicker startDatePicker;
+    private DatePicker endDatePicker;
+    private Label rowCountLabel;
+    private Label totalAmountLabel;
     private final Set<String> searchTerms = new HashSet<>();
     private final ObservableList<String> searchTagsList = FXCollections.observableArrayList();
     private Timer debounceTimer;
@@ -84,8 +91,27 @@ public class LoadingSlipListView {
             searchField.clear();
             searchTerms.clear();
             searchTagsList.clear();
+            startDatePicker.setValue(null);
+            endDatePicker.setValue(null);
             loadRows();
         });
+
+        startDatePicker = new DatePicker();
+        startDatePicker.setPromptText("Start Date");
+        startDatePicker.setPrefWidth(120);
+
+        endDatePicker = new DatePicker();
+        endDatePicker.setPromptText("End Date");
+        endDatePicker.setPrefWidth(120);
+
+        Button filterBtn = new Button("Filter");
+        filterBtn.setOnAction(e -> applyFilters());
+
+        rowCountLabel = new Label("Total: 0");
+        rowCountLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
+
+        totalAmountLabel = new Label("Total Amount: \u20B90.00");
+        totalAmountLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #dc2626;");
 
         HBox tagsContainer = new HBox(8);
         tagsContainer.setAlignment(Pos.CENTER_LEFT);
@@ -107,16 +133,26 @@ public class LoadingSlipListView {
         HBox searchControls = new HBox(10, new Label("Search:"), searchField, clearBtn);
         searchControls.setAlignment(Pos.CENTER_LEFT);
 
-        HBox searchRow = new HBox(10);
-        searchRow.setAlignment(Pos.CENTER_LEFT);
-        searchRow.getChildren().addAll(searchControls, tagsContainer);
+        Region spacer1 = new Region();
+        HBox.setHgrow(spacer1, Priority.ALWAYS);
+
+        HBox row1 = new HBox(8, searchControls, tagsContainer, spacer1, addBtn, refreshBtn);
+        row1.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(tagsContainer, Priority.ALWAYS);
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        HBox dateControls = new HBox(8, new Label("Date:"), startDatePicker, new Label("to"), endDatePicker, filterBtn);
+        dateControls.setAlignment(Pos.CENTER_LEFT);
 
-        HBox topBar = new HBox(10, searchRow, spacer, addBtn, refreshBtn);
-        topBar.setAlignment(Pos.CENTER_LEFT);
+        Region spacer2 = new Region();
+        HBox.setHgrow(spacer2, Priority.ALWAYS);
+
+        HBox statsControls = new HBox(15, rowCountLabel, totalAmountLabel);
+        statsControls.setAlignment(Pos.CENTER_RIGHT);
+
+        HBox row2 = new HBox(8, dateControls, spacer2, statsControls);
+        row2.setAlignment(Pos.CENTER_LEFT);
+
+        VBox topBar = new VBox(6, row1, row2);
 
         table = new TableView<>();
         table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
@@ -234,53 +270,68 @@ public class LoadingSlipListView {
         AppExecutor.submit(() -> {
             try {
                 List<LoadingSlip> data = dao.getAll();
-                Platform.runLater(() -> rows.setAll(data));
+                Platform.runLater(() -> {
+                    allData = data;
+                    applyFilters();
+                });
             } catch (Exception ignored) {
-                Platform.runLater(rows::clear);
+                Platform.runLater(() -> {
+                    allData = new java.util.ArrayList<>();
+                    rows.clear();
+                    updateStats();
+                });
             }
         });
     }
 
-    private void searchRows() {
-        String liveSearchText = searchField.getText().trim();
+    private void applyFilters() {
+        List<LoadingSlip> filtered = new java.util.ArrayList<>(allData);
 
-        if (searchTerms.isEmpty() && liveSearchText.isEmpty()) {
-            loadRows();
-            return;
+        LocalDate start = startDatePicker.getValue();
+        LocalDate end = endDatePicker.getValue();
+        if (start != null && end != null) {
+            filtered = filtered.stream()
+                .filter(r -> r.getSlipDate() != null && !r.getSlipDate().isBefore(start) && !r.getSlipDate().isAfter(end))
+                .collect(Collectors.toList());
+        } else if (start != null) {
+            filtered = filtered.stream()
+                .filter(r -> r.getSlipDate() != null && !r.getSlipDate().isBefore(start))
+                .collect(Collectors.toList());
+        } else if (end != null) {
+            filtered = filtered.stream()
+                .filter(r -> r.getSlipDate() != null && !r.getSlipDate().isAfter(end))
+                .collect(Collectors.toList());
         }
 
-        AppExecutor.submit(() -> {
-            try {
-                List<LoadingSlip> data = null;
-
-                if (!searchTerms.isEmpty()) {
-                    data = dao.searchAllColumns(searchTerms.iterator().next());
-                    for (String term : searchTerms) {
-                        List<LoadingSlip> termResults = dao.searchAllColumns(term);
-                        data.retainAll(termResults);
-                    }
+        String liveSearchText = searchField.getText().trim().toLowerCase();
+        if (!searchTerms.isEmpty() || !liveSearchText.isEmpty()) {
+            filtered = filtered.stream().filter(slip -> {
+                String combined = ((slip.getSlipNo() != null ? slip.getSlipNo() : "") + " "
+                    + (slip.getPartyName() != null ? slip.getPartyName() : "") + " "
+                    + (slip.getVehicleNo() != null ? slip.getVehicleNo() : "") + " "
+                    + (slip.getStation() != null ? slip.getStation() : "") + " "
+                    + (slip.getToLocation() != null ? slip.getToLocation() : "") + " "
+                    + (slip.getRemarks() != null ? slip.getRemarks() : "")).toLowerCase();
+                for (String term : searchTerms) {
+                    if (!combined.contains(term.toLowerCase())) return false;
                 }
+                if (!liveSearchText.isEmpty() && !combined.contains(liveSearchText)) return false;
+                return true;
+            }).collect(Collectors.toList());
+        }
 
-                if (!liveSearchText.isEmpty()) {
-                    List<LoadingSlip> liveResults = dao.searchAllColumns(liveSearchText);
-                    if (data == null) {
-                        data = liveResults;
-                    } else {
-                        data.retainAll(liveResults);
-                    }
-                }
+        rows.setAll(filtered);
+        updateStats();
+    }
 
-                if (data == null) {
-                    data = new java.util.ArrayList<>();
-                }
+    private void searchRows() {
+        applyFilters();
+    }
 
-                final List<LoadingSlip> finalData = data;
-                Platform.runLater(() -> rows.setAll(finalData));
-            } catch (Exception e) {
-                e.printStackTrace();
-                Platform.runLater(rows::clear);
-            }
-        });
+    private void updateStats() {
+        rowCountLabel.setText("Total: " + rows.size());
+        double total = rows.stream().mapToDouble(LoadingSlip::getFreightAmount).sum();
+        totalAmountLabel.setText("Total Amount: \u20B9" + String.format("%.2f", total));
     }
 
     private void addSearchTerm() {

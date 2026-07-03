@@ -20,20 +20,27 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.prefs.Preferences;
+import java.util.stream.Collectors;
 import java.time.format.DateTimeFormatter;
 
 public class LorryReceiptListView {
 
     private final LorryReceiptDAO dao = new LorryReceiptDAO();
     private final ObservableList<LorryReceipt> rows = FXCollections.observableArrayList();
+    private List<LorryReceipt> allData = new java.util.ArrayList<>();
     private TableView<LorryReceipt> table;
     private TextField searchField;
+    private DatePicker startDatePicker;
+    private DatePicker endDatePicker;
+    private Label rowCountLabel;
+    private Label totalAmountLabel;
     private final Set<String> searchTerms = new HashSet<>();
     private final ObservableList<String> searchTagsList = FXCollections.observableArrayList();
     private Timer debounceTimer;
@@ -82,8 +89,27 @@ public class LorryReceiptListView {
             searchField.clear();
             searchTerms.clear();
             searchTagsList.clear();
+            startDatePicker.setValue(null);
+            endDatePicker.setValue(null);
             loadRows();
         });
+
+        startDatePicker = new DatePicker();
+        startDatePicker.setPromptText("Start Date");
+        startDatePicker.setPrefWidth(120);
+
+        endDatePicker = new DatePicker();
+        endDatePicker.setPromptText("End Date");
+        endDatePicker.setPrefWidth(120);
+
+        Button filterBtn = new Button("Filter");
+        filterBtn.setOnAction(e -> applyFilters());
+
+        rowCountLabel = new Label("Total: 0");
+        rowCountLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
+
+        totalAmountLabel = new Label("Total Amount: \u20B90.00");
+        totalAmountLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #dc2626;");
 
         HBox tagsContainer = new HBox(8);
         tagsContainer.setAlignment(Pos.CENTER_LEFT);
@@ -102,19 +128,29 @@ public class LorryReceiptListView {
             }
         });
 
-        HBox searchControls = new HBox(10, new Label("Search:"), searchField, clearBtn);
+        HBox searchControls = new HBox(8, new Label("Search:"), searchField, clearBtn);
         searchControls.setAlignment(Pos.CENTER_LEFT);
 
-        HBox searchRow = new HBox(10);
-        searchRow.setAlignment(Pos.CENTER_LEFT);
-        searchRow.getChildren().addAll(searchControls, tagsContainer);
+        Region spacer1 = new Region();
+        HBox.setHgrow(spacer1, Priority.ALWAYS);
+
+        HBox row1 = new HBox(8, searchControls, tagsContainer, spacer1, addBtn, refreshBtn);
+        row1.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(tagsContainer, Priority.ALWAYS);
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        HBox dateControls = new HBox(8, new Label("Date:"), startDatePicker, new Label("to"), endDatePicker, filterBtn);
+        dateControls.setAlignment(Pos.CENTER_LEFT);
 
-        HBox topBar = new HBox(10, searchRow, spacer, addBtn, refreshBtn);
-        topBar.setAlignment(Pos.CENTER_LEFT);
+        Region spacer2 = new Region();
+        HBox.setHgrow(spacer2, Priority.ALWAYS);
+
+        HBox statsControls = new HBox(15, rowCountLabel, totalAmountLabel);
+        statsControls.setAlignment(Pos.CENTER_RIGHT);
+
+        HBox row2 = new HBox(8, dateControls, spacer2, statsControls);
+        row2.setAlignment(Pos.CENTER_LEFT);
+
+        VBox topBar = new VBox(6, row1, row2);
 
         table = new TableView<>();
         table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
@@ -224,42 +260,69 @@ public class LorryReceiptListView {
         AppExecutor.submit(() -> {
             try {
                 List<LorryReceipt> data = dao.getAll();
-                Platform.runLater(() -> rows.setAll(data));
+                Platform.runLater(() -> {
+                    allData = data;
+                    applyFilters();
+                });
             } catch (Exception ignored) {
-                Platform.runLater(rows::clear);
+                Platform.runLater(() -> {
+                    allData = new java.util.ArrayList<>();
+                    rows.clear();
+                    updateStats();
+                });
             }
         });
     }
 
-    private void searchRows() {
-        String liveSearchText = searchField.getText().trim();
-        if (searchTerms.isEmpty() && liveSearchText.isEmpty()) {
-            loadRows();
-            return;
+    private void applyFilters() {
+        List<LorryReceipt> filtered = new java.util.ArrayList<>(allData);
+
+        LocalDate start = startDatePicker.getValue();
+        LocalDate end = endDatePicker.getValue();
+        if (start != null && end != null) {
+            filtered = filtered.stream()
+                .filter(r -> r.getLrDate() != null && !r.getLrDate().isBefore(start) && !r.getLrDate().isAfter(end))
+                .collect(Collectors.toList());
+        } else if (start != null) {
+            filtered = filtered.stream()
+                .filter(r -> r.getLrDate() != null && !r.getLrDate().isBefore(start))
+                .collect(Collectors.toList());
+        } else if (end != null) {
+            filtered = filtered.stream()
+                .filter(r -> r.getLrDate() != null && !r.getLrDate().isAfter(end))
+                .collect(Collectors.toList());
         }
-        AppExecutor.submit(() -> {
-            try {
-                List<LorryReceipt> data = null;
-                if (!searchTerms.isEmpty()) {
-                    data = dao.searchAllColumns(searchTerms.iterator().next());
-                    for (String term : searchTerms) {
-                        List<LorryReceipt> termResults = dao.searchAllColumns(term);
-                        data.retainAll(termResults);
-                    }
+
+        String liveSearchText = searchField.getText().trim().toLowerCase();
+        if (!searchTerms.isEmpty() || !liveSearchText.isEmpty()) {
+            filtered = filtered.stream().filter(lr -> {
+                String combined = ((lr.getLrNo() != null ? lr.getLrNo() : "") + " "
+                    + (lr.getVehicleNo() != null ? lr.getVehicleNo() : "") + " "
+                    + (lr.getFromLocation() != null ? lr.getFromLocation() : "") + " "
+                    + (lr.getToLocation() != null ? lr.getToLocation() : "") + " "
+                    + (lr.getConsignorName() != null ? lr.getConsignorName() : "") + " "
+                    + (lr.getConsigneeName() != null ? lr.getConsigneeName() : "") + " "
+                    + (lr.getRemarks() != null ? lr.getRemarks() : "")).toLowerCase();
+                for (String term : searchTerms) {
+                    if (!combined.contains(term.toLowerCase())) return false;
                 }
-                if (!liveSearchText.isEmpty()) {
-                    List<LorryReceipt> liveResults = dao.searchAllColumns(liveSearchText);
-                    if (data == null) data = liveResults;
-                    else data.retainAll(liveResults);
-                }
-                if (data == null) data = new java.util.ArrayList<>();
-                final List<LorryReceipt> finalData = data;
-                Platform.runLater(() -> rows.setAll(finalData));
-            } catch (Exception e) {
-                e.printStackTrace();
-                Platform.runLater(rows::clear);
-            }
-        });
+                if (!liveSearchText.isEmpty() && !combined.contains(liveSearchText)) return false;
+                return true;
+            }).collect(Collectors.toList());
+        }
+
+        rows.setAll(filtered);
+        updateStats();
+    }
+
+    private void searchRows() {
+        applyFilters();
+    }
+
+    private void updateStats() {
+        rowCountLabel.setText("Total: " + rows.size());
+        double total = rows.stream().mapToDouble(LorryReceipt::getTotal).sum();
+        totalAmountLabel.setText("Total Amount: \u20B9" + String.format("%.2f", total));
     }
 
     private void addSearchTerm() {
