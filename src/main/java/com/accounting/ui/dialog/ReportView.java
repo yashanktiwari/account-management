@@ -151,81 +151,62 @@ public class ReportView {
     }
 
     private VBox buildFilterSection() {
-        VBox section = new VBox(12);
-        section.setPadding(new Insets(16));
+        VBox section = new VBox(10);
+        section.setPadding(new Insets(12, 16, 12, 16));
         section.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");
 
-        Label sectionTitle = new Label("Filters & Search");
-        sectionTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;");
-
-        GridPane grid = new GridPane();
-        grid.setHgap(12);
-        grid.setVgap(12);
-        grid.setPadding(new Insets(8));
-
-
-        Label fromDateLabel = new Label("From Date:");
-        fromDateLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #64748b;");
+        // Row 1: Date pickers + Search + Generate button all in one line
         fromDate = new DatePicker();
-        fromDate.setPrefWidth(150);
+        fromDate.setPrefWidth(130);
         fromDate.setValue(LocalDate.now().minusDays(30));
 
-        Label toDateLabel = new Label("To Date:");
-        toDateLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #64748b;");
         toDate = new DatePicker();
-        toDate.setPrefWidth(150);
+        toDate.setPrefWidth(130);
         toDate.setValue(LocalDate.now());
 
-        // Party Filter
-        Label searchLabel = new Label("Search:");
-        searchLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #64748b;");
         searchField = new TextField();
-        searchField.setPromptText("Search by Type, Transaction No, Party, Date, or Amount");
-        searchField.setPrefWidth(400);
+        searchField.setPromptText("Search by Type, No, Party, Date, Amount...");
         searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
-        
-        // Add to grid
-        grid.add(fromDateLabel, 0, 0);
-        grid.add(fromDate, 1, 0);
-        grid.add(toDateLabel, 2, 0);
-        grid.add(toDate, 3, 0);
+        HBox.setHgrow(searchField, Priority.ALWAYS);
 
-        grid.add(searchLabel, 0, 1);
-        grid.add(searchField, 1, 1, 3, 1);
-        
-        Button generateBtn = new Button("Generate Report");
-        generateBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 16 8 16; -fx-background-radius: 6;");
+        Button generateBtn = new Button("Generate");
+        generateBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 6 14 6 14; -fx-background-radius: 4; -fx-font-size: 12px;");
         generateBtn.setOnAction(e -> generateReport());
-        
-        MenuButton actionsMenu = new MenuButton("Actions");
-        actionsMenu.setStyle("-fx-background-color: #64748b; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 16 8 16; -fx-background-radius: 6;");
-        
+
+        MenuButton actionsMenu = new MenuButton("Actions ▾");
+        actionsMenu.setStyle("-fx-background-color: #475569; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 6 14 6 14; -fx-background-radius: 4; -fx-font-size: 12px;");
+
         MenuItem exportExcelItem = new MenuItem("Export to Excel");
         exportExcelItem.setOnAction(e -> exportToExcel());
-        
+
         MenuItem printPdfItem = new MenuItem("Print to PDF");
         printPdfItem.setOnAction(e -> printToPdf());
-        
+
         MenuItem clearSearchItem = new MenuItem("Clear Search");
         clearSearchItem.setOnAction(e -> {
             searchField.clear();
             applyFilters();
         });
-        
+
         actionsMenu.getItems().addAll(exportExcelItem, printPdfItem, new SeparatorMenuItem(), clearSearchItem);
 
         resultCountLabel = new Label("No results");
-        resultCountLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
-        
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        
-        HBox buttonBox = new HBox(10, generateBtn, actionsMenu, spacer, resultCountLabel);
-        buttonBox.setAlignment(Pos.CENTER_LEFT);
+        resultCountLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b; -fx-font-weight: bold;");
 
-        grid.add(buttonBox, 0, 2, 4, 1);
+        HBox filterRow = new HBox(8, 
+            new Label("From"), fromDate, new Label("To"), toDate, 
+            searchField, generateBtn, actionsMenu
+        );
+        filterRow.setAlignment(Pos.CENTER_LEFT);
         
-        section.getChildren().addAll(sectionTitle, grid);
+        // Style the From/To labels
+        for (javafx.scene.Node node : filterRow.getChildren()) {
+            if (node instanceof Label l && ("From".equals(l.getText()) || "To".equals(l.getText()))) {
+                l.setStyle("-fx-font-size: 12px; -fx-text-fill: #64748b; -fx-font-weight: bold;");
+            }
+        }
+
+        section.getChildren().addAll(filterRow, resultCountLabel);
         return section;
     }
 

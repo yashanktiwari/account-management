@@ -124,12 +124,61 @@ public class MainApp extends Application {
         stage.setMaximized(true);
 
         stage.setOnCloseRequest(event -> {
-            AppExecutor.shutdown();
-            Platform.exit();
-            System.exit(0);
+            event.consume(); // Prevent immediate close
+            performBackupAndExit(stage);
         });
 
         stage.show();
+    }
+
+    private void performBackupAndExit(Stage stage) {
+        // Show a blocking dialog with progress while backup runs
+        javafx.scene.control.Dialog<Void> backupDialog = new javafx.scene.control.Dialog<>();
+        backupDialog.setTitle("Backup in Progress");
+        backupDialog.setHeaderText(null);
+        backupDialog.initOwner(stage);
+
+        VBox dialogContent = new VBox(16);
+        dialogContent.setAlignment(Pos.CENTER);
+        dialogContent.setPadding(new Insets(30));
+
+        ProgressIndicator progressIndicator = new ProgressIndicator();
+        progressIndicator.setMaxSize(50, 50);
+
+        Label messageLabel = new Label("Taking backup before closing...\nPlease wait.");
+        messageLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #1e3a5f; -fx-text-alignment: center;");
+        messageLabel.setAlignment(Pos.CENTER);
+
+        dialogContent.getChildren().addAll(progressIndicator, messageLabel);
+        backupDialog.getDialogPane().setContent(dialogContent);
+        backupDialog.getDialogPane().getButtonTypes().clear(); // No buttons - auto closes
+
+        // Run backup in background
+        AppExecutor.submit(() -> {
+            try {
+                SettingsDAO settingsDAO = new SettingsDAO();
+                String backupPath = settingsDAO.getSetting("backup_path");
+                if (backupPath == null || backupPath.isBlank()) {
+                    backupPath = System.getProperty("user.home") + java.io.File.separator + "AccountManagement_Backups";
+                }
+                com.accounting.util.BackupService.backupDatabase(backupPath);
+                com.accounting.util.BackupService.cleanupOldBackups(backupPath, 10);
+                log.info("Auto-backup completed successfully before exit.");
+            } catch (Exception e) {
+                log.error("Auto-backup failed before exit", e);
+            } finally {
+                Platform.runLater(() -> {
+                    // Close the dialog by adding a dummy button and closing
+                    backupDialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+                    backupDialog.close();
+                    AppExecutor.shutdown();
+                    Platform.exit();
+                    System.exit(0);
+                });
+            }
+        });
+
+        backupDialog.showAndWait();
     }
 
     private VBox buildSidebar() {
@@ -177,6 +226,7 @@ public class MainApp extends Application {
 
         Button dbBtn = sidebarButton("Database Setup", () -> DatabaseSetupDialog.show(primaryStage, () -> {}));
         Button invoiceBtn = sidebarButton("App Settings", this::showInvoiceSettings);
+        Button backupBtn = sidebarButton("Backup & Restore", this::showBackupRestore);
 
         sidebar.getChildren().addAll(
                 navTitle, dashBtn,
@@ -185,7 +235,7 @@ public class MainApp extends Application {
                 receiptsTitle, purchaseReceiptBtn, saleReceiptBtn,
                 slipsTitle, loadingSlipBtn, lorryReceiptBtn,
                 reportsTitle, reportsBtn, ledgerBtn,
-                settingsTitle, dbBtn, invoiceBtn
+                settingsTitle, dbBtn, invoiceBtn, backupBtn
         );
 
         setActiveSidebarButton(dashBtn);
@@ -263,6 +313,10 @@ public class MainApp extends Application {
         showContent(new LedgerView().createContent());
     }
 
+    private void showBackupRestore() {
+        showContent(new BackupRestoreView().createContent());
+    }
+
     private void showCompanySettings() {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Company Settings");
@@ -320,10 +374,16 @@ public class MainApp extends Application {
                     currentReceiptNumber = "1";
                 }
 
+                String currentBackupPath = settingsDAO.getSetting("backup_path");
+                if (currentBackupPath == null) {
+                    currentBackupPath = System.getProperty("user.home") + java.io.File.separator + "AccountManagement_Backups";
+                }
+
                 String finalCurrentStartingNumber = currentStartingNumber;
                 String finalCurrentSlipNumber = currentSlipNumber;
                 String finalCurrentLrNumber = currentLrNumber;
                 String finalCurrentReceiptNumber = currentReceiptNumber;
+                String finalCurrentBackupPath = currentBackupPath;
                 Platform.runLater(() -> {
                     Dialog<ButtonType> dialog = new Dialog<>();
                     dialog.setTitle("App Settings");
@@ -340,6 +400,23 @@ public class MainApp extends Application {
 
                     TextField receiptStartingNumberField = new TextField(finalCurrentReceiptNumber);
                     receiptStartingNumberField.setPrefWidth(200);
+
+                    TextField backupPathField = new TextField(finalCurrentBackupPath);
+                    backupPathField.setPrefWidth(300);
+                    Button browseBtn = new Button("Browse...");
+                    browseBtn.setOnAction(ev -> {
+                        javafx.stage.DirectoryChooser dc = new javafx.stage.DirectoryChooser();
+                        dc.setTitle("Select Backup Directory");
+                        if (backupPathField.getText() != null && !backupPathField.getText().isBlank()) {
+                            java.io.File initialDir = new java.io.File(backupPathField.getText());
+                            if (initialDir.exists()) dc.setInitialDirectory(initialDir);
+                        }
+                        java.io.File chosen = dc.showDialog(primaryStage);
+                        if (chosen != null) backupPathField.setText(chosen.getAbsolutePath());
+                    });
+                    HBox backupPathBox = new HBox(8, backupPathField, browseBtn);
+                    backupPathBox.setAlignment(Pos.CENTER_LEFT);
+                    HBox.setHgrow(backupPathField, Priority.ALWAYS);
 
                     GridPane grid = new GridPane();
                     grid.setHgap(10);
@@ -365,6 +442,11 @@ public class MainApp extends Application {
                     grid.add(new Label("This number will be used for both purchase and sale receipts."), 0, 7);
                     GridPane.setColumnSpan(grid.getChildren().get(11), 2);
 
+                    grid.add(new Label("Backup Directory:"), 0, 8);
+                    grid.add(backupPathBox, 1, 8);
+                    grid.add(new Label("Auto-backup will be saved here when application closes."), 0, 9);
+                    GridPane.setColumnSpan(grid.getChildren().get(14), 2);
+
                     dialog.getDialogPane().setContent(grid);
                     dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
@@ -383,6 +465,10 @@ public class MainApp extends Application {
                                             settingsDAO.saveSetting("lr_starting_number", String.valueOf(lrNum));
                                             settingsDAO.saveSetting("purchase_receipt_starting_number", String.valueOf(receiptNum));
                                             settingsDAO.saveSetting("sale_receipt_starting_number", String.valueOf(receiptNum));
+                                            String bkPath = backupPathField.getText().trim();
+                                            if (!bkPath.isBlank()) {
+                                                settingsDAO.saveSetting("backup_path", bkPath);
+                                            }
                                             Platform.runLater(() -> {
                                                 AlertUtil.showInfo("Success", "Settings updated.\nInvoice: " + num + "  |  Loading Slip: " + slipNum + "  |  LR: " + lrNum + "  |  Receipt: " + receiptNum);
                                             });
