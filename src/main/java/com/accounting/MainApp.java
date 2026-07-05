@@ -142,6 +142,9 @@ public class MainApp extends Application {
         });
 
         stage.show();
+        
+        // Check license status after UI is shown
+        checkLicenseStatus();
     }
 
     private void performBackupAndExit(Stage stage) {
@@ -240,6 +243,7 @@ public class MainApp extends Application {
         Button dbBtn = sidebarButton("Database Setup", () -> DatabaseSetupDialog.show(primaryStage, () -> {}));
         Button invoiceBtn = sidebarButton("App Settings", this::showInvoiceSettings);
         Button backupBtn = sidebarButton("Backup & Restore", this::showBackupRestore);
+        Button licenseBtn = sidebarButton("License", this::showLicenseManagement);
 
         sidebar.getChildren().addAll(
                 navTitle, dashBtn,
@@ -248,7 +252,7 @@ public class MainApp extends Application {
                 receiptsTitle, purchaseReceiptBtn, saleReceiptBtn,
                 slipsTitle, loadingSlipBtn, lorryReceiptBtn,
                 reportsTitle, reportsBtn, ledgerBtn,
-                settingsTitle, dbBtn, invoiceBtn, backupBtn
+                settingsTitle, dbBtn, invoiceBtn, backupBtn, licenseBtn
         );
 
         setActiveSidebarButton(dashBtn);
@@ -349,6 +353,78 @@ public class MainApp extends Application {
     private void showBackupRestore() {
         currentViewRefresher = this::showBackupRestore;
         showContent(new BackupRestoreView().createContent());
+    }
+
+    private void showLicenseManagement() {
+        com.accounting.util.LicenseManager.LicenseStatus status = com.accounting.util.LicenseManager.checkLicense();
+        
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("License Management");
+        alert.setHeaderText("Current License Status");
+        alert.initOwner(primaryStage);
+        
+        String statusText = "License Type: " + status.type + "\n" +
+                           "Status: " + status.message;
+        
+        if (status.type == com.accounting.util.LicenseManager.LicenseType.DEMO && status.daysRemaining > 0) {
+            statusText += "\n\nDays Remaining: " + status.daysRemaining;
+        }
+        
+        alert.setContentText(statusText);
+        
+        ButtonType activateBtn = new ButtonType("Activate License");
+        ButtonType closeBtn = new ButtonType("Close", ButtonBar.ButtonData.CANCEL_CLOSE);
+        alert.getButtonTypes().setAll(activateBtn, closeBtn);
+        
+        alert.showAndWait().ifPresent(response -> {
+            if (response == activateBtn) {
+                LicenseDialog.showActivationDialog(primaryStage);
+                com.accounting.util.LicenseManager.resetCache();
+                // Refresh license status
+                checkLicenseStatus();
+            }
+        });
+    }
+    
+    private void checkLicenseStatus() {
+        com.accounting.util.LicenseManager.LicenseStatus status = com.accounting.util.LicenseManager.checkLicense();
+        
+        if (!status.isValid) {
+            // Demo expired
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Demo Expired");
+            alert.setHeaderText("Your demo period has ended");
+            alert.initOwner(primaryStage);
+            alert.setContentText(
+                "Thank you for trying Account Management System!\n\n" +
+                "Your 30-day demo period has expired.\n" +
+                "To continue using the application, please purchase a license.\n\n" +
+                "Contact support for assistance."
+            );
+            
+            ButtonType activateBtn = new ButtonType("Activate License");
+            ButtonType exitBtn = new ButtonType("Exit", ButtonBar.ButtonData.CANCEL_CLOSE);
+            alert.getButtonTypes().setAll(activateBtn, exitBtn);
+            
+            alert.showAndWait().ifPresent(response -> {
+                if (response == activateBtn) {
+                    LicenseDialog.showActivationDialog(primaryStage);
+                    com.accounting.util.LicenseManager.resetCache();
+                    // Check again after activation attempt
+                    com.accounting.util.LicenseManager.LicenseStatus newStatus = com.accounting.util.LicenseManager.checkLicense();
+                    if (!newStatus.isValid) {
+                        Platform.exit();
+                    }
+                } else {
+                    Platform.exit();
+                }
+            });
+        } else if (status.type == com.accounting.util.LicenseManager.LicenseType.DEMO) {
+            // Demo active - show info notification
+            NotificationUtil.showInfo("Demo Mode", 
+                "You are using the demo version. " + status.daysRemaining + " days remaining.\n" +
+                "Click License in Settings to activate the full version.");
+        }
     }
 
     private void showCompanySettings() {

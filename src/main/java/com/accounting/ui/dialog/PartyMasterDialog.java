@@ -48,6 +48,8 @@ public class PartyMasterDialog {
     private TextField tanNoField;
     private TextField tdsField;
     private TextField aadharNoField;
+    private TextField openingBalanceField;
+    private ComboBox<String> balanceTypeCombo;
 
     // Routes
     private final ObservableList<String> routesList = FXCollections.observableArrayList();
@@ -217,9 +219,18 @@ public class PartyMasterDialog {
         grid.add(lbl("TAN No."), 0, 6); grid.add(tanNoField, 1, 6);
         grid.add(lbl("TDS"),     2, 6); grid.add(tdsField,   3, 6);
 
-        // Row 7: Aadhar No.
+        // Row 7: Aadhar No. | Opening Balance
         aadharNoField = field();
+        openingBalanceField = field();
+        openingBalanceField.setPromptText("0.00");
         grid.add(lbl("Aadhar No."), 0, 7); grid.add(aadharNoField, 1, 7);
+        grid.add(lbl("Opening Balance"), 2, 7); grid.add(openingBalanceField, 3, 7);
+
+        // Row 8: Balance Type
+        balanceTypeCombo = new ComboBox<>(FXCollections.observableArrayList("Credit", "Debit"));
+        balanceTypeCombo.setValue("Credit");
+        balanceTypeCombo.setMaxWidth(Double.MAX_VALUE);
+        grid.add(lbl("Balance Type"), 0, 8); grid.add(balanceTypeCombo, 1, 8);
 
         // ── Routes section ───────────────────────────────────────────────────
         Label routesTitle = new Label("Routes");
@@ -327,6 +338,10 @@ public class PartyMasterDialog {
         tanNoField.setText(nvl(p.getTanNo()));
         tdsField.setText(nvl(p.getTds()));
         aadharNoField.setText(nvl(p.getAadharNo()));
+        openingBalanceField.setText(nvl(p.getOpeningBalance()));
+        if (p.getBalanceType() != null && !p.getBalanceType().isBlank()) {
+            balanceTypeCombo.setValue(p.getBalanceType());
+        }
 
         routesList.clear();
         if (p.getRoutes() != null && !p.getRoutes().isBlank()) {
@@ -357,6 +372,8 @@ public class PartyMasterDialog {
         tanNoField.clear();
         tdsField.clear();
         aadharNoField.clear();
+        openingBalanceField.clear();
+        balanceTypeCombo.setValue("Credit");
         routesList.clear();
         routeInputField.clear();
     }
@@ -378,6 +395,8 @@ public class PartyMasterDialog {
         party.setTanNo(nvl(tanNoField.getText()));
         party.setTds(nvl(tdsField.getText()));
         party.setAadharNo(nvl(aadharNoField.getText()));
+        party.setOpeningBalance(nvl(openingBalanceField.getText()));
+        party.setBalanceType(balanceTypeCombo.getValue());
         party.setRoutes(String.join("|", routesList));
 
         boolean isEdit = currentParty != null;
