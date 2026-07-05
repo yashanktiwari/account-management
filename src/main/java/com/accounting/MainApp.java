@@ -162,7 +162,7 @@ public class MainApp extends Application {
                     backupPath = System.getProperty("user.home") + java.io.File.separator + "AccountManagement_Backups";
                 }
                 com.accounting.util.BackupService.backupDatabase(backupPath);
-                com.accounting.util.BackupService.cleanupOldBackups(backupPath, 10);
+                com.accounting.util.BackupService.cleanupOldBackups(backupPath, 15);
                 log.info("Auto-backup completed successfully before exit.");
             } catch (Exception e) {
                 log.error("Auto-backup failed before exit", e);

@@ -265,7 +265,7 @@ public class BackupRestoreView {
         AppExecutor.submit(() -> {
             try {
                 String filePath = BackupService.backupDatabase(backupPath);
-                BackupService.cleanupOldBackups(backupPath, 10);
+                BackupService.cleanupOldBackups(backupPath, 15);
                 Platform.runLater(() -> {
                     setStatus("Backup completed!\n" + new File(filePath).getName(), false);
                     refreshBackupList();
