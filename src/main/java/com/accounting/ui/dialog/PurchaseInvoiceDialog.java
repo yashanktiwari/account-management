@@ -226,9 +226,9 @@ public class PurchaseInvoiceDialog {
 
         stateListView = new ListView<>();
         stateListView.setFocusTraversable(false);
-        stateListView.setPrefHeight(200);
+        stateListView.setMaxHeight(200);
         stateListView.setPrefWidth(250);
-        stateListView.setStyle("-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-radius: 4;");
+        stateListView.setStyle("-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-radius: 4; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 6, 0, 0, 2);");
 
         stateField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == null || newVal.isBlank()) {
@@ -244,11 +244,12 @@ public class PurchaseInvoiceDialog {
                 statePopup.hide();
             } else {
                 stateListView.getItems().setAll(filtered);
+                stateListView.setPrefHeight(Math.min(filtered.size() * 28 + 4, 200));
                 if (!statePopup.isShowing() && stateField.isFocused()) {
                     Window window = stateField.getScene().getWindow();
                     javafx.geometry.Bounds bounds = stateField.localToScreen(stateField.getBoundsInLocal());
                     if (bounds != null) {
-                        statePopup.show(window, bounds.getMinX(), bounds.getMaxY());
+                        statePopup.show(window, bounds.getMinX(), bounds.getMaxY() + 2);
                     }
                 }
             }
@@ -699,21 +700,21 @@ public class PurchaseInvoiceDialog {
 
         TableColumn<InvoiceLineItem, String> descriptionCol = new TableColumn<>("Description");
         descriptionCol.setCellValueFactory(new PropertyValueFactory<>("description"));
-        descriptionCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        descriptionCol.setCellFactory(com.accounting.util.EditableCellFactory.forStringColumn());
         descriptionCol.setOnEditCommit(e -> e.getRowValue().setDescription(e.getNewValue()));
         descriptionCol.setPrefWidth(200);
         descriptionCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> unitCol = new TableColumn<>("Unit");
         unitCol.setCellValueFactory(new PropertyValueFactory<>("unit"));
-        unitCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        unitCol.setCellFactory(com.accounting.util.EditableCellFactory.forStringColumn());
         unitCol.setOnEditCommit(e -> e.getRowValue().setUnit(e.getNewValue()));
         unitCol.setPrefWidth(80);
         unitCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, Double> quantityCol = new TableColumn<>("Qty");
         quantityCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
-        quantityCol.setCellFactory(TextFieldTableCell.forTableColumn(new javafx.util.converter.DoubleStringConverter()));
+        quantityCol.setCellFactory(com.accounting.util.EditableCellFactory.forDoubleColumn());
         quantityCol.setOnEditCommit(e -> {
             e.getRowValue().setQuantity(e.getNewValue());
             lineItemTable.refresh();
@@ -724,7 +725,7 @@ public class PurchaseInvoiceDialog {
 
         TableColumn<InvoiceLineItem, Double> rateCol = new TableColumn<>("Rate");
         rateCol.setCellValueFactory(new PropertyValueFactory<>("rate"));
-        rateCol.setCellFactory(TextFieldTableCell.forTableColumn(new javafx.util.converter.DoubleStringConverter()));
+        rateCol.setCellFactory(com.accounting.util.EditableCellFactory.forDoubleColumn());
         rateCol.setOnEditCommit(e -> {
             e.getRowValue().setRate(e.getNewValue());
             lineItemTable.refresh();
@@ -740,7 +741,7 @@ public class PurchaseInvoiceDialog {
 
         TableColumn<InvoiceLineItem, String> remarkCol = new TableColumn<>("Remark");
         remarkCol.setCellValueFactory(new PropertyValueFactory<>("remark"));
-        remarkCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        remarkCol.setCellFactory(com.accounting.util.EditableCellFactory.forStringColumn());
         remarkCol.setOnEditCommit(e -> e.getRowValue().setRemark(e.getNewValue()));
         remarkCol.setPrefWidth(150);
         remarkCol.setEditable(true);

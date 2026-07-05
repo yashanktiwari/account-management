@@ -587,56 +587,56 @@ public class SaleInvoiceDialog {
         // Date column
         TableColumn<InvoiceLineItem, String> dateCol = new TableColumn<>("Date");
         dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
-        dateCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        dateCol.setCellFactory(com.accounting.util.EditableCellFactory.forStringColumn());
         dateCol.setOnEditCommit(e -> e.getRowValue().setDate(e.getNewValue()));
         dateCol.setPrefWidth(100);
         dateCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> lrNoCol = new TableColumn<>("LR No");
         lrNoCol.setCellValueFactory(new PropertyValueFactory<>("lrNo"));
-        lrNoCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        lrNoCol.setCellFactory(com.accounting.util.EditableCellFactory.forStringColumn());
         lrNoCol.setOnEditCommit(e -> e.getRowValue().setLrNo(e.getNewValue()));
         lrNoCol.setPrefWidth(70);
         lrNoCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> containerCol = new TableColumn<>("Container");
         containerCol.setCellValueFactory(new PropertyValueFactory<>("containerNo"));
-        containerCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        containerCol.setCellFactory(com.accounting.util.EditableCellFactory.forStringColumn());
         containerCol.setOnEditCommit(e -> e.getRowValue().setContainerNo(e.getNewValue()));
         containerCol.setPrefWidth(80);
         containerCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> vehicleCol = new TableColumn<>("Vehicle");
         vehicleCol.setCellValueFactory(new PropertyValueFactory<>("vehicleNo"));
-        vehicleCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        vehicleCol.setCellFactory(com.accounting.util.EditableCellFactory.forStringColumn());
         vehicleCol.setOnEditCommit(e -> e.getRowValue().setVehicleNo(e.getNewValue()));
         vehicleCol.setPrefWidth(80);
         vehicleCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> fromCol = new TableColumn<>("From");
         fromCol.setCellValueFactory(new PropertyValueFactory<>("from"));
-        fromCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        fromCol.setCellFactory(com.accounting.util.EditableCellFactory.forStringColumn());
         fromCol.setOnEditCommit(e -> e.getRowValue().setFrom(e.getNewValue()));
         fromCol.setPrefWidth(60);
         fromCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> toCol = new TableColumn<>("To");
         toCol.setCellValueFactory(new PropertyValueFactory<>("to"));
-        toCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        toCol.setCellFactory(com.accounting.util.EditableCellFactory.forStringColumn());
         toCol.setOnEditCommit(e -> e.getRowValue().setTo(e.getNewValue()));
         toCol.setPrefWidth(60);
         toCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> typeCol = new TableColumn<>("Type");
         typeCol.setCellValueFactory(new PropertyValueFactory<>("type"));
-        typeCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        typeCol.setCellFactory(com.accounting.util.EditableCellFactory.forStringColumn());
         typeCol.setOnEditCommit(e -> e.getRowValue().setType(e.getNewValue()));
         typeCol.setPrefWidth(70);
         typeCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, Double> freightCol = new TableColumn<>("Freight");
         freightCol.setCellValueFactory(new PropertyValueFactory<>("basicFreight"));
-        freightCol.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+        freightCol.setCellFactory(com.accounting.util.EditableCellFactory.forDoubleColumn());
         freightCol.setOnEditCommit(e -> {
             e.getRowValue().setBasicFreight(e.getNewValue());
             lineItemTable.refresh();
@@ -647,7 +647,7 @@ public class SaleInvoiceDialog {
 
         TableColumn<InvoiceLineItem, Double> detentionCol = new TableColumn<>("Detention");
         detentionCol.setCellValueFactory(new PropertyValueFactory<>("detentionCharge"));
-        detentionCol.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+        detentionCol.setCellFactory(com.accounting.util.EditableCellFactory.forDoubleColumn());
         detentionCol.setOnEditCommit(e -> {
             e.getRowValue().setDetentionCharge(e.getNewValue());
             lineItemTable.refresh();
@@ -658,7 +658,7 @@ public class SaleInvoiceDialog {
 
         TableColumn<InvoiceLineItem, Double> otherChargesCol = new TableColumn<>("Other");
         otherChargesCol.setCellValueFactory(new PropertyValueFactory<>("otherCharges"));
-        otherChargesCol.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+        otherChargesCol.setCellFactory(com.accounting.util.EditableCellFactory.forDoubleColumn());
         otherChargesCol.setOnEditCommit(e -> {
             e.getRowValue().setOtherCharges(e.getNewValue());
             lineItemTable.refresh();
@@ -853,9 +853,9 @@ public class SaleInvoiceDialog {
 
         stateListView = new ListView<>();
         stateListView.setFocusTraversable(false);
-        stateListView.setPrefHeight(200);
+        stateListView.setMaxHeight(200);
         stateListView.setPrefWidth(250);
-        stateListView.setStyle("-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-radius: 4;");
+        stateListView.setStyle("-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-radius: 4; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 6, 0, 0, 2);");
 
         stateField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == null || newVal.isBlank()) {
@@ -871,11 +871,12 @@ public class SaleInvoiceDialog {
                 statePopup.hide();
             } else {
                 stateListView.getItems().setAll(filtered);
+                stateListView.setPrefHeight(Math.min(filtered.size() * 28 + 4, 200));
                 if (!statePopup.isShowing() && stateField.isFocused()) {
                     Window window = stateField.getScene().getWindow();
                     javafx.geometry.Bounds bounds = stateField.localToScreen(stateField.getBoundsInLocal());
                     if (bounds != null) {
-                        statePopup.show(window, bounds.getMinX(), bounds.getMaxY());
+                        statePopup.show(window, bounds.getMinX(), bounds.getMaxY() + 2);
                     }
                 }
             }
