@@ -320,10 +320,12 @@ public class BackupRestoreView {
                     try {
                         BackupService.restoreDatabase(backupFile.getAbsolutePath());
                         Platform.runLater(() -> {
-                            setStatus("Restore completed!\nPlease restart the application.", false);
+                            setStatus("Restore completed!\nRefreshing data...", false);
                             AlertUtil.showInfo("Restore Complete",
                                 "Database restored successfully from:\n" + backupFile.getName() +
-                                "\n\nPlease restart the application for changes to take effect.");
+                                "\n\nAll data will be refreshed automatically.");
+                            // Refresh the current view to show restored data
+                            com.accounting.MainApp.refreshCurrentView();
                         });
                     } catch (Exception e) {
                         log.error("Restore failed", e);

@@ -33,6 +33,7 @@ public class MainApp extends Application {
 
     private StackPane contentHost;
     private final List<Button> sidebarNavButtons = new ArrayList<>();
+    private Runnable currentViewRefresher;
     private Button dashBtn;
     private Button partyBtn;
     private Button purchaseInvoiceBtn;
@@ -57,6 +58,18 @@ public class MainApp extends Application {
     public static void showContentNodeInApp(javafx.scene.Node node) {
         if (instance != null) {
             instance.contentHost.getChildren().setAll(node);
+        }
+    }
+
+    /**
+     * Refreshes the currently active view. Called after database restore.
+     */
+    public static void refreshCurrentView() {
+        if (instance != null && instance.currentViewRefresher != null) {
+            Platform.runLater(() -> {
+                instance.currentViewRefresher.run();
+                NotificationUtil.showSuccess("Data Refreshed", "All data has been reloaded from the restored database.");
+            });
         }
     }
 
@@ -266,7 +279,9 @@ public class MainApp extends Application {
     }
 
     private void showDashboard() {
+        currentViewRefresher = this::showDashboard;
         showContent(new DashboardView().createContent());
+        setActiveSidebarButton(dashBtn);
     }
 
     private void showContent(Parent content) {
@@ -278,42 +293,61 @@ public class MainApp extends Application {
     }
 
     private void showParties() {
+        currentViewRefresher = this::showParties;
         showContent(new PartyMasterListView().createContent());
+        setActiveSidebarButton(partyBtn);
     }
 
     private void showPurchaseInvoice() {
+        currentViewRefresher = this::showPurchaseInvoice;
         showContent(new PurchaseInvoiceListView().createContent());
+        setActiveSidebarButton(purchaseInvoiceBtn);
     }
 
     private void showSaleInvoice() {
+        currentViewRefresher = this::showSaleInvoice;
         showContent(new SaleInvoiceListView().createContent());
+        setActiveSidebarButton(saleInvoiceBtn);
     }
 
     private void showPurchaseReceipt() {
+        currentViewRefresher = this::showPurchaseReceipt;
         showContent(new PurchaseReceiptListView().createContent());
+        setActiveSidebarButton(purchaseReceiptBtn);
     }
 
     private void showSaleReceipt() {
+        currentViewRefresher = this::showSaleReceipt;
         showContent(new SaleReceiptListView().createContent());
+        setActiveSidebarButton(saleReceiptBtn);
     }
 
     private void showLoadingSlips() {
+        currentViewRefresher = this::showLoadingSlips;
         showContent(new LoadingSlipListView().createContent());
+        setActiveSidebarButton(loadingSlipBtn);
     }
 
     private void showLorryReceipts() {
+        currentViewRefresher = this::showLorryReceipts;
         showContent(new LorryReceiptListView().createContent());
+        setActiveSidebarButton(lorryReceiptBtn);
     }
 
     private void showReports() {
+        currentViewRefresher = this::showReports;
         showContent(new ReportView().createContent());
+        setActiveSidebarButton(reportsBtn);
     }
 
     private void showLedger() {
+        currentViewRefresher = this::showLedger;
         showContent(new LedgerView().createContent());
+        setActiveSidebarButton(ledgerBtn);
     }
 
     private void showBackupRestore() {
+        currentViewRefresher = this::showBackupRestore;
         showContent(new BackupRestoreView().createContent());
     }
 
