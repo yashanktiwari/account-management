@@ -46,7 +46,7 @@ public class LorryReceiptListView {
     private Timer debounceTimer;
     private static final int DEBOUNCE_DELAY = 500;
     private static final int MAX_SEARCH_TERMS = 5;
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public Parent createContent() {
         VBox root = new VBox(10);

@@ -18,7 +18,7 @@ import java.time.format.DateTimeFormatter;
 public class InvoicePDFGenerator {
 
     private static final Logger log = AppLogger.get(InvoicePDFGenerator.class);
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final String IMAGES_FOLDER = "src/main/resources/images";
 
     public static void generatePurchaseInvoicePDF(PurchaseInvoice invoice, String outputPath) {
@@ -1149,12 +1149,17 @@ public class InvoicePDFGenerator {
             // Try parsing ISO format (yyyy-MM-dd)
             if (date.matches("\\d{4}-\\d{2}-\\d{2}")) {
                 LocalDate ld = LocalDate.parse(date);
-                return ld.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+                return ld.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
             }
             // Try parsing dd.MM.yyyy format
             if (date.matches("\\d{2}\\.\\d{2}\\.\\d{4}")) {
                 LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-                return ld.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+                return ld.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+            }
+            // Try parsing dd-MM-yyyy format
+            if (date.matches("\\d{2}-\\d{2}-\\d{4}")) {
+                LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+                return ld.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
             }
         } catch (Exception ignored) {}
         return date;

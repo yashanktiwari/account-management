@@ -25,7 +25,7 @@ import java.util.List;
 public class BackupRestoreView {
 
     private static final Logger log = AppLogger.get(BackupRestoreView.class);
-    private static final DateTimeFormatter DISPLAY_FMT = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+    private static final DateTimeFormatter DISPLAY_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
     private final SettingsDAO settingsDAO = new SettingsDAO();
     private VBox backupListContainer;

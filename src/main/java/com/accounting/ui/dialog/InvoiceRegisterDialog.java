@@ -31,7 +31,7 @@ import java.util.Objects;
 public class InvoiceRegisterDialog {
 
     private final InvoiceDAO dao = new InvoiceDAO();
-    private final DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private final DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private ComboBox<String> transTypeCombo;
     private ComboBox<String> searchByCombo;

@@ -16,7 +16,7 @@ import java.util.List;
 public class ReportPDFGenerator {
 
     private static final Logger log = AppLogger.get(ReportPDFGenerator.class);
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final String IMAGES_FOLDER = "src/main/resources/images";
 
     // Fonts

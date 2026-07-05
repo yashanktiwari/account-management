@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter;
 public class LorryReceiptPDFGenerator {
 
     private static final Logger log = AppLogger.get(LorryReceiptPDFGenerator.class);
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final String IMAGES_FOLDER = "src/main/resources/images";
 
     // Fonts
@@ -127,8 +127,8 @@ public class LorryReceiptPDFGenerator {
         addLabelValueFullLine(ccInner, "LR No.", s(lr.getLrNo()), F_RED_BOLD_14);
         addLabelValueFullLine(ccInner, "LR Date", lr.getLrDate() != null ? lr.getLrDate().format(DATE_FORMATTER) : "", F_NORM_10);
         addLabelValueFullLine(ccInner, "Vehicle No.", s(lr.getVehicleNo()), F_BOLD_10);
-        addLabelValueFullLine(ccInner, "From", s(lr.getFromLocation()), F_BOLD_10);
-        addLabelValueFullLine(ccInner, "To", s(lr.getToLocation()), F_BOLD_10);
+        addLabelValueFullLine(ccInner, "From", truncate(lr.getFromLocation(), 45), F_BOLD_10);
+        addLabelValueFullLine(ccInner, "To", truncate(lr.getToLocation(), 45), F_BOLD_10);
         addLabelValueFullLine(ccInner, "E-Way Bill No.", s(lr.getEWayBillNo()), F_NORM_10, false); // No underline
 
         ccCell.addElement(ccInner);
@@ -279,20 +279,20 @@ public class LorryReceiptPDFGenerator {
         PdfPCell csorCell = new PdfPCell();
         csorCell.setBorder(Rectangle.BOX);
         csorCell.setPadding(4);
-        csorCell.setMinimumHeight(22);
+        csorCell.setFixedHeight(22);  // Fixed height to prevent overflow
         Paragraph csorPara = new Paragraph();
         csorPara.add(new Chunk("Consignor", F_BOLD_9));
-        csorPara.add(new Chunk("  " + s(lr.getConsignorName()), F_NORM_9));
+        csorPara.add(new Chunk("  " + truncate(lr.getConsignorName(), 80), F_NORM_9));
         csorCell.addElement(csorPara);
         conTable.addCell(csorCell);
 
         PdfPCell cseeCell = new PdfPCell();
         cseeCell.setBorder(Rectangle.BOX);
         cseeCell.setPadding(4);
-        cseeCell.setMinimumHeight(22);
+        cseeCell.setFixedHeight(22);  // Fixed height to prevent overflow
         Paragraph cseePara = new Paragraph();
         cseePara.add(new Chunk("Consignee", F_BOLD_9));
-        cseePara.add(new Chunk("  " + s(lr.getConsigneeName()), F_NORM_9));
+        cseePara.add(new Chunk("  " + truncate(lr.getConsigneeName(), 80), F_NORM_9));
         cseeCell.addElement(cseePara);
         conTable.addCell(cseeCell);
 
@@ -614,6 +614,16 @@ public class LorryReceiptPDFGenerator {
 
     private static String s(String val) {
         return val != null ? val : "";
+    }
+
+    /**
+     * Truncate text to a maximum length with ellipsis if exceeded.
+     * Used to prevent long addresses from causing PDF to overflow to 2 pages.
+     */
+    private static String truncate(String val, int maxLength) {
+        if (val == null) return "";
+        if (val.length() <= maxLength) return val;
+        return val.substring(0, maxLength - 3) + "...";
     }
 
     private static Paragraph spacer(float size) {

@@ -28,7 +28,7 @@ import java.util.*;
 public class QueryBuilderView {
 
     private static final Logger log = AppLogger.get(QueryBuilderView.class);
-    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final ReportDAO reportDAO = new ReportDAO();
 

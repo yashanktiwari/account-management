@@ -28,7 +28,7 @@ import java.util.List;
 public class ExportUtil {
 
     private static final Logger log = AppLogger.get(ExportUtil.class);
-    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     // ── Invoice Register Excel ──
     public static void exportInvoicesToExcel(List<Invoice> data, String filePath) throws Exception {

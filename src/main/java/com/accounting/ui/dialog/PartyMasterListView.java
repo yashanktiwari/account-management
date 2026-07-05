@@ -211,7 +211,7 @@ public class PartyMasterListView {
                 if (empty || item == null) {
                     setText(null);
                 } else {
-                    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm a");
+                    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy hh:mm a");
                     setText(item.format(formatter));
                 }
             }
@@ -229,7 +229,7 @@ public class PartyMasterListView {
                 if (empty || item == null) {
                     setText(null);
                 } else {
-                    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm a");
+                    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy hh:mm a");
                     setText(item.format(formatter));
                 }
             }

@@ -35,7 +35,7 @@ public class SaleReceiptListView {
     private DatePicker endDatePicker;
     private Label rowCountLabel;
     private Label totalAmountLabel;
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public Parent createContent() {
         VBox root = new VBox(10);

@@ -14,7 +14,34 @@ public class PaymentDAO {
 
     private static final Logger log = AppLogger.get(PaymentDAO.class);
 
+    public void ensureTable() {
+        String sql = """
+            CREATE TABLE IF NOT EXISTS payments (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                payment_date DATE NOT NULL,
+                voucher_no VARCHAR(50),
+                voucher_type VARCHAR(20),
+                account_id INT,
+                account_name VARCHAR(255),
+                particulars VARCHAR(500),
+                amount DECIMAL(15, 2) DEFAULT 0,
+                against_invoice_id INT,
+                against_invoice_no VARCHAR(50),
+                remarks VARCHAR(500),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+        } catch (Exception e) {
+            log.error("Failed to ensure payments table", e);
+        }
+    }
+
     public int save(Payment p) {
+        ensureTable();
         String sql = """
             INSERT INTO payments (payment_date, voucher_no, voucher_type, account_id, account_name,
                 particulars, amount, against_invoice_id, against_invoice_no, remarks)

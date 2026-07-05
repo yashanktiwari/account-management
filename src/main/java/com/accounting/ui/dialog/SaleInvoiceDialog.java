@@ -1195,7 +1195,8 @@ public class SaleInvoiceDialog {
             // Show print preview embedded in app; Close returns to sale invoice list
             stage.close();
             new PrintPreviewDialog(fileName, (copyLabel, outputPath) ->
-                    com.accounting.util.InvoicePDFGenerator.generateSaleInvoicePDF(invoice, outputPath, copyLabel)
+                    com.accounting.util.InvoicePDFGenerator.generateSaleInvoicePDF(invoice, outputPath, copyLabel),
+                    true  // Enable copies from spinner
             ).showInApp(() -> MainApp.showContentInApp(new SaleInvoiceListView().createContent()));
         } catch (Exception e) {
             log.error("Failed to generate PDF", e);

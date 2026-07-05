@@ -16,7 +16,7 @@ import java.time.format.DateTimeFormatter;
 public class LedgerPDFGenerator {
 
     private static final Logger log = AppLogger.get(LedgerPDFGenerator.class);
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final String IMAGES_FOLDER = "src/main/resources/images";
 
     // Fonts

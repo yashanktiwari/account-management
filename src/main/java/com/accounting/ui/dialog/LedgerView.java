@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 public class LedgerView {
 
     private static final Logger log = AppLogger.get(LedgerView.class);
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final LedgerDAO ledgerDAO = new LedgerDAO();
     private final PartyDAO partyDAO = new PartyDAO();

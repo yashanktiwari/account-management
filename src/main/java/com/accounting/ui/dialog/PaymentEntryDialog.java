@@ -35,7 +35,7 @@ public class PaymentEntryDialog {
     private final AccountDAO accountDAO = new AccountDAO();
     private final InvoiceDAO invoiceDAO = new InvoiceDAO();
     private final PaymentDAO paymentDAO = new PaymentDAO();
-    private final DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private final DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private TextField accountNameField;
     private DatePicker paymentDatePicker;

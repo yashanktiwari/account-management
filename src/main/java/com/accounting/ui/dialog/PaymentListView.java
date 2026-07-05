@@ -25,7 +25,7 @@ import java.util.List;
 public class PaymentListView {
 
     private final PaymentDAO dao = new PaymentDAO();
-    private final DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private final DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final ObservableList<Payment> rows = FXCollections.observableArrayList();
 

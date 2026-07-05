@@ -31,7 +31,7 @@ import java.util.Objects;
 public class OutstandingRegisterDialog {
 
     private final AccountDAO dao = new AccountDAO();
-    private final DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private final DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private ComboBox<String> acTypeCombo;
     private ComboBox<String> rootCityCombo;

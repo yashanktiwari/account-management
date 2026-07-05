@@ -13,6 +13,11 @@ import static com.accounting.util.AppLogger.get;
 public class ReportDAO {
 
     private static final Logger log = get(ReportDAO.class);
+    private final PaymentDAO paymentDAO = new PaymentDAO();
+
+    private void ensurePaymentsTable() {
+        paymentDAO.ensureTable();
+    }
 
     public List<String> getAllParties() throws Exception {
         List<String> parties = new ArrayList<>();
@@ -72,6 +77,7 @@ public class ReportDAO {
     }
 
     private ReportResult generateAllTransactionsReport(LocalDate fromDate, LocalDate toDate) throws Exception {
+        ensurePaymentsTable();
         List<ReportRow> rows = new ArrayList<>();
         double totalAmount = 0.0;
 
@@ -156,6 +162,7 @@ public class ReportDAO {
     }
 
     private ReportResult generatePartyTransactionsReport(LocalDate fromDate, LocalDate toDate, String party) throws Exception {
+        ensurePaymentsTable();
         List<ReportRow> rows = new ArrayList<>();
         double openingBalance = 0.0;
         double runningBalance = 0.0;
@@ -474,6 +481,7 @@ public class ReportDAO {
     }
 
     private ReportResult generateReceiptSummaryReport(LocalDate fromDate, LocalDate toDate) throws Exception {
+        ensurePaymentsTable();
         List<ReportRow> rows = new ArrayList<>();
         double totalAmount = 0.0;
 
@@ -851,6 +859,7 @@ public class ReportDAO {
     }
 
     private SimpleReportResult presetPayments(LocalDate from, LocalDate to, String party) throws Exception {
+        ensurePaymentsTable();
         String[] headers = {"Sr.No", "Date", "Voucher No", "Party", "Amount", "Voucher Type", "Particulars"};
         List<String[]> rows = new ArrayList<>();
         double total = 0;

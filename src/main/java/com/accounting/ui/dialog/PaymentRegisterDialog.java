@@ -31,7 +31,7 @@ import java.util.Objects;
 public class PaymentRegisterDialog {
 
     private final PaymentDAO dao = new PaymentDAO();
-    private final DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private final DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private ComboBox<String> voucherTypeCombo;
     private DatePicker fromDatePicker;

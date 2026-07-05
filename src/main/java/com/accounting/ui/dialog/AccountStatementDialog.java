@@ -33,7 +33,7 @@ import java.util.Objects;
 public class AccountStatementDialog {
 
     private final AccountDAO dao = new AccountDAO();
-    private final DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private final DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private TextField accountNameField;
     private Label acTypeLabel;

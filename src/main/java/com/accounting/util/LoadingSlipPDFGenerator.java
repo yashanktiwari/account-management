@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter;
 public class LoadingSlipPDFGenerator {
 
     private static final Logger log = AppLogger.get(LoadingSlipPDFGenerator.class);
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final String IMAGES_FOLDER = "src/main/resources/images";
 
     public static void generateLoadingSlipPDF(LoadingSlip slip, String outputPath, String copyLabel) {

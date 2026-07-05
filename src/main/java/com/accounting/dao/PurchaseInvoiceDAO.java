@@ -154,18 +154,20 @@ public class PurchaseInvoiceDAO {
     }
 
     public List<PurchaseInvoice> getAll(LocalDate startDate, LocalDate endDate) throws Exception {
-        String sql = "SELECT * FROM purchase_invoices ORDER BY id DESC";
+        StringBuilder sql = new StringBuilder("SELECT * FROM purchase_invoices");
+        
         if (startDate != null && endDate != null) {
-            sql += " WHERE invoice_date BETWEEN ? AND ?";
+            sql.append(" WHERE invoice_date BETWEEN ? AND ?");
         } else if (startDate != null) {
-            sql += " WHERE invoice_date >= ?";
+            sql.append(" WHERE invoice_date >= ?");
         } else if (endDate != null) {
-            sql += " WHERE invoice_date <= ?";
+            sql.append(" WHERE invoice_date <= ?");
         }
+        sql.append(" ORDER BY id DESC");
         
         List<PurchaseInvoice> invoices = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
             
             int paramIndex = 1;
             if (startDate != null) {
