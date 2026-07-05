@@ -148,30 +148,10 @@ public class MainApp extends Application {
     }
 
     private void performBackupAndExit(Stage stage) {
-        // Show a blocking dialog with progress while backup runs
-        javafx.scene.control.Dialog<Void> backupDialog = new javafx.scene.control.Dialog<>();
-        backupDialog.setTitle("Backup in Progress");
-        backupDialog.setHeaderText(null);
-        backupDialog.initOwner(stage);
-
-        VBox dialogContent = new VBox(16);
-        dialogContent.setAlignment(Pos.CENTER);
-        dialogContent.setPadding(new Insets(30));
-
-        ProgressIndicator progressIndicator = new ProgressIndicator();
-        progressIndicator.setMaxSize(50, 50);
-
-        Label messageLabel = new Label("Taking backup before closing...\nPlease wait.");
-        messageLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #1e3a5f; -fx-text-alignment: center;");
-        messageLabel.setAlignment(Pos.CENTER);
-
-        dialogContent.getChildren().addAll(progressIndicator, messageLabel);
-        backupDialog.getDialogPane().setContent(dialogContent);
-        backupDialog.getDialogPane().getButtonTypes().clear(); // No buttons - auto closes
-
-        // Run backup in background
+        // Run backup synchronously in background thread to avoid JavaFX threading issues
         AppExecutor.submit(() -> {
             try {
+                log.info("Starting auto-backup before exit...");
                 SettingsDAO settingsDAO = new SettingsDAO();
                 String backupPath = settingsDAO.getSetting("backup_path");
                 if (backupPath == null || backupPath.isBlank()) {
@@ -183,18 +163,18 @@ public class MainApp extends Application {
             } catch (Exception e) {
                 log.error("Auto-backup failed before exit", e);
             } finally {
-                Platform.runLater(() -> {
-                    // Close the dialog by adding a dummy button and closing
-                    backupDialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-                    backupDialog.close();
-                    AppExecutor.shutdown();
-                    Platform.exit();
-                    System.exit(0);
-                });
+                // Shutdown executor and exit cleanly
+                AppExecutor.shutdown();
+                // Give a moment for threads to finish
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+                // Exit without Platform.exit() to avoid JavaFX shutdown race condition
+                System.exit(0);
             }
         });
-
-        backupDialog.showAndWait();
     }
 
     private VBox buildSidebar() {
@@ -419,12 +399,9 @@ public class MainApp extends Application {
                     Platform.exit();
                 }
             });
-        } else if (status.type == com.accounting.util.LicenseManager.LicenseType.DEMO) {
-            // Demo active - show warning notification
-            NotificationUtil.showWarning("Demo Mode", 
-                "You are using the demo version. " + status.daysRemaining + " days remaining.\n" +
-                "Click License in Settings to activate the full version.");
         }
+        // Demo mode active - no notification shown
+        // User can check license status via Settings > License menu
     }
 
     private void showCompanySettings() {
