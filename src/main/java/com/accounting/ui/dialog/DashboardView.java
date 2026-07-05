@@ -29,6 +29,7 @@ public class DashboardView {
 
     private static final Logger log = AppLogger.get(DashboardView.class);
     private static final String SETTINGS_KEY = "dashboard_active_widgets";
+    private static final String WIDGET_SIZES_KEY = "dashboard_widget_sizes";
     private static final String[] CHART_COLORS = {
         "#4a7a94", "#7a5565", "#4a7a60", "#8a7a4a", "#6b5a8a", "#8a5a6a",
         "#4a8a7a", "#8a6a4a", "#5a5a8a", "#6a8a5a", "#4a7a8a", "#8a4a6a"
@@ -39,6 +40,7 @@ public class DashboardView {
     private FlowPane widgetGrid;
     private final List<WidgetDef> allWidgets = new ArrayList<>();
     private final List<String> activeWidgetIds = new ArrayList<>();
+    private final Map<String, double[]> widgetSizes = new HashMap<>(); // widgetId -> [width, height]
 
     enum RenderType { TABLE, BAR_CHART, PIE_CHART, LINE_CHART }
 
@@ -73,6 +75,7 @@ public class DashboardView {
     public DashboardView() {
         registerWidgets();
         loadActiveWidgets();
+        loadWidgetSizes();
     }
 
     private void registerWidgets() {
@@ -135,6 +138,41 @@ public class DashboardView {
         });
     }
 
+    private void loadWidgetSizes() {
+        try {
+            String saved = settingsDAO.getSetting(WIDGET_SIZES_KEY);
+            if (saved != null && !saved.isBlank()) {
+                // Format: widgetId:width:height,widgetId:width:height,...
+                for (String entry : saved.split(",")) {
+                    String[] parts = entry.split(":");
+                    if (parts.length == 3) {
+                        String widgetId = parts[0];
+                        double width = Double.parseDouble(parts[1]);
+                        double height = Double.parseDouble(parts[2]);
+                        widgetSizes.put(widgetId, new double[]{width, height});
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to load widget sizes", e);
+        }
+    }
+
+    private void saveWidgetSizes() {
+        AppExecutor.submit(() -> {
+            try {
+                List<String> entries = new ArrayList<>();
+                for (Map.Entry<String, double[]> entry : widgetSizes.entrySet()) {
+                    double[] size = entry.getValue();
+                    entries.add(entry.getKey() + ":" + size[0] + ":" + size[1]);
+                }
+                settingsDAO.saveSetting(WIDGET_SIZES_KEY, String.join(",", entries));
+            } catch (Exception e) {
+                log.error("Failed to save widget sizes", e);
+            }
+        });
+    }
+
     // ── Build UI ────────────────────────────────────────────────────────────
     public Parent createContent() {
         VBox root = new VBox(16);
@@ -190,6 +228,14 @@ public class DashboardView {
             if (def == null) continue;
 
             VBox card = buildWidgetCard(def, null, true);
+            
+            // Restore saved size if available
+            if (widgetSizes.containsKey(widgetId)) {
+                double[] size = widgetSizes.get(widgetId);
+                card.setPrefWidth(size[0]);
+                card.setPrefHeight(size[1]);
+            }
+            
             setupDragAndDrop(card);
             widgetGrid.getChildren().add(card);
 
@@ -204,6 +250,10 @@ public class DashboardView {
                             VBox loaded = buildWidgetCard(def, data, false);
                             loaded.setPrefWidth(w);
                             if (h > 0) loaded.setPrefHeight(h);
+                            
+                            // Store widget ID as user data for later reference
+                            loaded.setUserData(def.id);
+                            
                             setupDragAndDrop(loaded);
                             widgetGrid.getChildren().set(idx, loaded);
                         }
@@ -288,6 +338,7 @@ public class DashboardView {
         boolean isChart = def.renderType != RenderType.TABLE;
         card.setPrefWidth(isChart ? 440 : 420);
         card.setMinWidth(300);
+        card.setUserData(def.id); // Store widget ID for size persistence
         card.setStyle("-fx-background-color: white; -fx-background-radius: 10; " +
                 "-fx-border-color: #e2e8f0; -fx-border-radius: 10; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 10, 0, 0, 3);");
@@ -540,6 +591,16 @@ public class DashboardView {
             card.setPrefHeight(Math.max(200, Math.min(650, newH)));
             card.setMaxWidth(Region.USE_PREF_SIZE);
             card.setMinWidth(Region.USE_PREF_SIZE);
+            e.consume();
+        });
+
+        handle.setOnMouseReleased(e -> {
+            // Save the new size when resize is complete
+            String widgetId = (String) card.getUserData();
+            if (widgetId != null) {
+                widgetSizes.put(widgetId, new double[]{card.getPrefWidth(), card.getPrefHeight()});
+                saveWidgetSizes();
+            }
             e.consume();
         });
     }
