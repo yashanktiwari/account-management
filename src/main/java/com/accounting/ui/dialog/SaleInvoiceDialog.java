@@ -75,6 +75,8 @@ public class SaleInvoiceDialog {
     private TextField loadingUnloadingChargesField;
     private TextField weighBridgeChargesField;
     private TextField advanceAmountField;
+    private ComboBox<String> stateCombo;
+    private Label stateCodeLabel;
     private boolean loadingData = false;
     private Runnable onClose;
 
@@ -197,6 +199,12 @@ public class SaleInvoiceDialog {
         rcvrContactField.setText(invoice.getRcvrContactNo());
         rcvrGstinField.setText(invoice.getRcvrGstin());
         panNoField.setText(invoice.getPanNo());
+
+        // State
+        if (invoice.getState() != null && !invoice.getState().isBlank()) {
+            stateCombo.setValue(invoice.getState());
+            stateCodeLabel.setText(invoice.getStateCode() != null ? invoice.getStateCode() : "-");
+        }
 
         // Set GST checkboxes based on values
         sgstCheckBox.setSelected(invoice.getSgstAmount() > 0);
@@ -466,6 +474,27 @@ public class SaleInvoiceDialog {
         setupUppercaseListener(panNoField);
         grid.add(label("PAN No"), 0, 2);
         grid.add(panNoField, 1, 2);
+
+        // State
+        stateCombo = new ComboBox<>(FXCollections.observableArrayList(
+            com.accounting.util.StateCodeUtil.getAllStateNames()
+        ));
+        stateCombo.setPromptText("Select State");
+        stateCombo.setEditable(true);
+        stateCombo.setValue("Maharashtra");
+        stateCodeLabel = new Label("27");
+        stateCodeLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f; -fx-min-width: 30;");
+        stateCombo.setOnAction(e -> {
+            String selected = stateCombo.getValue();
+            if (selected != null && !selected.isBlank()) {
+                String code = com.accounting.util.StateCodeUtil.getStateCode(selected);
+                stateCodeLabel.setText(code.isEmpty() ? "-" : code);
+            }
+        });
+        HBox stateBox = new HBox(8, stateCombo, new Label("Code:"), stateCodeLabel);
+        stateBox.setAlignment(Pos.CENTER_LEFT);
+        grid.add(label("State"), 2, 2);
+        grid.add(stateBox, 3, 2);
 
         return grid;
     }
@@ -809,7 +838,11 @@ public class SaleInvoiceDialog {
             rcvrGstinField.setText(party.getGstin());
             panNoField.setText(party.getPan());
             accountNameField.setText(party.getOwnerName());
-            // Don't auto-fill paidBy, bank details - let user choose
+            if (party.getState() != null && !party.getState().isBlank()) {
+                stateCombo.setValue(party.getState());
+                String code = com.accounting.util.StateCodeUtil.getStateCode(party.getState());
+                stateCodeLabel.setText(code.isEmpty() ? "-" : code);
+            }
         }
     }
 
@@ -980,6 +1013,8 @@ public class SaleInvoiceDialog {
         invoice.setRcvrContactNo(rcvrContactField.getText());
         invoice.setRcvrGstin(rcvrGstinField.getText());
         invoice.setPanNo(panNoField.getText());
+        invoice.setState(stateCombo.getValue());
+        invoice.setStateCode(stateCodeLabel.getText());
         invoice.setCreditDebit(creditDebitCombo.getValue());
         invoice.setAccountName(accountNameField.getText());
         invoice.setPaidBy(paidByField.getText());

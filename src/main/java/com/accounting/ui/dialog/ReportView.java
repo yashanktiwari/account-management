@@ -173,8 +173,10 @@ public class ReportView {
         generateBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 6 14 6 14; -fx-background-radius: 4; -fx-font-size: 12px;");
         generateBtn.setOnAction(e -> generateReport());
 
-        MenuButton actionsMenu = new MenuButton("Actions ▾");
-        actionsMenu.setStyle("-fx-background-color: #475569; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 6 14 6 14; -fx-background-radius: 4; -fx-font-size: 12px;");
+        MenuButton actionsMenu = new MenuButton("Actions");
+        actionsMenu.setStyle("-fx-background-color: #475569; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 6 10 6 10; -fx-background-radius: 4; -fx-font-size: 12px;");
+        actionsMenu.setMaxHeight(30);
+        actionsMenu.setMinHeight(30);
 
         MenuItem exportExcelItem = new MenuItem("Export to Excel");
         exportExcelItem.setOnAction(e -> exportToExcel());

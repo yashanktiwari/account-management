@@ -65,6 +65,8 @@ public class PurchaseInvoiceDialog {
     private TextField supplierContactNumberField;
     private TextField supplierGstNoField;
     private TextField supplierField; // Changed from ComboBox to TextField
+    private ComboBox<String> stateCombo;
+    private Label stateCodeLabel;
     private ObservableList<Party> allParties = FXCollections.observableArrayList();
     private Popup supplierPopup;
     private ListView<Party> supplierListView;
@@ -178,6 +180,12 @@ public class PurchaseInvoiceDialog {
             supplierContactNumberField.setText(invoice.getSupplierContactNumber());
             supplierGstNoField.setText(invoice.getSupplierGstNo());
 
+            // State
+            if (invoice.getState() != null && !invoice.getState().isBlank()) {
+                stateCombo.setValue(invoice.getState());
+                stateCodeLabel.setText(invoice.getStateCode() != null ? invoice.getStateCode() : "-");
+            }
+
             // Set GST checkboxes based on values
             sgstCheckBox.setSelected(invoice.getSgstAmount() > 0);
             sgstValueField.setText(sgstCheckBox.isSelected() ? "9" : "0");
@@ -201,7 +209,11 @@ public class PurchaseInvoiceDialog {
             supplierAddressField.setText(party.getAddress());
             supplierContactNumberField.setText(party.getMobile());
             supplierGstNoField.setText(party.getGstin());
-            // Don't auto-fill paidBy, bank details - let user choose
+            if (party.getState() != null && !party.getState().isBlank()) {
+                stateCombo.setValue(party.getState());
+                String code = com.accounting.util.StateCodeUtil.getStateCode(party.getState());
+                stateCodeLabel.setText(code.isEmpty() ? "-" : code);
+            }
         }
     }
 
@@ -511,6 +523,27 @@ public class PurchaseInvoiceDialog {
         grid.add(label("GSTIN No."), 2, 1);
         grid.add(supplierGstNoField, 3, 1);
 
+        // State
+        stateCombo = new ComboBox<>(FXCollections.observableArrayList(
+            com.accounting.util.StateCodeUtil.getAllStateNames()
+        ));
+        stateCombo.setPromptText("Select State");
+        stateCombo.setEditable(true);
+        stateCombo.setValue("Maharashtra");
+        stateCodeLabel = new Label("27");
+        stateCodeLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f; -fx-min-width: 30;");
+        stateCombo.setOnAction(e -> {
+            String selected = stateCombo.getValue();
+            if (selected != null && !selected.isBlank()) {
+                String code = com.accounting.util.StateCodeUtil.getStateCode(selected);
+                stateCodeLabel.setText(code.isEmpty() ? "-" : code);
+            }
+        });
+        HBox stateBox = new HBox(8, stateCombo, new Label("Code:"), stateCodeLabel);
+        stateBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        grid.add(label("State"), 0, 2);
+        grid.add(stateBox, 1, 2, 3, 1);
+
         return grid;
     }
 
@@ -790,6 +823,8 @@ public class PurchaseInvoiceDialog {
         invoice.setSupplierAddress(supplierAddressField.getText());
         invoice.setSupplierContactNumber(supplierContactNumberField.getText());
         invoice.setSupplierGstNo(supplierGstNoField.getText());
+        invoice.setState(stateCombo.getValue());
+        invoice.setStateCode(stateCodeLabel.getText());
         invoice.setLoadingUnloadingCharges(0);
         invoice.setWeighBridgeCharges(0);
 

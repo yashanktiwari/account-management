@@ -60,6 +60,12 @@ public class SaleInvoiceDAO {
                 if (!existing.contains("pan_no")) {
                     stmt2.executeUpdate("ALTER TABLE sale_invoices ADD COLUMN pan_no VARCHAR(20)");
                 }
+                if (!existing.contains("state")) {
+                    stmt2.executeUpdate("ALTER TABLE sale_invoices ADD COLUMN state VARCHAR(100)");
+                }
+                if (!existing.contains("state_code")) {
+                    stmt2.executeUpdate("ALTER TABLE sale_invoices ADD COLUMN state_code VARCHAR(10)");
+                }
             }
         }
     }
@@ -71,8 +77,8 @@ public class SaleInvoiceDAO {
                 voucher_type, gst, taxable_amount, sgst_amount, cgst_amount, igst_amount, total_gst,
                 net_amount, remarks, rcvr_name, rcvr_address, rcvr_contact_no, rcvr_gstin,
                 credit_debit, account_name, paid_by, payment_mode, bank_name, bank_account, ifsc_code,
-                loading_unloading_charges, weigh_bridge_charges, advance_amount, pan_no, status, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                loading_unloading_charges, weigh_bridge_charges, advance_amount, pan_no, state, state_code, status, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -105,7 +111,9 @@ public class SaleInvoiceDAO {
             pstmt.setDouble(27, invoice.getWeighBridgeCharges());
             pstmt.setDouble(28, invoice.getAdvanceAmount());
             pstmt.setString(29, invoice.getPanNo());
-            pstmt.setString(30, invoice.getStatus());
+            pstmt.setString(30, invoice.getState());
+            pstmt.setString(31, invoice.getStateCode());
+            pstmt.setString(32, invoice.getStatus());
 
             pstmt.executeUpdate();
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
@@ -127,7 +135,7 @@ public class SaleInvoiceDAO {
                 igst_amount=?, total_gst=?, net_amount=?, remarks=?, rcvr_name=?, rcvr_address=?,
                 rcvr_contact_no=?, rcvr_gstin=?, credit_debit=?, account_name=?, paid_by=?, payment_mode=?,
                 bank_name=?, bank_account=?, ifsc_code=?, loading_unloading_charges=?, weigh_bridge_charges=?, 
-                advance_amount=?, pan_no=?, status=?, updated_at=NOW() WHERE id=?
+                advance_amount=?, pan_no=?, state=?, state_code=?, status=?, updated_at=NOW() WHERE id=?
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -160,8 +168,10 @@ public class SaleInvoiceDAO {
             pstmt.setDouble(27, invoice.getWeighBridgeCharges());
             pstmt.setDouble(28, invoice.getAdvanceAmount());
             pstmt.setString(29, invoice.getPanNo());
-            pstmt.setString(30, invoice.getStatus());
-            pstmt.setInt(31, invoice.getId());
+            pstmt.setString(30, invoice.getState());
+            pstmt.setString(31, invoice.getStateCode());
+            pstmt.setString(32, invoice.getStatus());
+            pstmt.setInt(33, invoice.getId());
 
             pstmt.executeUpdate();
             deleteLineItems(invoice.getId());
@@ -393,6 +403,8 @@ public class SaleInvoiceDAO {
         try { inv.setWeighBridgeCharges(rs.getDouble("weigh_bridge_charges")); } catch (Exception ignored) {}
         try { inv.setAdvanceAmount(rs.getDouble("advance_amount")); } catch (Exception ignored) {}
         try { inv.setPanNo(rs.getString("pan_no")); } catch (Exception ignored) {}
+        try { inv.setState(rs.getString("state")); } catch (Exception ignored) {}
+        try { inv.setStateCode(rs.getString("state_code")); } catch (Exception ignored) {}
         inv.setStatus(rs.getString("status"));
         inv.setCreatedAt(rs.getDate("created_at").toLocalDate());
         inv.setUpdatedAt(rs.getDate("updated_at").toLocalDate());

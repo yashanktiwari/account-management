@@ -492,7 +492,7 @@ public class InvoicePDFGenerator {
         gstTable.addCell(createCell("PAN No", false));
         gstTable.addCell(createCell(invoice.getPanNo() != null ? invoice.getPanNo() : "", false));
         gstTable.addCell(createCell("State Code", false));
-        gstTable.addCell(createCell("27", false));
+        gstTable.addCell(createCell(invoice.getStateCode() != null ? invoice.getStateCode() : "27", false));
 
         document.add(gstTable);
 
@@ -501,7 +501,8 @@ public class InvoicePDFGenerator {
         stateContactTable.setWidthPercentage(100);
         stateContactTable.setWidths(new float[]{2f, 0.7f, 1f, 0.8f, 0.5f});
 
-        stateContactTable.addCell(createCell("State - MAHARASHTRA", false));
+        String purchaseStateName = invoice.getState() != null ? invoice.getState().toUpperCase() : "MAHARASHTRA";
+        stateContactTable.addCell(createCell("State - " + purchaseStateName, false));
         PdfPCell contactCell = createCell("Contact No - " + (invoice.getSupplierContactNumber() != null ? invoice.getSupplierContactNumber() : ""), false);
         contactCell.setColspan(4);
         stateContactTable.addCell(contactCell);
@@ -549,7 +550,7 @@ public class InvoicePDFGenerator {
         gstTable.addCell(createCell("PAN No", false));
         gstTable.addCell(createCell(invoice.getPanNo() != null ? invoice.getPanNo() : "", false));
         gstTable.addCell(createCell("State Code", false));
-        gstTable.addCell(createCell("27", false));
+        gstTable.addCell(createCell(invoice.getStateCode() != null ? invoice.getStateCode() : "27", false));
 
         document.add(gstTable);
 
@@ -558,7 +559,8 @@ public class InvoicePDFGenerator {
         stateContactTable.setWidthPercentage(100);
         stateContactTable.setWidths(new float[]{2f, 0.7f, 1f, 0.8f, 0.5f});
 
-        stateContactTable.addCell(createCell("State - MAHARASHTRA", false));
+        String saleStateName = invoice.getState() != null ? invoice.getState().toUpperCase() : "MAHARASHTRA";
+        stateContactTable.addCell(createCell("State - " + saleStateName, false));
         PdfPCell contactCell = createCell("Contact No - " + (invoice.getRcvrContactNo() != null ? invoice.getRcvrContactNo() : ""), false);
         contactCell.setColspan(4);
         stateContactTable.addCell(contactCell);

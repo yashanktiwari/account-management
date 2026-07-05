@@ -22,8 +22,8 @@ public class PurchaseInvoiceDAO {
                 INSERT INTO purchase_invoices (invoice_no, invoice_date, party_id, party_name, voucher_type,
                 gst, taxable_amount, sgst_amount, cgst_amount, igst_amount, total_gst, net_amount, remarks,
                 bank_name, bank_account, ifsc_code, credit_debit, account_name, paid_by, payment_mode, supplier_address,
-                supplier_contact_number, supplier_gst_no, loading_unloading_charges, weigh_bridge_charges, advance_amount, pan_no, status, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                supplier_contact_number, supplier_gst_no, loading_unloading_charges, weigh_bridge_charges, advance_amount, pan_no, state, state_code, status, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -54,7 +54,9 @@ public class PurchaseInvoiceDAO {
             pstmt.setDouble(25, invoice.getWeighBridgeCharges());
             pstmt.setDouble(26, invoice.getAdvanceAmount());
             pstmt.setString(27, invoice.getPanNo());
-            pstmt.setString(28, invoice.getStatus());
+            pstmt.setString(28, invoice.getState());
+            pstmt.setString(29, invoice.getStateCode());
+            pstmt.setString(30, invoice.getStatus());
 
             pstmt.executeUpdate();
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
@@ -75,7 +77,7 @@ public class PurchaseInvoiceDAO {
                 voucher_type=?, gst=?, taxable_amount=?, sgst_amount=?, cgst_amount=?, igst_amount=?,
                 total_gst=?, net_amount=?, remarks=?, bank_name=?, bank_account=?, ifsc_code=?,
                 credit_debit=?, account_name=?, paid_by=?, payment_mode=?, supplier_address=?, supplier_contact_number=?,
-                supplier_gst_no=?, loading_unloading_charges=?, weigh_bridge_charges=?, advance_amount=?, pan_no=?, status=?, updated_at=NOW() WHERE id=?
+                supplier_gst_no=?, loading_unloading_charges=?, weigh_bridge_charges=?, advance_amount=?, pan_no=?, state=?, state_code=?, status=?, updated_at=NOW() WHERE id=?
                 """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -106,8 +108,10 @@ public class PurchaseInvoiceDAO {
             pstmt.setDouble(25, invoice.getWeighBridgeCharges());
             pstmt.setDouble(26, invoice.getAdvanceAmount());
             pstmt.setString(27, invoice.getPanNo());
-            pstmt.setString(28, invoice.getStatus());
-            pstmt.setInt(29, invoice.getId());
+            pstmt.setString(28, invoice.getState());
+            pstmt.setString(29, invoice.getStateCode());
+            pstmt.setString(30, invoice.getStatus());
+            pstmt.setInt(31, invoice.getId());
 
             pstmt.executeUpdate();
             deleteLineItems(invoice.getId());
@@ -347,6 +351,12 @@ public class PurchaseInvoiceDAO {
                 if (!existing.contains("pan_no")) {
                     stmt.executeUpdate("ALTER TABLE purchase_invoices ADD COLUMN pan_no VARCHAR(20)");
                 }
+                if (!existing.contains("state")) {
+                    stmt.executeUpdate("ALTER TABLE purchase_invoices ADD COLUMN state VARCHAR(100)");
+                }
+                if (!existing.contains("state_code")) {
+                    stmt.executeUpdate("ALTER TABLE purchase_invoices ADD COLUMN state_code VARCHAR(10)");
+                }
             }
         }
     }
@@ -403,6 +413,8 @@ public class PurchaseInvoiceDAO {
         try { inv.setWeighBridgeCharges(rs.getDouble("weigh_bridge_charges")); } catch (Exception ignored) {}
         try { inv.setAdvanceAmount(rs.getDouble("advance_amount")); } catch (Exception ignored) {}
         try { inv.setPanNo(rs.getString("pan_no")); } catch (Exception ignored) {}
+        try { inv.setState(rs.getString("state")); } catch (Exception ignored) {}
+        try { inv.setStateCode(rs.getString("state_code")); } catch (Exception ignored) {}
         inv.setStatus(rs.getString("status"));
         inv.setCreatedAt(rs.getDate("created_at").toLocalDate());
         inv.setUpdatedAt(rs.getDate("updated_at").toLocalDate());

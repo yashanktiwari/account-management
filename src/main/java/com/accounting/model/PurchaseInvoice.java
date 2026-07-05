@@ -34,6 +34,8 @@ public class PurchaseInvoice {
     private double weighBridgeCharges;
     private double advanceAmount;
     private String panNo;
+    private String state;
+    private String stateCode;
     private String status; // DRAFT, SAVED, PRINTED
     private LocalDate createdAt;
     private LocalDate updatedAt;
@@ -124,6 +126,12 @@ public class PurchaseInvoice {
 
     public String getPanNo() { return panNo; }
     public void setPanNo(String panNo) { this.panNo = panNo; }
+
+    public String getState() { return state; }
+    public void setState(String state) { this.state = state; }
+
+    public String getStateCode() { return stateCode; }
+    public void setStateCode(String stateCode) { this.stateCode = stateCode; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
