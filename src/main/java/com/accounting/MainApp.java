@@ -420,8 +420,8 @@ public class MainApp extends Application {
                 }
             });
         } else if (status.type == com.accounting.util.LicenseManager.LicenseType.DEMO) {
-            // Demo active - show info notification
-            NotificationUtil.showInfo("Demo Mode", 
+            // Demo active - show warning notification
+            NotificationUtil.showWarning("Demo Mode", 
                 "You are using the demo version. " + status.daysRemaining + " days remaining.\n" +
                 "Click License in Settings to activate the full version.");
         }
