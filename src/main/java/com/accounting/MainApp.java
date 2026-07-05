@@ -148,8 +148,9 @@ public class MainApp extends Application {
     }
 
     private void performBackupAndExit(Stage stage) {
-        // Run backup synchronously in background thread to avoid JavaFX threading issues
-        AppExecutor.submit(() -> {
+        // Use a separate thread instead of AppExecutor to avoid RejectedExecutionException
+        // if the executor is already shutting down
+        Thread backupThread = new Thread(() -> {
             try {
                 log.info("Starting auto-backup before exit...");
                 SettingsDAO settingsDAO = new SettingsDAO();
@@ -175,6 +176,9 @@ public class MainApp extends Application {
                 System.exit(0);
             }
         });
+        backupThread.setDaemon(false); // Ensure it completes before JVM exits
+        backupThread.setName("BackupOnExit");
+        backupThread.start();
     }
 
     private VBox buildSidebar() {

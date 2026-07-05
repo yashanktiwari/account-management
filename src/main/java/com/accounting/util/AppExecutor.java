@@ -13,7 +13,14 @@ public final class AppExecutor {
     private AppExecutor() {}
 
     public static Future<?> submit(Runnable task) {
+        if (EXECUTOR.isShutdown()) {
+            return null;
+        }
         return EXECUTOR.submit(task);
+    }
+
+    public static boolean isShutdown() {
+        return EXECUTOR.isShutdown();
     }
 
     public static void shutdown() {
