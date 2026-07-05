@@ -117,7 +117,26 @@ public class PurchaseReceiptListView {
         serialCol.setPrefWidth(60);
         table.getColumns().add(serialCol);
         table.getColumns().add(col("Receipt No", "receiptNo", 120));
-        table.getColumns().add(col("Receipt Date", "receiptDate", 120));
+
+        // Receipt Date column with custom date formatting
+        TableColumn<PurchaseReceipt, Object> receiptDateCol = new TableColumn<>("Receipt Date");
+        receiptDateCol.setCellValueFactory(new PropertyValueFactory<>("receiptDate"));
+        receiptDateCol.setPrefWidth(120);
+        receiptDateCol.setCellFactory(column -> new TableCell<PurchaseReceipt, Object>() {
+            @Override
+            protected void updateItem(Object item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else if (item instanceof java.time.LocalDate) {
+                    setText(((java.time.LocalDate) item).format(DATE_FORMATTER));
+                } else {
+                    setText(item.toString());
+                }
+            }
+        });
+        table.getColumns().add(receiptDateCol);
+
         table.getColumns().add(col("Party", "partyName", 200));
         TableColumn<PurchaseReceipt, Object> amountCol = new TableColumn<>("Amount");
         amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));

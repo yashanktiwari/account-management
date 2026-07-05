@@ -164,7 +164,26 @@ public class PurchaseInvoiceListView {
         serialCol.setPrefWidth(70);
         table.getColumns().add(serialCol);
         table.getColumns().add(col("Invoice No", "invoiceNo", 150));
-        table.getColumns().add(col("Invoice Date", "invoiceDate", 120));
+
+        // Invoice Date column with custom date formatting
+        TableColumn<PurchaseInvoice, Object> invoiceDateCol = new TableColumn<>("Invoice Date");
+        invoiceDateCol.setCellValueFactory(new PropertyValueFactory<>("invoiceDate"));
+        invoiceDateCol.setPrefWidth(120);
+        invoiceDateCol.setCellFactory(column -> new TableCell<PurchaseInvoice, Object>() {
+            @Override
+            protected void updateItem(Object item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else if (item instanceof java.time.LocalDate) {
+                    setText(((java.time.LocalDate) item).format(DATE_FORMATTER));
+                } else {
+                    setText(item.toString());
+                }
+            }
+        });
+        table.getColumns().add(invoiceDateCol);
+
         table.getColumns().add(col("Party Name", "partyName", 200));
         table.getColumns().add(col("Voucher Type", "voucherType", 120));
         

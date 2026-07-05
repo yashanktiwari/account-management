@@ -165,7 +165,26 @@ public class LoadingSlipListView {
         serialCol.setPrefWidth(70);
         table.getColumns().add(serialCol);
         table.getColumns().add(col("Slip No", "slipNo", 100));
-        table.getColumns().add(col("Slip Date", "slipDate", 120));
+
+        // Slip Date column with custom date formatting
+        TableColumn<LoadingSlip, Object> slipDateCol = new TableColumn<>("Slip Date");
+        slipDateCol.setCellValueFactory(new PropertyValueFactory<>("slipDate"));
+        slipDateCol.setPrefWidth(120);
+        slipDateCol.setCellFactory(column -> new TableCell<LoadingSlip, Object>() {
+            @Override
+            protected void updateItem(Object item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else if (item instanceof java.time.LocalDate) {
+                    setText(((java.time.LocalDate) item).format(DATE_FORMATTER));
+                } else {
+                    setText(item.toString());
+                }
+            }
+        });
+        table.getColumns().add(slipDateCol);
+
         table.getColumns().add(col("Party Name", "partyName", 200));
         table.getColumns().add(col("Vehicle No", "vehicleNo", 120));
         table.getColumns().add(col("Station", "station", 120));

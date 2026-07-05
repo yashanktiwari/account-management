@@ -279,20 +279,20 @@ public class LorryReceiptPDFGenerator {
         PdfPCell csorCell = new PdfPCell();
         csorCell.setBorder(Rectangle.BOX);
         csorCell.setPadding(4);
-        csorCell.setFixedHeight(22);  // Fixed height to prevent overflow
+        csorCell.setMinimumHeight(22);
         Paragraph csorPara = new Paragraph();
-        csorPara.add(new Chunk("Consignor", F_BOLD_9));
-        csorPara.add(new Chunk("  " + truncate(lr.getConsignorName(), 80), F_NORM_9));
+        csorPara.add(new Chunk("Consignor: ", F_BOLD_9));
+        csorPara.add(new Chunk(truncate(lr.getConsignorName(), 80), F_NORM_9));
         csorCell.addElement(csorPara);
         conTable.addCell(csorCell);
 
         PdfPCell cseeCell = new PdfPCell();
         cseeCell.setBorder(Rectangle.BOX);
         cseeCell.setPadding(4);
-        cseeCell.setFixedHeight(22);  // Fixed height to prevent overflow
+        cseeCell.setMinimumHeight(22);
         Paragraph cseePara = new Paragraph();
-        cseePara.add(new Chunk("Consignee", F_BOLD_9));
-        cseePara.add(new Chunk("  " + truncate(lr.getConsigneeName(), 80), F_NORM_9));
+        cseePara.add(new Chunk("Consignee: ", F_BOLD_9));
+        cseePara.add(new Chunk(truncate(lr.getConsigneeName(), 80), F_NORM_9));
         cseeCell.addElement(cseePara);
         conTable.addCell(cseeCell);
 
@@ -684,7 +684,7 @@ public class LorryReceiptPDFGenerator {
         rowTable.setWidthPercentage(100);
 
         Paragraph p = new Paragraph();
-        p.add(new Chunk(label + " ", F_NORM_10));
+        p.add(new Chunk(label + ": ", F_NORM_10));
         p.add(new Chunk(value.isEmpty() ? "____________________" : value, valueFont));
         PdfPCell cell = new PdfPCell(p);
         cell.setBorder(Rectangle.NO_BORDER);

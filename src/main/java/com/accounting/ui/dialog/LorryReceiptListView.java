@@ -163,7 +163,26 @@ public class LorryReceiptListView {
         serialCol.setPrefWidth(60);
         table.getColumns().add(serialCol);
         table.getColumns().add(col("LR No", "lrNo", 90));
-        table.getColumns().add(col("LR Date", "lrDate", 100));
+
+        // LR Date column with custom date formatting
+        TableColumn<LorryReceipt, Object> lrDateCol = new TableColumn<>("LR Date");
+        lrDateCol.setCellValueFactory(new PropertyValueFactory<>("lrDate"));
+        lrDateCol.setPrefWidth(100);
+        lrDateCol.setCellFactory(column -> new TableCell<LorryReceipt, Object>() {
+            @Override
+            protected void updateItem(Object item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else if (item instanceof java.time.LocalDate) {
+                    setText(((java.time.LocalDate) item).format(DATE_FORMATTER));
+                } else {
+                    setText(item.toString());
+                }
+            }
+        });
+        table.getColumns().add(lrDateCol);
+
         table.getColumns().add(col("Vehicle No", "vehicleNo", 110));
         table.getColumns().add(col("From", "fromLocation", 110));
         table.getColumns().add(col("To", "toLocation", 110));
