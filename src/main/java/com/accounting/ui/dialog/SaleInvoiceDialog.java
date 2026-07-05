@@ -478,9 +478,9 @@ public class SaleInvoiceDialog {
         grid.add(panNoField, 1, 2);
 
         // State with autocomplete
-        stateField = new TextField("Maharashtra");
+        stateField = new TextField();
         stateField.setPromptText("Type to search state...");
-        stateCodeLabel = new Label("27");
+        stateCodeLabel = new Label("-");
         stateCodeLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f; -fx-min-width: 30;");
         setupStateAutocomplete();
         Label codeLbl = new Label("Code:");
@@ -854,7 +854,6 @@ public class SaleInvoiceDialog {
         stateListView = new ListView<>();
         stateListView.setFocusTraversable(false);
         stateListView.setMaxHeight(200);
-        stateListView.setPrefWidth(250);
         stateListView.setStyle("-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-radius: 4; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 6, 0, 0, 2);");
 
         stateField.textProperty().addListener((obs, oldVal, newVal) -> {
@@ -872,11 +871,12 @@ public class SaleInvoiceDialog {
             } else {
                 stateListView.getItems().setAll(filtered);
                 stateListView.setPrefHeight(Math.min(filtered.size() * 28 + 4, 200));
+                stateListView.setPrefWidth(stateField.getWidth());
                 if (!statePopup.isShowing() && stateField.isFocused()) {
                     Window window = stateField.getScene().getWindow();
                     javafx.geometry.Bounds bounds = stateField.localToScreen(stateField.getBoundsInLocal());
                     if (bounds != null) {
-                        statePopup.show(window, bounds.getMinX(), bounds.getMaxY() + 2);
+                        statePopup.show(window, bounds.getMinX(), bounds.getMaxY() + 4);
                     }
                 }
             }
