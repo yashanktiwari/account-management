@@ -65,7 +65,9 @@ public class PurchaseInvoiceDialog {
     private TextField supplierContactNumberField;
     private TextField supplierGstNoField;
     private TextField supplierField; // Changed from ComboBox to TextField
-    private ComboBox<String> stateCombo;
+    private TextField stateField;
+    private Popup statePopup;
+    private ListView<String> stateListView;
     private Label stateCodeLabel;
     private ObservableList<Party> allParties = FXCollections.observableArrayList();
     private Popup supplierPopup;
@@ -182,7 +184,7 @@ public class PurchaseInvoiceDialog {
 
             // State
             if (invoice.getState() != null && !invoice.getState().isBlank()) {
-                stateCombo.setValue(invoice.getState());
+                stateField.setText(invoice.getState());
                 stateCodeLabel.setText(invoice.getStateCode() != null ? invoice.getStateCode() : "-");
             }
 
@@ -210,11 +212,104 @@ public class PurchaseInvoiceDialog {
             supplierContactNumberField.setText(party.getMobile());
             supplierGstNoField.setText(party.getGstin());
             if (party.getState() != null && !party.getState().isBlank()) {
-                stateCombo.setValue(party.getState());
+                stateField.setText(party.getState());
                 String code = com.accounting.util.StateCodeUtil.getStateCode(party.getState());
                 stateCodeLabel.setText(code.isEmpty() ? "-" : code);
             }
         }
+    }
+
+    private void setupStateAutocomplete() {
+        java.util.List<String> allStates = com.accounting.util.StateCodeUtil.getAllStateNames();
+        statePopup = new Popup();
+        statePopup.setAutoHide(true);
+
+        stateListView = new ListView<>();
+        stateListView.setFocusTraversable(false);
+        stateListView.setPrefHeight(200);
+        stateListView.setPrefWidth(250);
+        stateListView.setStyle("-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-radius: 4;");
+
+        stateField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal == null || newVal.isBlank()) {
+                statePopup.hide();
+                stateCodeLabel.setText("-");
+                return;
+            }
+            String filter = newVal.toLowerCase();
+            java.util.List<String> filtered = allStates.stream()
+                    .filter(s -> s.toLowerCase().contains(filter))
+                    .collect(java.util.stream.Collectors.toList());
+            if (filtered.isEmpty()) {
+                statePopup.hide();
+            } else {
+                stateListView.getItems().setAll(filtered);
+                if (!statePopup.isShowing() && stateField.isFocused()) {
+                    Window window = stateField.getScene().getWindow();
+                    javafx.geometry.Bounds bounds = stateField.localToScreen(stateField.getBoundsInLocal());
+                    if (bounds != null) {
+                        statePopup.show(window, bounds.getMinX(), bounds.getMaxY());
+                    }
+                }
+            }
+            // Update state code for exact match
+            String code = com.accounting.util.StateCodeUtil.getStateCode(newVal.trim());
+            stateCodeLabel.setText(code.isEmpty() ? "-" : code);
+        });
+
+        stateListView.setOnMouseClicked(e -> {
+            String selected = stateListView.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                stateField.setText(selected);
+                String code = com.accounting.util.StateCodeUtil.getStateCode(selected);
+                stateCodeLabel.setText(code.isEmpty() ? "-" : code);
+                statePopup.hide();
+            }
+        });
+
+        stateField.setOnKeyPressed(event -> {
+            switch (event.getCode()) {
+                case DOWN -> {
+                    if (statePopup.isShowing() && !stateListView.getItems().isEmpty()) {
+                        stateListView.requestFocus();
+                        if (stateListView.getSelectionModel().isEmpty()) {
+                            stateListView.getSelectionModel().selectFirst();
+                        }
+                    }
+                }
+                case ESCAPE -> statePopup.hide();
+                case ENTER -> {
+                    if (statePopup.isShowing() && !stateListView.getItems().isEmpty()) {
+                        String first = stateListView.getItems().get(0);
+                        stateField.setText(first);
+                        String code = com.accounting.util.StateCodeUtil.getStateCode(first);
+                        stateCodeLabel.setText(code.isEmpty() ? "-" : code);
+                        statePopup.hide();
+                    }
+                }
+            }
+        });
+
+        stateListView.setOnKeyPressed(event -> {
+            switch (event.getCode()) {
+                case ENTER -> {
+                    String selected = stateListView.getSelectionModel().getSelectedItem();
+                    if (selected != null) {
+                        stateField.setText(selected);
+                        String code = com.accounting.util.StateCodeUtil.getStateCode(selected);
+                        stateCodeLabel.setText(code.isEmpty() ? "-" : code);
+                        stateField.requestFocus();
+                    }
+                    statePopup.hide();
+                }
+                case ESCAPE -> {
+                    statePopup.hide();
+                    stateField.requestFocus();
+                }
+            }
+        });
+
+        statePopup.getContent().add(stateListView);
     }
 
     private void setupSupplierAutocomplete() {
@@ -523,24 +618,17 @@ public class PurchaseInvoiceDialog {
         grid.add(label("GSTIN No."), 2, 1);
         grid.add(supplierGstNoField, 3, 1);
 
-        // State
-        stateCombo = new ComboBox<>(FXCollections.observableArrayList(
-            com.accounting.util.StateCodeUtil.getAllStateNames()
-        ));
-        stateCombo.setPromptText("Select State");
-        stateCombo.setEditable(true);
-        stateCombo.setValue("Maharashtra");
+        // State with autocomplete
+        stateField = new TextField("Maharashtra");
+        stateField.setPromptText("Type to search state...");
         stateCodeLabel = new Label("27");
         stateCodeLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f; -fx-min-width: 30;");
-        stateCombo.setOnAction(e -> {
-            String selected = stateCombo.getValue();
-            if (selected != null && !selected.isBlank()) {
-                String code = com.accounting.util.StateCodeUtil.getStateCode(selected);
-                stateCodeLabel.setText(code.isEmpty() ? "-" : code);
-            }
-        });
-        HBox stateBox = new HBox(8, stateCombo, new Label("Code:"), stateCodeLabel);
+        setupStateAutocomplete();
+        Label codeLbl = new Label("Code:");
+        codeLbl.setMinWidth(Region.USE_PREF_SIZE);
+        HBox stateBox = new HBox(8, stateField, codeLbl, stateCodeLabel);
         stateBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        HBox.setHgrow(stateField, Priority.ALWAYS);
         grid.add(label("State"), 0, 2);
         grid.add(stateBox, 1, 2, 3, 1);
 
@@ -599,7 +687,7 @@ public class PurchaseInvoiceDialog {
 
         lineItemTable = new TableView<>(lineItems);
         lineItemTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
-        lineItemTable.setEditable(false);
+        lineItemTable.setEditable(true);
         lineItemTable.setPrefHeight(200);
         lineItemTable.setMinHeight(150);
 
@@ -611,27 +699,51 @@ public class PurchaseInvoiceDialog {
 
         TableColumn<InvoiceLineItem, String> descriptionCol = new TableColumn<>("Description");
         descriptionCol.setCellValueFactory(new PropertyValueFactory<>("description"));
+        descriptionCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        descriptionCol.setOnEditCommit(e -> e.getRowValue().setDescription(e.getNewValue()));
         descriptionCol.setPrefWidth(200);
+        descriptionCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, String> unitCol = new TableColumn<>("Unit");
         unitCol.setCellValueFactory(new PropertyValueFactory<>("unit"));
+        unitCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        unitCol.setOnEditCommit(e -> e.getRowValue().setUnit(e.getNewValue()));
         unitCol.setPrefWidth(80);
+        unitCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, Double> quantityCol = new TableColumn<>("Qty");
         quantityCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
+        quantityCol.setCellFactory(TextFieldTableCell.forTableColumn(new javafx.util.converter.DoubleStringConverter()));
+        quantityCol.setOnEditCommit(e -> {
+            e.getRowValue().setQuantity(e.getNewValue());
+            lineItemTable.refresh();
+            updateTotal();
+        });
         quantityCol.setPrefWidth(90);
+        quantityCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, Double> rateCol = new TableColumn<>("Rate");
         rateCol.setCellValueFactory(new PropertyValueFactory<>("rate"));
+        rateCol.setCellFactory(TextFieldTableCell.forTableColumn(new javafx.util.converter.DoubleStringConverter()));
+        rateCol.setOnEditCommit(e -> {
+            e.getRowValue().setRate(e.getNewValue());
+            lineItemTable.refresh();
+            updateTotal();
+        });
         rateCol.setPrefWidth(90);
+        rateCol.setEditable(true);
 
         TableColumn<InvoiceLineItem, Double> amountCol = new TableColumn<>("Amount");
         amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
         amountCol.setPrefWidth(90);
+        amountCol.setEditable(false);
 
         TableColumn<InvoiceLineItem, String> remarkCol = new TableColumn<>("Remark");
         remarkCol.setCellValueFactory(new PropertyValueFactory<>("remark"));
+        remarkCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        remarkCol.setOnEditCommit(e -> e.getRowValue().setRemark(e.getNewValue()));
         remarkCol.setPrefWidth(150);
+        remarkCol.setEditable(true);
 
         lineItemTable.getColumns().addAll(srNoCol, descriptionCol, unitCol, quantityCol, rateCol, amountCol, remarkCol);
 
@@ -823,7 +935,7 @@ public class PurchaseInvoiceDialog {
         invoice.setSupplierAddress(supplierAddressField.getText());
         invoice.setSupplierContactNumber(supplierContactNumberField.getText());
         invoice.setSupplierGstNo(supplierGstNoField.getText());
-        invoice.setState(stateCombo.getValue());
+        invoice.setState(stateField.getText());
         invoice.setStateCode(stateCodeLabel.getText());
         invoice.setLoadingUnloadingCharges(0);
         invoice.setWeighBridgeCharges(0);
@@ -865,6 +977,7 @@ public class PurchaseInvoiceDialog {
     private Label label(String text) {
         Label lbl = new Label(text);
         lbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #475569;");
+        lbl.setMinWidth(Region.USE_PREF_SIZE);
         return lbl;
     }
 
