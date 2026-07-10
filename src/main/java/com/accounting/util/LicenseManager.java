@@ -106,13 +106,13 @@ public class LicenseManager {
             return currentStatus;
 
         } catch (Exception e) {
-            log.error("Error checking license", e);
-            // Default to expired demo
+            log.error("Error checking license (DB may not be connected)", e);
+            // Default to valid demo when DB is unavailable (fresh install / no DB configured)
             currentStatus = new LicenseStatus(
                 LicenseType.DEMO,
-                "License check failed",
-                0,
-                false
+                "Demo Mode - Database not connected",
+                30,
+                true
             );
             return currentStatus;
         }

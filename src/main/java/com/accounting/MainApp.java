@@ -224,7 +224,10 @@ public class MainApp extends Application {
         Label settingsTitle = new Label("Settings");
         settingsTitle.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-padding: 12 0 4 8;");
 
-        Button dbBtn = sidebarButton("Database Setup", () -> DatabaseSetupDialog.show(primaryStage, () -> {}));
+        Button dbBtn = sidebarButton("Database Setup", () -> DatabaseSetupDialog.show(primaryStage, () -> {
+            com.accounting.util.LicenseManager.resetCache();
+            checkLicenseStatus();
+        }));
         Button invoiceBtn = sidebarButton("App Settings", this::showInvoiceSettings);
         Button backupBtn = sidebarButton("Backup & Restore", this::showBackupRestore);
         Button licenseBtn = sidebarButton("License", this::showLicenseManagement);
