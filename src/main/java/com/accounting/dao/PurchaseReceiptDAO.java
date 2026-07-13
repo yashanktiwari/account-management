@@ -57,7 +57,10 @@ public class PurchaseReceiptDAO {
             pstmt.setDate(8, receipt.getChequeDate() != null ? java.sql.Date.valueOf(receipt.getChequeDate()) : null);
             pstmt.setString(9, receipt.getBankName());
             pstmt.setString(10, receipt.getRemarks());
-            pstmt.setString(11, receipt.getStatus());
+            pstmt.setDouble(11, receipt.getTdsPercentage());
+            pstmt.setDouble(12, receipt.getTdsAmount());
+            pstmt.setDouble(13, receipt.getKasarAmount());
+            pstmt.setString(14, receipt.getStatus());
 
             pstmt.executeUpdate();
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
