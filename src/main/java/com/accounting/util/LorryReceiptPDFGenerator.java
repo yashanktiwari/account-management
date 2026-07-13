@@ -279,42 +279,42 @@ public class LorryReceiptPDFGenerator {
         PdfPCell csorCell = new PdfPCell();
         csorCell.setBorder(Rectangle.BOX);
         csorCell.setPadding(4);
-        csorCell.setFixedHeight(35);
-        Paragraph csorPara = new Paragraph();
-        csorPara.add(new Chunk("Consignor: ", F_BOLD_9));
-        csorPara.add(new Chunk(truncate(lr.getConsignorName(), 160), F_NORM_9));
-        csorCell.addElement(csorPara);
+        csorCell.setFixedHeight(30);
+        Phrase csorPhrase = new Phrase();
+        csorPhrase.add(new Chunk("Consignor: ", F_BOLD_9));
+        csorPhrase.add(new Chunk(truncate(lr.getConsignorName(), 160), F_NORM_9));
+        csorCell.setPhrase(csorPhrase);
         conTable.addCell(csorCell);
 
         PdfPCell cseeCell = new PdfPCell();
         cseeCell.setBorder(Rectangle.BOX);
         cseeCell.setPadding(4);
-        cseeCell.setFixedHeight(35);
-        Paragraph cseePara = new Paragraph();
-        cseePara.add(new Chunk("Consignee: ", F_BOLD_9));
-        cseePara.add(new Chunk(truncate(lr.getConsigneeName(), 160), F_NORM_9));
-        cseeCell.addElement(cseePara);
+        cseeCell.setFixedHeight(30);
+        Phrase cseePhrase = new Phrase();
+        cseePhrase.add(new Chunk("Consignee: ", F_BOLD_9));
+        cseePhrase.add(new Chunk(truncate(lr.getConsigneeName(), 160), F_NORM_9));
+        cseeCell.setPhrase(cseePhrase);
         conTable.addCell(cseeCell);
 
         // GSTIN row
         PdfPCell gstinCsor = new PdfPCell();
         gstinCsor.setBorder(Rectangle.BOX);
         gstinCsor.setPadding(4);
-        gstinCsor.setMinimumHeight(22);
-        Paragraph gstinCsorPara = new Paragraph();
-        gstinCsorPara.add(new Chunk("GSTIN : ", F_BOLD_9));
-        gstinCsorPara.add(new Chunk(s(lr.getConsignorGstin()), F_NORM_9));
-        gstinCsor.addElement(gstinCsorPara);
+        gstinCsor.setFixedHeight(16);
+        Phrase gstinCsorPhrase = new Phrase();
+        gstinCsorPhrase.add(new Chunk("GSTIN : ", F_BOLD_9));
+        gstinCsorPhrase.add(new Chunk(s(lr.getConsignorGstin()), F_NORM_9));
+        gstinCsor.setPhrase(gstinCsorPhrase);
         conTable.addCell(gstinCsor);
 
         PdfPCell gstinCsee = new PdfPCell();
         gstinCsee.setBorder(Rectangle.BOX);
         gstinCsee.setPadding(4);
-        gstinCsee.setMinimumHeight(22);
-        Paragraph gstinCseePara = new Paragraph();
-        gstinCseePara.add(new Chunk("GSTIN : ", F_BOLD_9));
-        gstinCseePara.add(new Chunk(s(lr.getConsigneeGstin()), F_NORM_9));
-        gstinCsee.addElement(gstinCseePara);
+        gstinCsee.setFixedHeight(16);
+        Phrase gstinCseePhrase = new Phrase();
+        gstinCseePhrase.add(new Chunk("GSTIN : ", F_BOLD_9));
+        gstinCseePhrase.add(new Chunk(s(lr.getConsigneeGstin()), F_NORM_9));
+        gstinCsee.setPhrase(gstinCseePhrase);
         conTable.addCell(gstinCsee);
 
         outerCell.addElement(conTable);
@@ -538,8 +538,6 @@ public class LorryReceiptPDFGenerator {
                 "The Consignment note issued subject to terms & condition printed overleaf", F_NORM_7));
         discCell.addElement(new Paragraph(
                 "We are not responsible for the leakage & Breakage.", F_NORM_7));
-        discCell.addElement(spacer(6));
-
         // Add footer content to disclaimer cell
         Paragraph toPayLine = new Paragraph();
         toPayLine.add(new Chunk("To Pay Rs. ", F_BOLD_9));
