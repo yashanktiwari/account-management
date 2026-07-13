@@ -447,15 +447,11 @@ public class LorryReceiptDialog {
         saveBtn.setStyle("-fx-padding: 8 20; -fx-font-size: 12px; -fx-background-color: #16a34a; -fx-text-fill: white;");
         saveBtn.setOnAction(e -> saveLR());
 
-        Button printBtn = new Button("Print");
-        printBtn.setStyle("-fx-padding: 8 20; -fx-font-size: 12px; -fx-background-color: #2563eb; -fx-text-fill: white;");
-        printBtn.setOnAction(e -> printLR());
-
         Button closeBtn = new Button("Close");
         closeBtn.setStyle("-fx-padding: 8 20; -fx-font-size: 12px;");
         closeBtn.setOnAction(e -> stage.close());
 
-        HBox buttonsBox = new HBox(10, saveBtn, printBtn, closeBtn);
+        HBox buttonsBox = new HBox(10, saveBtn, closeBtn);
         buttonsBox.setAlignment(Pos.CENTER_RIGHT);
         buttonsBox.setPadding(new Insets(12));
         buttonsBox.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;");

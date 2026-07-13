@@ -39,7 +39,6 @@ public class ReportView {
     private Label resultCountLabel;
     private Label receivableAmountLabel;
     private Label payableAmountLabel;
-    private Label netPositionAmountLabel;
 
     public Parent createContent() {
         VBox root = new VBox(16);
@@ -87,21 +86,10 @@ public class ReportView {
         );
         payableAmountLabel = (Label) ((VBox) payableCard.getChildren().get(0)).getChildren().get(1);
         
-        // Net Position Card
-        VBox netPositionCard = createSummaryCard(
-            "Net Position",
-            "₹0.00",
-            "#2563eb",
-            "#dbeafe",
-            null
-        );
-        netPositionAmountLabel = (Label) ((VBox) netPositionCard.getChildren().get(0)).getChildren().get(1);
-        
         HBox.setHgrow(receivableCard, Priority.ALWAYS);
         HBox.setHgrow(payableCard, Priority.ALWAYS);
-        HBox.setHgrow(netPositionCard, Priority.ALWAYS);
         
-        cardsContainer.getChildren().addAll(receivableCard, payableCard, netPositionCard);
+        cardsContainer.getChildren().addAll(receivableCard, payableCard);
         return cardsContainer;
     }
     
@@ -406,13 +394,13 @@ public class ReportView {
         for (ReportDAO.ReportRow row : allTransactions) {
             if (row.getAmount() != null) {
                 String type = row.getTransactionType();
-                if ("PURCHASE_INVOICE".equals(type)) {
+                if ("Purchase Invoice".equals(type)) {
                     totalReceivable += row.getAmount();
-                } else if ("PURCHASE_RECEIPT".equals(type)) {
+                } else if ("Purchase Receipt".equals(type)) {
                     totalReceivable -= row.getAmount();
-                } else if ("SALE_INVOICE".equals(type)) {
+                } else if ("Sale Invoice".equals(type)) {
                     totalPayable += row.getAmount();
-                } else if ("SALE_RECEIPT".equals(type)) {
+                } else if ("Sale Receipt".equals(type)) {
                     totalPayable -= row.getAmount();
                 }
             }
@@ -422,20 +410,12 @@ public class ReportView {
         totalReceivable = Math.max(0, totalReceivable);
         totalPayable = Math.max(0, totalPayable);
         
-        double netPosition = totalReceivable - totalPayable;
-        
         // Update summary card labels
         if (receivableAmountLabel != null) {
             receivableAmountLabel.setText(String.format("₹%.2f", totalReceivable));
         }
         if (payableAmountLabel != null) {
             payableAmountLabel.setText(String.format("₹%.2f", totalPayable));
-        }
-        if (netPositionAmountLabel != null) {
-            netPositionAmountLabel.setText(String.format("₹%.2f", netPosition));
-            // Change color based on positive/negative
-            String color = netPosition >= 0 ? "#16a34a" : "#dc2626";
-            netPositionAmountLabel.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: " + color + ";");
         }
     }
 
@@ -622,10 +602,10 @@ public class ReportView {
                         double amount = row.getAmount();
                         String type = row.getTransactionType();
                         
-                        if ("PURCHASE_INVOICE".equals(type)) {
+                        if ("Purchase Invoice".equals(type)) {
                             // Money we need to receive (our sales to them)
                             partyReceivables.put(party, partyReceivables.getOrDefault(party, 0.0) + amount);
-                        } else if ("PURCHASE_RECEIPT".equals(type)) {
+                        } else if ("Purchase Receipt".equals(type)) {
                             // Money we already received
                             partyReceivables.put(party, partyReceivables.getOrDefault(party, 0.0) - amount);
                         }
@@ -659,10 +639,10 @@ public class ReportView {
                         double amount = row.getAmount();
                         String type = row.getTransactionType();
                         
-                        if ("SALE_INVOICE".equals(type)) {
+                        if ("Sale Invoice".equals(type)) {
                             // Money we need to pay (our purchases from them)
                             partyPayables.put(party, partyPayables.getOrDefault(party, 0.0) + amount);
-                        } else if ("SALE_RECEIPT".equals(type)) {
+                        } else if ("Sale Receipt".equals(type)) {
                             // Money we already paid
                             partyPayables.put(party, partyPayables.getOrDefault(party, 0.0) - amount);
                         }

@@ -98,15 +98,11 @@ public class SaleReceiptDialog {
         saveBtn.setStyle("-fx-padding: 6 16 6 16; -fx-font-size: 12px; -fx-background-color: #16a34a; -fx-text-fill: white; -fx-background-radius: 4;");
         saveBtn.setOnAction(e -> saveReceipt());
 
-        Button printBtn = new Button("Print");
-        printBtn.setStyle("-fx-padding: 6 16 6 16; -fx-font-size: 12px; -fx-background-color: #0891b2; -fx-text-fill: white; -fx-background-radius: 4;");
-        printBtn.setOnAction(e -> printReceipt());
-
         Button closeBtn = new Button("Close");
         closeBtn.setStyle("-fx-padding: 6 16 6 16; -fx-font-size: 12px; -fx-background-radius: 4;");
         closeBtn.setOnAction(e -> stage.close());
 
-        HBox btnRow = new HBox(8, saveBtn, printBtn, closeBtn);
+        HBox btnRow = new HBox(8, saveBtn, closeBtn);
         btnRow.setAlignment(Pos.CENTER_RIGHT);
         btnRow.setPadding(new Insets(8, 0, 0, 0));
 
@@ -518,10 +514,6 @@ public class SaleReceiptDialog {
         } catch (NumberFormatException e) {
             return defaultValue;
         }
-    }
-
-    private void printReceipt() {
-        AlertUtil.showInfo("Info", "Print functionality will be implemented with PDF export");
     }
 
     private Label label(String text) {
