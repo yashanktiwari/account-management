@@ -279,20 +279,20 @@ public class LorryReceiptPDFGenerator {
         PdfPCell csorCell = new PdfPCell();
         csorCell.setBorder(Rectangle.BOX);
         csorCell.setPadding(4);
-        csorCell.setMinimumHeight(22);
+        csorCell.setFixedHeight(35);
         Paragraph csorPara = new Paragraph();
         csorPara.add(new Chunk("Consignor: ", F_BOLD_9));
-        csorPara.add(new Chunk(truncate(lr.getConsignorName(), 80), F_NORM_9));
+        csorPara.add(new Chunk(truncate(lr.getConsignorName(), 160), F_NORM_9));
         csorCell.addElement(csorPara);
         conTable.addCell(csorCell);
 
         PdfPCell cseeCell = new PdfPCell();
         cseeCell.setBorder(Rectangle.BOX);
         cseeCell.setPadding(4);
-        cseeCell.setMinimumHeight(22);
+        cseeCell.setFixedHeight(35);
         Paragraph cseePara = new Paragraph();
         cseePara.add(new Chunk("Consignee: ", F_BOLD_9));
-        cseePara.add(new Chunk(truncate(lr.getConsigneeName(), 80), F_NORM_9));
+        cseePara.add(new Chunk(truncate(lr.getConsigneeName(), 160), F_NORM_9));
         cseeCell.addElement(cseePara);
         conTable.addCell(cseeCell);
 
