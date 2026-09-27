@@ -387,36 +387,31 @@ public class ReportView {
             resultCountLabel.setText("Showing " + filtered + " of " + total + " transaction(s)");
         }
         
-        // Calculate totals for summary cards
-        double totalReceivable = 0.0;
-        double totalPayable = 0.0;
+        // Calculate totals for summary cards from DB (includes kasar + TDS in effective receipt amounts)
+        LocalDate from = fromDate.getValue();
+        LocalDate to = toDate.getValue();
+        if (from == null || to == null) return;
         
-        for (ReportDAO.ReportRow row : allTransactions) {
-            if (row.getAmount() != null) {
-                String type = row.getTransactionType();
-                if ("Purchase Invoice".equals(type)) {
-                    totalReceivable += row.getAmount();
-                } else if ("Purchase Receipt".equals(type)) {
-                    totalReceivable -= row.getAmount();
-                } else if ("Sale Invoice".equals(type)) {
-                    totalPayable += row.getAmount();
-                } else if ("Sale Receipt".equals(type)) {
-                    totalPayable -= row.getAmount();
-                }
+        AppExecutor.submit(() -> {
+            try {
+                Map<String, Double> receivables = reportDAO.getReceivableOutstanding(from, to);
+                Map<String, Double> payables = reportDAO.getPayableOutstanding(from, to);
+                
+                double totalReceivable = receivables.values().stream().mapToDouble(Double::doubleValue).sum();
+                double totalPayable = payables.values().stream().mapToDouble(Double::doubleValue).sum();
+                
+                Platform.runLater(() -> {
+                    if (receivableAmountLabel != null) {
+                        receivableAmountLabel.setText(String.format("₹%.2f", totalReceivable));
+                    }
+                    if (payableAmountLabel != null) {
+                        payableAmountLabel.setText(String.format("₹%.2f", totalPayable));
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        }
-        
-        // Ensure non-negative values
-        totalReceivable = Math.max(0, totalReceivable);
-        totalPayable = Math.max(0, totalPayable);
-        
-        // Update summary card labels
-        if (receivableAmountLabel != null) {
-            receivableAmountLabel.setText(String.format("₹%.2f", totalReceivable));
-        }
-        if (payableAmountLabel != null) {
-            payableAmountLabel.setText(String.format("₹%.2f", totalPayable));
-        }
+        });
     }
 
     private void exportReport() {
@@ -591,36 +586,17 @@ public class ReportView {
     }
 
     private void showPartyWiseReceivable() {
+        LocalDate from = fromDate.getValue();
+        LocalDate to = toDate.getValue();
+        if (from == null || to == null) {
+            AlertUtil.showWarning("Validation", "Please select both from and to dates");
+            return;
+        }
+        
         AppExecutor.submit(() -> {
             try {
-                // Calculate party-wise receivables: Purchase Invoices - Purchase Receipts
-                Map<String, Double> partyReceivables = new HashMap<>();
-                
-                for (ReportDAO.ReportRow row : allTransactions) {
-                    if (row.getParty() != null && row.getAmount() != null) {
-                        String party = row.getParty();
-                        double amount = row.getAmount();
-                        String type = row.getTransactionType();
-                        
-                        if ("Purchase Invoice".equals(type)) {
-                            // Money we need to receive (our sales to them)
-                            partyReceivables.put(party, partyReceivables.getOrDefault(party, 0.0) + amount);
-                        } else if ("Purchase Receipt".equals(type)) {
-                            // Money we already received
-                            partyReceivables.put(party, partyReceivables.getOrDefault(party, 0.0) - amount);
-                        }
-                    }
-                }
-                
-                // Filter out parties with zero or negative balance
-                Map<String, Double> filteredReceivables = new HashMap<>();
-                for (Map.Entry<String, Double> entry : partyReceivables.entrySet()) {
-                    if (entry.getValue() > 0.01) { // Only positive balances
-                        filteredReceivables.put(entry.getKey(), entry.getValue());
-                    }
-                }
-                
-                Platform.runLater(() -> showPartyWiseDialog("Total Receivable - Party Wise", filteredReceivables));
+                Map<String, Double> receivables = reportDAO.getReceivableOutstanding(from, to);
+                Platform.runLater(() -> showPartyWiseDialog("Receivable Outstanding - Party Wise", receivables));
             } catch (Exception e) {
                 Platform.runLater(() -> AlertUtil.showError("Error", "Failed to calculate receivables: " + e.getMessage()));
             }
@@ -628,36 +604,17 @@ public class ReportView {
     }
 
     private void showPartyWisePayable() {
+        LocalDate from = fromDate.getValue();
+        LocalDate to = toDate.getValue();
+        if (from == null || to == null) {
+            AlertUtil.showWarning("Validation", "Please select both from and to dates");
+            return;
+        }
+        
         AppExecutor.submit(() -> {
             try {
-                // Calculate party-wise payables: Sale Invoices - Sale Receipts
-                Map<String, Double> partyPayables = new HashMap<>();
-                
-                for (ReportDAO.ReportRow row : allTransactions) {
-                    if (row.getParty() != null && row.getAmount() != null) {
-                        String party = row.getParty();
-                        double amount = row.getAmount();
-                        String type = row.getTransactionType();
-                        
-                        if ("Sale Invoice".equals(type)) {
-                            // Money we need to pay (our purchases from them)
-                            partyPayables.put(party, partyPayables.getOrDefault(party, 0.0) + amount);
-                        } else if ("Sale Receipt".equals(type)) {
-                            // Money we already paid
-                            partyPayables.put(party, partyPayables.getOrDefault(party, 0.0) - amount);
-                        }
-                    }
-                }
-                
-                // Filter out parties with zero or negative balance
-                Map<String, Double> filteredPayables = new HashMap<>();
-                for (Map.Entry<String, Double> entry : partyPayables.entrySet()) {
-                    if (entry.getValue() > 0.01) { // Only positive balances
-                        filteredPayables.put(entry.getKey(), entry.getValue());
-                    }
-                }
-                
-                Platform.runLater(() -> showPartyWiseDialog("Total Payable - Party Wise", filteredPayables));
+                Map<String, Double> payables = reportDAO.getPayableOutstanding(from, to);
+                Platform.runLater(() -> showPartyWiseDialog("Payable Outstanding - Party Wise", payables));
             } catch (Exception e) {
                 Platform.runLater(() -> AlertUtil.showError("Error", "Failed to calculate payables: " + e.getMessage()));
             }

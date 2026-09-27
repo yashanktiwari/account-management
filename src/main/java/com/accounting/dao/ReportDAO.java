@@ -6,7 +6,9 @@ import org.slf4j.Logger;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.accounting.util.AppLogger.get;
 
@@ -1196,5 +1198,99 @@ public class ReportDAO {
     private static String fmt(double val) {
         if (val == 0) return "0.00";
         return String.format("%.2f", val);
+    }
+
+    /**
+     * Receivable Outstanding: Purchase Invoices - Purchase Receipts (effective amount including TDS + Kasar)
+     * Returns party-wise outstanding amounts for the given date range.
+     */
+    public Map<String, Double> getReceivableOutstanding(LocalDate fromDate, LocalDate toDate) throws Exception {
+        Map<String, Double> partyOutstanding = new LinkedHashMap<>();
+
+        String sql = """
+            SELECT party_name,
+                   SUM(CASE WHEN txn_type = 'INVOICE' THEN amount ELSE 0 END) as invoice_total,
+                   SUM(CASE WHEN txn_type = 'RECEIPT' THEN amount ELSE 0 END) as receipt_total
+            FROM (
+                SELECT party_name, net_amount as amount, 'INVOICE' as txn_type
+                FROM purchase_invoices
+                WHERE invoice_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT party_name, (amount + IFNULL(tds_amount, 0) + IFNULL(kasar_amount, 0)) as amount, 'RECEIPT' as txn_type
+                FROM purchase_receipts
+                WHERE receipt_date BETWEEN ? AND ?
+            ) combined
+            WHERE party_name IS NOT NULL AND party_name != ''
+            GROUP BY party_name
+            HAVING (invoice_total - receipt_total) > 0.01
+            ORDER BY (invoice_total - receipt_total) DESC
+            """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setDate(1, Date.valueOf(fromDate));
+            pstmt.setDate(2, Date.valueOf(toDate));
+            pstmt.setDate(3, Date.valueOf(fromDate));
+            pstmt.setDate(4, Date.valueOf(toDate));
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    String party = rs.getString("party_name");
+                    double outstanding = rs.getDouble("invoice_total") - rs.getDouble("receipt_total");
+                    if (outstanding > 0.01) {
+                        partyOutstanding.put(party, outstanding);
+                    }
+                }
+            }
+        }
+
+        return partyOutstanding;
+    }
+
+    /**
+     * Payable Outstanding: Sale Invoices - Sale Receipts (effective amount including TDS + Kasar)
+     * Returns party-wise outstanding amounts for the given date range.
+     */
+    public Map<String, Double> getPayableOutstanding(LocalDate fromDate, LocalDate toDate) throws Exception {
+        Map<String, Double> partyOutstanding = new LinkedHashMap<>();
+
+        String sql = """
+            SELECT party_name,
+                   SUM(CASE WHEN txn_type = 'INVOICE' THEN amount ELSE 0 END) as invoice_total,
+                   SUM(CASE WHEN txn_type = 'RECEIPT' THEN amount ELSE 0 END) as receipt_total
+            FROM (
+                SELECT account_name as party_name, net_amount as amount, 'INVOICE' as txn_type
+                FROM sale_invoices
+                WHERE invoice_date BETWEEN ? AND ?
+                UNION ALL
+                SELECT party_name, (amount + IFNULL(tds_amount, 0) + IFNULL(kasar_amount, 0)) as amount, 'RECEIPT' as txn_type
+                FROM sale_receipts
+                WHERE receipt_date BETWEEN ? AND ?
+            ) combined
+            WHERE party_name IS NOT NULL AND party_name != ''
+            GROUP BY party_name
+            HAVING (invoice_total - receipt_total) > 0.01
+            ORDER BY (invoice_total - receipt_total) DESC
+            """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setDate(1, Date.valueOf(fromDate));
+            pstmt.setDate(2, Date.valueOf(toDate));
+            pstmt.setDate(3, Date.valueOf(fromDate));
+            pstmt.setDate(4, Date.valueOf(toDate));
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    String party = rs.getString("party_name");
+                    double outstanding = rs.getDouble("invoice_total") - rs.getDouble("receipt_total");
+                    if (outstanding > 0.01) {
+                        partyOutstanding.put(party, outstanding);
+                    }
+                }
+            }
+        }
+
+        return partyOutstanding;
     }
 }
