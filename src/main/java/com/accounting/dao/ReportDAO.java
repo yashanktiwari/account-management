@@ -1201,7 +1201,8 @@ public class ReportDAO {
     }
 
     /**
-     * Receivable Outstanding: Purchase Invoices - Purchase Receipts (effective amount including TDS + Kasar)
+     * Receivable Outstanding: Sale Invoices - Sale Receipts (customers owe us)
+     * Effective receipt = amount + tds_amount + kasar_amount
      * Returns party-wise outstanding amounts for the given date range.
      */
     public Map<String, Double> getReceivableOutstanding(LocalDate fromDate, LocalDate toDate) throws Exception {
@@ -1212,12 +1213,12 @@ public class ReportDAO {
                    SUM(CASE WHEN txn_type = 'INVOICE' THEN amount ELSE 0 END) as invoice_total,
                    SUM(CASE WHEN txn_type = 'RECEIPT' THEN amount ELSE 0 END) as receipt_total
             FROM (
-                SELECT party_name, net_amount as amount, 'INVOICE' as txn_type
-                FROM purchase_invoices
+                SELECT account_name as party_name, net_amount as amount, 'INVOICE' as txn_type
+                FROM sale_invoices
                 WHERE invoice_date BETWEEN ? AND ?
                 UNION ALL
                 SELECT party_name, (amount + IFNULL(tds_amount, 0) + IFNULL(kasar_amount, 0)) as amount, 'RECEIPT' as txn_type
-                FROM purchase_receipts
+                FROM sale_receipts
                 WHERE receipt_date BETWEEN ? AND ?
             ) combined
             WHERE party_name IS NOT NULL AND party_name != ''
@@ -1248,7 +1249,8 @@ public class ReportDAO {
     }
 
     /**
-     * Payable Outstanding: Sale Invoices - Sale Receipts (effective amount including TDS + Kasar)
+     * Payable Outstanding: Purchase Invoices - Purchase Receipts (we owe suppliers)
+     * Effective receipt = amount + tds_amount + kasar_amount
      * Returns party-wise outstanding amounts for the given date range.
      */
     public Map<String, Double> getPayableOutstanding(LocalDate fromDate, LocalDate toDate) throws Exception {
@@ -1259,12 +1261,12 @@ public class ReportDAO {
                    SUM(CASE WHEN txn_type = 'INVOICE' THEN amount ELSE 0 END) as invoice_total,
                    SUM(CASE WHEN txn_type = 'RECEIPT' THEN amount ELSE 0 END) as receipt_total
             FROM (
-                SELECT account_name as party_name, net_amount as amount, 'INVOICE' as txn_type
-                FROM sale_invoices
+                SELECT party_name, net_amount as amount, 'INVOICE' as txn_type
+                FROM purchase_invoices
                 WHERE invoice_date BETWEEN ? AND ?
                 UNION ALL
                 SELECT party_name, (amount + IFNULL(tds_amount, 0) + IFNULL(kasar_amount, 0)) as amount, 'RECEIPT' as txn_type
-                FROM sale_receipts
+                FROM purchase_receipts
                 WHERE receipt_date BETWEEN ? AND ?
             ) combined
             WHERE party_name IS NOT NULL AND party_name != ''
