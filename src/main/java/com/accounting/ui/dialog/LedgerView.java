@@ -173,7 +173,11 @@ public class LedgerView {
             @Override
             protected void updateItem(LedgerDAO.LedgerEntry item, boolean empty) {
                 super.updateItem(item, empty);
-                setStyle("-fx-border-color: transparent transparent #cbd5e1 transparent; -fx-border-width: 0 0 1 0;");
+                if (empty || item == null) {
+                    setStyle("-fx-border-width: 0;");
+                } else {
+                    setStyle("-fx-border-color: transparent transparent #cbd5e1 transparent; -fx-border-width: 0 0 1 0;");
+                }
             }
         });
 
