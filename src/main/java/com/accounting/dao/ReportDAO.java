@@ -92,7 +92,7 @@ public class ReportDAO {
                 WHERE invoice_date BETWEEN ? AND ?
                 UNION ALL
                 SELECT 'Sale Invoice' as transaction_type, invoice_no as transaction_no, invoice_date as date,
-                       account_name as party, net_amount as amount, 'INVOICE' as type
+                       party_name as party, net_amount as amount, 'INVOICE' as type
                 FROM sale_invoices
                 WHERE invoice_date BETWEEN ? AND ?
                 UNION ALL
@@ -177,7 +177,7 @@ public class ReportDAO {
                     COALESCE(SUM(CASE WHEN type = 'DEBIT' THEN amount ELSE 0 END), 0) -
                     COALESCE(SUM(CASE WHEN type = 'CREDIT' THEN amount ELSE 0 END), 0) as balance
                 FROM (
-                    SELECT 'DEBIT' as type, net_amount as amount, invoice_date as date, account_name as party_name FROM sale_invoices
+                    SELECT 'DEBIT' as type, net_amount as amount, invoice_date as date, party_name FROM sale_invoices
                     UNION ALL
                     SELECT 'CREDIT' as type, amount as amount, payment_date as date, account_name as party_name FROM payments
                 ) combined
@@ -189,7 +189,7 @@ public class ReportDAO {
                     COALESCE(SUM(CASE WHEN type = 'DEBIT' THEN amount ELSE 0 END), 0) -
                     COALESCE(SUM(CASE WHEN type = 'CREDIT' THEN amount ELSE 0 END), 0) as balance
                 FROM (
-                    SELECT 'DEBIT' as type, net_amount as amount, invoice_date as date, account_name as party_name FROM sale_invoices
+                    SELECT 'DEBIT' as type, net_amount as amount, invoice_date as date, party_name FROM sale_invoices
                     UNION ALL
                     SELECT 'CREDIT' as type, amount as amount, payment_date as date, account_name as party_name FROM payments
                 ) combined
@@ -220,10 +220,10 @@ public class ReportDAO {
                        CASE WHEN type = 'DEBIT' THEN amount ELSE 0 END as debit,
                        CASE WHEN type = 'CREDIT' THEN amount ELSE 0 END as credit
                 FROM (
-                    SELECT invoice_date as date, account_name as party_name, 'Invoice' as type,
+                    SELECT invoice_date as date, party_name, 'Invoice' as type,
                            invoice_no as reference, net_amount as amount
                     FROM sale_invoices
-                    WHERE invoice_date BETWEEN ? AND ? AND account_name = ?
+                    WHERE invoice_date BETWEEN ? AND ? AND party_name = ?
 
                     UNION ALL
 
@@ -240,7 +240,7 @@ public class ReportDAO {
                        CASE WHEN type = 'DEBIT' THEN amount ELSE 0 END as debit,
                        CASE WHEN type = 'CREDIT' THEN amount ELSE 0 END as credit
                 FROM (
-                    SELECT invoice_date as date, account_name as party_name, 'Invoice' as type,
+                    SELECT invoice_date as date, party_name, 'Invoice' as type,
                            invoice_no as reference, net_amount as amount
                     FROM sale_invoices
                     WHERE invoice_date BETWEEN ? AND ?
@@ -371,30 +371,30 @@ public class ReportDAO {
         String sql;
         if (party != null) {
             sql = """
-                SELECT invoice_date as date, account_name as party_name, 'Sale Invoice' as type,
+                SELECT invoice_date as date, party_name, 'Sale Invoice' as type,
                        rcvr_gstin as gstin, taxable_amount, total_gst
                 FROM sale_invoices
-                WHERE invoice_date BETWEEN ? AND ? AND account_name = ?
+                WHERE invoice_date BETWEEN ? AND ? AND party_name = ?
 
                 UNION ALL
 
-                SELECT invoice_date as date, account_name as party_name, 'Purchase Invoice' as type,
+                SELECT invoice_date as date, party_name, 'Purchase Invoice' as type,
                        supplier_gst_no as gstin, taxable_amount, total_gst
                 FROM purchase_invoices
-                WHERE invoice_date BETWEEN ? AND ? AND account_name = ?
+                WHERE invoice_date BETWEEN ? AND ? AND party_name = ?
 
                 ORDER BY date
                 """;
         } else {
             sql = """
-                SELECT invoice_date as date, account_name as party_name, 'Sale Invoice' as type,
+                SELECT invoice_date as date, party_name, 'Sale Invoice' as type,
                        rcvr_gstin as gstin, taxable_amount, total_gst
                 FROM sale_invoices
                 WHERE invoice_date BETWEEN ? AND ?
 
                 UNION ALL
 
-                SELECT invoice_date as date, account_name as party_name, 'Purchase Invoice' as type,
+                SELECT invoice_date as date, party_name, 'Purchase Invoice' as type,
                        supplier_gst_no as gstin, taxable_amount, total_gst
                 FROM purchase_invoices
                 WHERE invoice_date BETWEEN ? AND ?
@@ -443,14 +443,14 @@ public class ReportDAO {
 
         String sql = """
             SELECT invoice_date as date, invoice_no as reference,
-                   CONCAT('Sale - ', account_name) as description, net_amount as amount
+                   CONCAT('Sale - ', party_name) as description, net_amount as amount
             FROM sale_invoices
             WHERE invoice_date BETWEEN ? AND ?
 
             UNION ALL
 
             SELECT invoice_date as date, invoice_no as reference,
-                   CONCAT('Purchase - ', account_name) as description, net_amount as amount
+                   CONCAT('Purchase - ', party_name) as description, net_amount as amount
             FROM purchase_invoices
             WHERE invoice_date BETWEEN ? AND ?
 
@@ -780,10 +780,10 @@ public class ReportDAO {
         String[] headers = {"Sr.No", "Date", "Invoice No", "Party", "Voucher Type", "Taxable Amt", "GST", "Net Amount", "Remarks"};
         List<String[]> rows = new ArrayList<>();
         double total = 0;
-        String sql = "SELECT invoice_date, invoice_no, account_name, voucher_type, " +
+        String sql = "SELECT invoice_date, invoice_no, party_name, voucher_type, " +
                    "COALESCE(taxable_amount,0), COALESCE(total_gst,0), COALESCE(net_amount,0), COALESCE(remarks,'') " +
                    "FROM sale_invoices WHERE invoice_date BETWEEN ? AND ?";
-        if (party != null) sql += " AND account_name = ?";
+        if (party != null) sql += " AND party_name = ?";
         sql += " ORDER BY invoice_date, id";
         
         try (Connection conn = DBConnection.getConnection();
@@ -961,9 +961,9 @@ public class ReportDAO {
                                 "FROM purchase_invoices WHERE invoice_date BETWEEN ? AND ?";
         if (party != null) purchaseInvoices += " AND party_name = ?";
         
-        String saleInvoices = "SELECT account_name as party, 0, net_amount, 0, 0 " +
+        String saleInvoices = "SELECT party_name as party, 0, net_amount, 0, 0 " +
                              "FROM sale_invoices WHERE invoice_date BETWEEN ? AND ?";
-        if (party != null) saleInvoices += " AND account_name = ?";
+        if (party != null) saleInvoices += " AND party_name = ?";
         
         String purchaseReceipts = "SELECT party_name as party, 0, 0, amount, 0 " +
                                 "FROM purchase_receipts WHERE receipt_date BETWEEN ? AND ?";
@@ -1066,11 +1066,11 @@ public class ReportDAO {
         List<String[]> rows = new ArrayList<>();
         double total = 0;
         
-        String saleInvoices = "SELECT invoice_date, 'Sale' as type, account_name as party, COALESCE(rcvr_gstin,'') as gstin, " +
+        String saleInvoices = "SELECT invoice_date, 'Sale' as type, party_name as party, COALESCE(rcvr_gstin,'') as gstin, " +
                              "COALESCE(taxable_amount,0), COALESCE(sgst_amount,0), COALESCE(cgst_amount,0), " +
                              "COALESCE(igst_amount,0), COALESCE(total_gst,0) FROM sale_invoices " +
                              "WHERE invoice_date BETWEEN ? AND ?";
-        if (party != null) saleInvoices += " AND account_name = ?";
+        if (party != null) saleInvoices += " AND party_name = ?";
         
         String purchaseInvoices = "SELECT invoice_date, 'Purchase' as type, party_name as party, COALESCE(supplier_gst_no,'') as gstin, " +
                                 "COALESCE(taxable_amount,0), COALESCE(sgst_amount,0), COALESCE(cgst_amount,0), " +
@@ -1152,7 +1152,7 @@ public class ReportDAO {
                        party_name as party, net_amount as debit, 0 as credit
                 FROM purchase_invoices WHERE invoice_date BETWEEN ? AND ?
                 UNION ALL
-                SELECT invoice_date, 'Sale Invoice', invoice_no, account_name, 0, net_amount
+                SELECT invoice_date, 'Sale Invoice', invoice_no, party_name, 0, net_amount
                 FROM sale_invoices WHERE invoice_date BETWEEN ? AND ?
                 UNION ALL
                 SELECT receipt_date, 'Purchase Receipt', receipt_no, party_name, 0, amount
@@ -1201,9 +1201,49 @@ public class ReportDAO {
     }
 
     /**
-     * Receivable Outstanding: Sale Invoices - Sale Receipts (customers owe us)
+     * Receivable Outstanding (all-time): Sale Invoices - Sale Receipts (customers owe us)
      * Effective receipt = amount + tds_amount + kasar_amount
-     * Returns party-wise outstanding amounts for the given date range.
+     */
+    public Map<String, Double> getReceivableOutstanding() throws Exception {
+        Map<String, Double> partyOutstanding = new LinkedHashMap<>();
+
+        String sql = """
+            SELECT party_name,
+                   SUM(CASE WHEN txn_type = 'INVOICE' THEN amount ELSE 0 END) as invoice_total,
+                   SUM(CASE WHEN txn_type = 'RECEIPT' THEN amount ELSE 0 END) as receipt_total
+            FROM (
+                SELECT party_name, net_amount as amount, 'INVOICE' as txn_type
+                FROM sale_invoices
+                UNION ALL
+                SELECT party_name, (amount + IFNULL(tds_amount, 0) + IFNULL(kasar_amount, 0)) as amount, 'RECEIPT' as txn_type
+                FROM sale_receipts
+            ) combined
+            WHERE party_name IS NOT NULL AND party_name != ''
+            GROUP BY party_name
+            HAVING ABS(invoice_total - receipt_total) > 0.01
+            ORDER BY (invoice_total - receipt_total) DESC
+            """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    String party = rs.getString("party_name");
+                    double outstanding = rs.getDouble("invoice_total") - rs.getDouble("receipt_total");
+                    if (outstanding > 0.01) {
+                        partyOutstanding.put(party, outstanding);
+                    }
+                }
+            }
+        }
+
+        return partyOutstanding;
+    }
+
+    /**
+     * Receivable Outstanding (date-filtered): Sale Invoices - Sale Receipts (customers owe us)
+     * Effective receipt = amount + tds_amount + kasar_amount
      */
     public Map<String, Double> getReceivableOutstanding(LocalDate fromDate, LocalDate toDate) throws Exception {
         Map<String, Double> partyOutstanding = new LinkedHashMap<>();
@@ -1213,7 +1253,7 @@ public class ReportDAO {
                    SUM(CASE WHEN txn_type = 'INVOICE' THEN amount ELSE 0 END) as invoice_total,
                    SUM(CASE WHEN txn_type = 'RECEIPT' THEN amount ELSE 0 END) as receipt_total
             FROM (
-                SELECT account_name as party_name, net_amount as amount, 'INVOICE' as txn_type
+                SELECT party_name, net_amount as amount, 'INVOICE' as txn_type
                 FROM sale_invoices
                 WHERE invoice_date BETWEEN ? AND ?
                 UNION ALL
@@ -1249,9 +1289,49 @@ public class ReportDAO {
     }
 
     /**
-     * Payable Outstanding: Purchase Invoices - Purchase Receipts (we owe suppliers)
+     * Payable Outstanding (all-time): Purchase Invoices - Purchase Receipts (we owe suppliers)
      * Effective receipt = amount + tds_amount + kasar_amount
-     * Returns party-wise outstanding amounts for the given date range.
+     */
+    public Map<String, Double> getPayableOutstanding() throws Exception {
+        Map<String, Double> partyOutstanding = new LinkedHashMap<>();
+
+        String sql = """
+            SELECT party_name,
+                   SUM(CASE WHEN txn_type = 'INVOICE' THEN amount ELSE 0 END) as invoice_total,
+                   SUM(CASE WHEN txn_type = 'RECEIPT' THEN amount ELSE 0 END) as receipt_total
+            FROM (
+                SELECT party_name, net_amount as amount, 'INVOICE' as txn_type
+                FROM purchase_invoices
+                UNION ALL
+                SELECT party_name, (amount + IFNULL(tds_amount, 0) + IFNULL(kasar_amount, 0)) as amount, 'RECEIPT' as txn_type
+                FROM purchase_receipts
+            ) combined
+            WHERE party_name IS NOT NULL AND party_name != ''
+            GROUP BY party_name
+            HAVING ABS(invoice_total - receipt_total) > 0.01
+            ORDER BY (invoice_total - receipt_total) DESC
+            """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    String party = rs.getString("party_name");
+                    double outstanding = rs.getDouble("invoice_total") - rs.getDouble("receipt_total");
+                    if (outstanding > 0.01) {
+                        partyOutstanding.put(party, outstanding);
+                    }
+                }
+            }
+        }
+
+        return partyOutstanding;
+    }
+
+    /**
+     * Payable Outstanding (date-filtered): Purchase Invoices - Purchase Receipts (we owe suppliers)
+     * Effective receipt = amount + tds_amount + kasar_amount
      */
     public Map<String, Double> getPayableOutstanding(LocalDate fromDate, LocalDate toDate) throws Exception {
         Map<String, Double> partyOutstanding = new LinkedHashMap<>();

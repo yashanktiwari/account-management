@@ -39,6 +39,7 @@ public class ReportView {
     private Label resultCountLabel;
     private Label receivableAmountLabel;
     private Label payableAmountLabel;
+    private boolean userGeneratedDateFilter = false;
 
     public Parent createContent() {
         VBox root = new VBox(16);
@@ -58,6 +59,9 @@ public class ReportView {
 
         // Auto-generate report on load
         generateReport();
+
+        // Load all-time outstanding for summary cards on startup
+        loadAllTimeOutstanding();
 
         return root;
     }
@@ -159,7 +163,10 @@ public class ReportView {
 
         Button generateBtn = new Button("Generate");
         generateBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 6 14 6 14; -fx-background-radius: 4; -fx-font-size: 12px;");
-        generateBtn.setOnAction(e -> generateReport());
+        generateBtn.setOnAction(e -> {
+            userGeneratedDateFilter = true;
+            generateReport();
+        });
 
         MenuButton actionsMenu = new MenuButton("Actions");
         actionsMenu.setStyle("-fx-background-color: #475569; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 6 10 6 10; -fx-background-radius: 4; -fx-font-size: 12px;");
@@ -303,6 +310,29 @@ public class ReportView {
         }
     }
 
+    private void loadAllTimeOutstanding() {
+        AppExecutor.submit(() -> {
+            try {
+                Map<String, Double> receivables = reportDAO.getReceivableOutstanding();
+                Map<String, Double> payables = reportDAO.getPayableOutstanding();
+
+                double totalReceivable = receivables.values().stream().mapToDouble(Double::doubleValue).sum();
+                double totalPayable = payables.values().stream().mapToDouble(Double::doubleValue).sum();
+
+                Platform.runLater(() -> {
+                    if (receivableAmountLabel != null) {
+                        receivableAmountLabel.setText(String.format("\u20B9%.2f", totalReceivable));
+                    }
+                    if (payableAmountLabel != null) {
+                        payableAmountLabel.setText(String.format("\u20B9%.2f", totalPayable));
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
     private void generateReport() {
         LocalDate from = fromDate.getValue();
         LocalDate to = toDate.getValue();
@@ -387,25 +417,32 @@ public class ReportView {
             resultCountLabel.setText("Showing " + filtered + " of " + total + " transaction(s)");
         }
         
-        // Calculate totals for summary cards from DB (includes kasar + TDS in effective receipt amounts)
-        LocalDate from = fromDate.getValue();
-        LocalDate to = toDate.getValue();
-        if (from == null || to == null) return;
-        
+        // Update summary cards: use date-filtered if user explicitly generated, otherwise all-time
         AppExecutor.submit(() -> {
             try {
-                Map<String, Double> receivables = reportDAO.getReceivableOutstanding(from, to);
-                Map<String, Double> payables = reportDAO.getPayableOutstanding(from, to);
-                
+                Map<String, Double> receivables;
+                Map<String, Double> payables;
+
+                if (userGeneratedDateFilter) {
+                    LocalDate from = fromDate.getValue();
+                    LocalDate to = toDate.getValue();
+                    if (from == null || to == null) return;
+                    receivables = reportDAO.getReceivableOutstanding(from, to);
+                    payables = reportDAO.getPayableOutstanding(from, to);
+                } else {
+                    receivables = reportDAO.getReceivableOutstanding();
+                    payables = reportDAO.getPayableOutstanding();
+                }
+
                 double totalReceivable = receivables.values().stream().mapToDouble(Double::doubleValue).sum();
                 double totalPayable = payables.values().stream().mapToDouble(Double::doubleValue).sum();
-                
+
                 Platform.runLater(() -> {
                     if (receivableAmountLabel != null) {
-                        receivableAmountLabel.setText(String.format("₹%.2f", totalReceivable));
+                        receivableAmountLabel.setText(String.format("\u20B9%.2f", totalReceivable));
                     }
                     if (payableAmountLabel != null) {
-                        payableAmountLabel.setText(String.format("₹%.2f", totalPayable));
+                        payableAmountLabel.setText(String.format("\u20B9%.2f", totalPayable));
                     }
                 });
             } catch (Exception e) {
@@ -586,16 +623,17 @@ public class ReportView {
     }
 
     private void showPartyWiseReceivable() {
-        LocalDate from = fromDate.getValue();
-        LocalDate to = toDate.getValue();
-        if (from == null || to == null) {
-            AlertUtil.showWarning("Validation", "Please select both from and to dates");
-            return;
-        }
-        
         AppExecutor.submit(() -> {
             try {
-                Map<String, Double> receivables = reportDAO.getReceivableOutstanding(from, to);
+                Map<String, Double> receivables;
+                if (userGeneratedDateFilter) {
+                    LocalDate from = fromDate.getValue();
+                    LocalDate to = toDate.getValue();
+                    if (from == null || to == null) { Platform.runLater(() -> AlertUtil.showWarning("Validation", "Please select both from and to dates")); return; }
+                    receivables = reportDAO.getReceivableOutstanding(from, to);
+                } else {
+                    receivables = reportDAO.getReceivableOutstanding();
+                }
                 Platform.runLater(() -> showPartyWiseDialog("Receivable Outstanding - Party Wise", receivables));
             } catch (Exception e) {
                 Platform.runLater(() -> AlertUtil.showError("Error", "Failed to calculate receivables: " + e.getMessage()));
@@ -604,16 +642,17 @@ public class ReportView {
     }
 
     private void showPartyWisePayable() {
-        LocalDate from = fromDate.getValue();
-        LocalDate to = toDate.getValue();
-        if (from == null || to == null) {
-            AlertUtil.showWarning("Validation", "Please select both from and to dates");
-            return;
-        }
-        
         AppExecutor.submit(() -> {
             try {
-                Map<String, Double> payables = reportDAO.getPayableOutstanding(from, to);
+                Map<String, Double> payables;
+                if (userGeneratedDateFilter) {
+                    LocalDate from = fromDate.getValue();
+                    LocalDate to = toDate.getValue();
+                    if (from == null || to == null) { Platform.runLater(() -> AlertUtil.showWarning("Validation", "Please select both from and to dates")); return; }
+                    payables = reportDAO.getPayableOutstanding(from, to);
+                } else {
+                    payables = reportDAO.getPayableOutstanding();
+                }
                 Platform.runLater(() -> showPartyWiseDialog("Payable Outstanding - Party Wise", payables));
             } catch (Exception e) {
                 Platform.runLater(() -> AlertUtil.showError("Error", "Failed to calculate payables: " + e.getMessage()));
