@@ -166,6 +166,10 @@ public class LedgerView {
         ledgerTable = new TableView<>();
         ledgerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         ledgerTable.setItems(ledgerEntries);
+        ledgerTable.setStyle("-fx-border-color: #cbd5e1; -fx-border-width: 1;");
+        ledgerTable.getStylesheets().add("data:text/css," +
+            ".table-view .column-header { -fx-border-color: transparent #cbd5e1 transparent transparent; -fx-border-width: 1; }" +
+            ".table-view .table-cell { -fx-border-color: transparent #e2e8f0 transparent transparent; -fx-border-width: 1; }");
 
         // Serial No
         TableColumn<LedgerDAO.LedgerEntry, Integer> serialCol = new TableColumn<>("S.No");
@@ -199,34 +203,56 @@ public class LedgerView {
         noCol.setPrefWidth(130);
 
         // Debit
-        TableColumn<LedgerDAO.LedgerEntry, String> debitCol = new TableColumn<>("Debit");
+        TableColumn<LedgerDAO.LedgerEntry, String> debitCol = new TableColumn<>();
+        debitCol.setGraphic(makeCenterHeader("Debit"));
         debitCol.setCellValueFactory(cellData -> {
             double val = cellData.getValue().getDebit();
             return new javafx.beans.property.SimpleStringProperty(val == 0 ? "" : String.format("%,.2f", val));
         });
+        debitCol.setCellFactory(col -> new TableCell<>() {
+            { setStyle("-fx-alignment: CENTER;"); }
+            @Override protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item);
+            }
+        });
         debitCol.setPrefWidth(120);
-        debitCol.setStyle("-fx-alignment: CENTER-RIGHT;");
 
         // Credit
-        TableColumn<LedgerDAO.LedgerEntry, String> creditCol = new TableColumn<>("Credit");
+        TableColumn<LedgerDAO.LedgerEntry, String> creditCol = new TableColumn<>();
+        creditCol.setGraphic(makeCenterHeader("Credit"));
         creditCol.setCellValueFactory(cellData -> {
             double val = cellData.getValue().getCredit();
             return new javafx.beans.property.SimpleStringProperty(val == 0 ? "" : String.format("%,.2f", val));
         });
+        creditCol.setCellFactory(col -> new TableCell<>() {
+            { setStyle("-fx-alignment: CENTER;"); }
+            @Override protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item);
+            }
+        });
         creditCol.setPrefWidth(120);
-        creditCol.setStyle("-fx-alignment: CENTER-RIGHT;");
 
         // Kasar Amount
-        TableColumn<LedgerDAO.LedgerEntry, String> kasarCol = new TableColumn<>("Kasar Amount");
+        TableColumn<LedgerDAO.LedgerEntry, String> kasarCol = new TableColumn<>();
+        kasarCol.setGraphic(makeCenterHeader("Kasar Amount"));
         kasarCol.setCellValueFactory(cellData -> {
             double val = cellData.getValue().getKasarAmount();
             return new javafx.beans.property.SimpleStringProperty(val == 0 ? "" : String.format("%,.2f", val));
         });
+        kasarCol.setCellFactory(col -> new TableCell<>() {
+            { setStyle("-fx-alignment: CENTER;"); }
+            @Override protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item);
+            }
+        });
         kasarCol.setPrefWidth(120);
-        kasarCol.setStyle("-fx-alignment: CENTER-RIGHT;");
 
         // Running Balance
-        TableColumn<LedgerDAO.LedgerEntry, String> balanceCol = new TableColumn<>("Balance");
+        TableColumn<LedgerDAO.LedgerEntry, String> balanceCol = new TableColumn<>();
+        balanceCol.setGraphic(makeCenterHeader("Balance"));
         balanceCol.setCellValueFactory(cellData -> {
             double bal = cellData.getValue().getRunningBalance();
             String suffix = bal >= 0 ? " Cr" : " Dr";
@@ -234,20 +260,19 @@ public class LedgerView {
                 String.format("%,.2f%s", Math.abs(bal), suffix));
         });
         balanceCol.setPrefWidth(140);
-        balanceCol.setStyle("-fx-alignment: CENTER-RIGHT;");
         balanceCol.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setText(null);
-                    setStyle("-fx-alignment: CENTER-RIGHT;");
+                    setStyle("-fx-alignment: CENTER;");
                 } else {
                     setText(item);
                     if (item.endsWith("Dr")) {
-                        setStyle("-fx-alignment: CENTER-RIGHT; -fx-text-fill: #dc2626; -fx-font-weight: bold;");
+                        setStyle("-fx-alignment: CENTER; -fx-text-fill: #dc2626; -fx-font-weight: bold;");
                     } else {
-                        setStyle("-fx-alignment: CENTER-RIGHT; -fx-text-fill: #16a34a; -fx-font-weight: bold;");
+                        setStyle("-fx-alignment: CENTER; -fx-text-fill: #16a34a; -fx-font-weight: bold;");
                     }
                 }
             }
@@ -266,6 +291,14 @@ public class LedgerView {
         return section;
     }
 
+
+    private javafx.scene.control.Label makeCenterHeader(String text) {
+        javafx.scene.control.Label lbl = new javafx.scene.control.Label(text);
+        lbl.setMaxWidth(Double.MAX_VALUE);
+        lbl.setAlignment(javafx.geometry.Pos.CENTER);
+        lbl.setStyle("-fx-font-weight: bold;");
+        return lbl;
+    }
 
     private void setupPartyAutocomplete() {
         partyPopup = new Popup();
