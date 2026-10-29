@@ -166,10 +166,16 @@ public class LedgerView {
         ledgerTable = new TableView<>();
         ledgerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         ledgerTable.setItems(ledgerEntries);
-        ledgerTable.setStyle("-fx-border-color: #cbd5e1; -fx-border-width: 1;");
-        ledgerTable.getStylesheets().add("data:text/css," +
-            ".table-view .column-header { -fx-border-color: transparent #cbd5e1 transparent transparent; -fx-border-width: 1; }" +
-            ".table-view .table-cell { -fx-border-color: transparent #e2e8f0 transparent transparent; -fx-border-width: 1; }");
+        ledgerTable.setStyle(
+            "-fx-border-color: #cbd5e1; -fx-border-width: 1;" +
+            "-fx-table-cell-border-color: #e2e8f0;");
+        ledgerTable.setRowFactory(tv -> new javafx.scene.control.TableRow<LedgerDAO.LedgerEntry>() {
+            @Override
+            protected void updateItem(LedgerDAO.LedgerEntry item, boolean empty) {
+                super.updateItem(item, empty);
+                setStyle("-fx-border-color: transparent transparent #cbd5e1 transparent; -fx-border-width: 0 0 1 0;");
+            }
+        });
 
         // Serial No
         TableColumn<LedgerDAO.LedgerEntry, Integer> serialCol = new TableColumn<>("S.No");
