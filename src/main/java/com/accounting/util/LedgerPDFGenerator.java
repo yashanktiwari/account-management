@@ -78,7 +78,7 @@ public class LedgerPDFGenerator {
             document.add(openingBal);
 
             // Create ledger table
-            float[] columnWidths = {8f, 12f, 18f, 18f, 15f, 15f, 18f, 25f};
+            float[] columnWidths = {6f, 10f, 14f, 14f, 13f, 13f, 13f, 15f, 20f};
             PdfPTable table = new PdfPTable(columnWidths);
             table.setWidthPercentage(100);
             table.setSpacingBefore(5);
@@ -91,6 +91,7 @@ public class LedgerPDFGenerator {
             addTableCell(table, "Transaction No", F_BOLD_9, headerBg, Element.ALIGN_CENTER);
             addTableCell(table, "Debit", F_BOLD_9, headerBg, Element.ALIGN_RIGHT);
             addTableCell(table, "Credit", F_BOLD_9, headerBg, Element.ALIGN_RIGHT);
+            addTableCell(table, "Kasar", F_BOLD_9, headerBg, Element.ALIGN_RIGHT);
             addTableCell(table, "Balance", F_BOLD_9, headerBg, Element.ALIGN_RIGHT);
             addTableCell(table, "Remarks", F_BOLD_9, headerBg, Element.ALIGN_LEFT);
 
@@ -109,6 +110,7 @@ public class LedgerPDFGenerator {
                 addTableCell(table, entry.getTransactionNo(), F_NORM_8, Color.WHITE, Element.ALIGN_LEFT);
                 addTableCell(table, formatAmount(entry.getDebit()), F_NORM_8, Color.WHITE, Element.ALIGN_RIGHT);
                 addTableCell(table, formatAmount(entry.getCredit()), F_NORM_8, Color.WHITE, Element.ALIGN_RIGHT);
+                addTableCell(table, formatAmount(entry.getKasarAmount()), F_NORM_8, Color.WHITE, Element.ALIGN_RIGHT);
                 addTableCell(table, formatBalance(entry.getRunningBalance()), F_NORM_8, Color.WHITE, Element.ALIGN_RIGHT);
                 addTableCell(table, entry.getRemarks() != null ? entry.getRemarks() : "", F_NORM_8, Color.WHITE, Element.ALIGN_LEFT);
             }
@@ -121,6 +123,7 @@ public class LedgerPDFGenerator {
             addTableCell(table, "Total:", F_BOLD_9, totalBg, Element.ALIGN_RIGHT);
             addTableCell(table, formatAmount(totalDebit), F_BOLD_9, totalBg, Element.ALIGN_RIGHT);
             addTableCell(table, formatAmount(totalCredit), F_BOLD_9, totalBg, Element.ALIGN_RIGHT);
+            addTableCell(table, "", F_BOLD_9, totalBg, Element.ALIGN_CENTER);
             addTableCell(table, "", F_BOLD_9, totalBg, Element.ALIGN_CENTER);
             addTableCell(table, "", F_BOLD_9, totalBg, Element.ALIGN_CENTER);
 

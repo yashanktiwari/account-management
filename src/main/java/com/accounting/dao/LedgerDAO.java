@@ -25,6 +25,7 @@ public class LedgerDAO {
         private double debit;
         private double credit;
         private double runningBalance;
+        private double kasarAmount;
         private String remarks;
 
         public LocalDate getDate() { return date; }
@@ -44,6 +45,9 @@ public class LedgerDAO {
 
         public double getRunningBalance() { return runningBalance; }
         public void setRunningBalance(double runningBalance) { this.runningBalance = runningBalance; }
+
+        public double getKasarAmount() { return kasarAmount; }
+        public void setKasarAmount(double kasarAmount) { this.kasarAmount = kasarAmount; }
 
         public String getRemarks() { return remarks; }
         public void setRemarks(String remarks) { this.remarks = remarks; }
@@ -237,6 +241,7 @@ public class LedgerDAO {
                        COALESCE(invoice_no, '') as txn_no,
                        0 as debit_amt,
                        COALESCE(net_amount, 0) as credit_amt,
+                       0 as kasar_amt,
                        COALESCE(remarks, '') as remarks
                 FROM purchase_invoices
                 WHERE party_id = ? AND invoice_date BETWEEN ? AND ?
@@ -247,6 +252,7 @@ public class LedgerDAO {
                        COALESCE(invoice_no, '') as txn_no,
                        COALESCE(net_amount, 0) as debit_amt,
                        0 as credit_amt,
+                       0 as kasar_amt,
                        COALESCE(remarks, '') as remarks
                 FROM sale_invoices
                 WHERE party_id = ? AND invoice_date BETWEEN ? AND ?
@@ -257,6 +263,7 @@ public class LedgerDAO {
                        COALESCE(receipt_no, '') as txn_no,
                        0 as debit_amt,
                        COALESCE(amount, 0) as credit_amt,
+                       COALESCE(kasar_amount, 0) as kasar_amt,
                        COALESCE(remarks, '') as remarks
                 FROM purchase_receipts
                 WHERE party_id = ? AND receipt_date BETWEEN ? AND ?
@@ -267,6 +274,7 @@ public class LedgerDAO {
                        COALESCE(receipt_no, '') as txn_no,
                        COALESCE(amount, 0) as debit_amt,
                        0 as credit_amt,
+                       COALESCE(kasar_amount, 0) as kasar_amt,
                        COALESCE(remarks, '') as remarks
                 FROM sale_receipts
                 WHERE party_id = ? AND receipt_date BETWEEN ? AND ?
@@ -293,6 +301,7 @@ public class LedgerDAO {
                     entry.setTransactionNo(rs.getString("txn_no"));
                     entry.setDebit(rs.getDouble("debit_amt"));
                     entry.setCredit(rs.getDouble("credit_amt"));
+                    entry.setKasarAmount(rs.getDouble("kasar_amt"));
                     entry.setRemarks(rs.getString("remarks"));
                     entries.add(entry);
                 }

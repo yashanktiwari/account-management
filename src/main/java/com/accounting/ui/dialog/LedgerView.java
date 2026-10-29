@@ -199,20 +199,31 @@ public class LedgerView {
         noCol.setPrefWidth(130);
 
         // Debit
-        TableColumn<LedgerDAO.LedgerEntry, Double> debitCol = new TableColumn<>("Debit");
-        debitCol.setCellValueFactory(cellData ->
-            new javafx.beans.property.SimpleObjectProperty<>(cellData.getValue().getDebit()));
-        debitCol.setCellFactory(col -> formatCurrencyCell());
+        TableColumn<LedgerDAO.LedgerEntry, String> debitCol = new TableColumn<>("Debit");
+        debitCol.setCellValueFactory(cellData -> {
+            double val = cellData.getValue().getDebit();
+            return new javafx.beans.property.SimpleStringProperty(val == 0 ? "" : String.format("%,.2f", val));
+        });
         debitCol.setPrefWidth(120);
         debitCol.setStyle("-fx-alignment: CENTER-RIGHT;");
 
         // Credit
-        TableColumn<LedgerDAO.LedgerEntry, Double> creditCol = new TableColumn<>("Credit");
-        creditCol.setCellValueFactory(cellData ->
-            new javafx.beans.property.SimpleObjectProperty<>(cellData.getValue().getCredit()));
-        creditCol.setCellFactory(col -> formatCurrencyCell());
+        TableColumn<LedgerDAO.LedgerEntry, String> creditCol = new TableColumn<>("Credit");
+        creditCol.setCellValueFactory(cellData -> {
+            double val = cellData.getValue().getCredit();
+            return new javafx.beans.property.SimpleStringProperty(val == 0 ? "" : String.format("%,.2f", val));
+        });
         creditCol.setPrefWidth(120);
         creditCol.setStyle("-fx-alignment: CENTER-RIGHT;");
+
+        // Kasar Amount
+        TableColumn<LedgerDAO.LedgerEntry, String> kasarCol = new TableColumn<>("Kasar Amount");
+        kasarCol.setCellValueFactory(cellData -> {
+            double val = cellData.getValue().getKasarAmount();
+            return new javafx.beans.property.SimpleStringProperty(val == 0 ? "" : String.format("%,.2f", val));
+        });
+        kasarCol.setPrefWidth(120);
+        kasarCol.setStyle("-fx-alignment: CENTER-RIGHT;");
 
         // Running Balance
         TableColumn<LedgerDAO.LedgerEntry, String> balanceCol = new TableColumn<>("Balance");
@@ -248,26 +259,13 @@ public class LedgerView {
             new javafx.beans.property.SimpleStringProperty(cellData.getValue().getRemarks()));
         remarksCol.setPrefWidth(180);
 
-        ledgerTable.getColumns().addAll(serialCol, dateCol, typeCol, noCol, debitCol, creditCol, balanceCol, remarksCol);
+        ledgerTable.getColumns().addAll(serialCol, dateCol, typeCol, noCol, debitCol, creditCol, kasarCol, balanceCol, remarksCol);
 
         VBox.setVgrow(ledgerTable, Priority.ALWAYS);
         section.getChildren().add(ledgerTable);
         return section;
     }
 
-    private TableCell<LedgerDAO.LedgerEntry, Double> formatCurrencyCell() {
-        return new TableCell<>() {
-            @Override
-            protected void updateItem(Double item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null || item == 0) {
-                    setText(null);
-                } else {
-                    setText(String.format("%,.2f", item));
-                }
-            }
-        };
-    }
 
     private void setupPartyAutocomplete() {
         partyPopup = new Popup();
