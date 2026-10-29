@@ -85,7 +85,7 @@ public class LicenseManager {
             }
 
             int daysUsed = (int) java.time.temporal.ChronoUnit.DAYS.between(demoStart, LocalDate.now());
-            int daysRemaining = 30 - daysUsed;
+            int daysRemaining = 455 - daysUsed;
 
             if (daysRemaining > 0) {
                 currentStatus = new LicenseStatus(

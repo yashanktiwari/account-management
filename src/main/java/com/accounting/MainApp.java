@@ -384,7 +384,7 @@ public class MainApp extends Application {
             alert.initOwner(primaryStage);
             alert.setContentText(
                 "Thank you for trying Account Management System!\n\n" +
-                "Your 30-day demo period has expired.\n" +
+                "Your 60-day demo period has expired.\n" +
                 "To continue using the application, please purchase a license.\n\n" +
                 "Contact support for assistance."
             );

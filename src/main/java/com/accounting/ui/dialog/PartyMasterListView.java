@@ -22,6 +22,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
+import java.io.File;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
