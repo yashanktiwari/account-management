@@ -1201,27 +1201,24 @@ public class ReportDAO {
     }
 
     /**
-     * Receivable Outstanding (all-time): Sale Invoices - Sale Receipts (customers owe us)
-     * Effective receipt = amount + tds_amount + kasar_amount
+     * Receivable Outstanding (all-time): Uses all 4 transaction tables by party_id,
+     * matching LedgerDAO balance logic exactly.
+     * Receivable = sale_invoices + sale_receipts - purchase_invoices - purchase_receipts > 0
      */
     public Map<String, Double> getReceivableOutstanding() throws Exception {
         Map<String, Double> partyOutstanding = new LinkedHashMap<>();
 
         String sql = """
-            SELECT party_name,
-                   SUM(CASE WHEN txn_type = 'INVOICE' THEN amount ELSE 0 END) as invoice_total,
-                   SUM(CASE WHEN txn_type = 'RECEIPT' THEN amount ELSE 0 END) as receipt_total
-            FROM (
-                SELECT party_name, net_amount as amount, 'INVOICE' as txn_type
-                FROM sale_invoices
-                UNION ALL
-                SELECT party_name, (amount + IFNULL(tds_amount, 0) + IFNULL(kasar_amount, 0)) as amount, 'RECEIPT' as txn_type
-                FROM sale_receipts
-            ) combined
-            WHERE party_name IS NOT NULL AND party_name != ''
-            GROUP BY party_name
-            HAVING ABS(invoice_total - receipt_total) > 0.01
-            ORDER BY (invoice_total - receipt_total) DESC
+            SELECT p.party_name,
+                   (COALESCE(si.total, 0) + COALESCE(sr.total, 0)
+                  - COALESCE(pi.total, 0) - COALESCE(pr.total, 0)) as outstanding
+            FROM parties p
+            LEFT JOIN (SELECT party_id, SUM(net_amount) as total FROM sale_invoices GROUP BY party_id) si ON p.id = si.party_id
+            LEFT JOIN (SELECT party_id, SUM(amount) as total FROM sale_receipts GROUP BY party_id) sr ON p.id = sr.party_id
+            LEFT JOIN (SELECT party_id, SUM(net_amount) as total FROM purchase_invoices GROUP BY party_id) pi ON p.id = pi.party_id
+            LEFT JOIN (SELECT party_id, SUM(amount) as total FROM purchase_receipts GROUP BY party_id) pr ON p.id = pr.party_id
+            HAVING outstanding > 0.01
+            ORDER BY outstanding DESC
             """;
 
         try (Connection conn = DBConnection.getConnection();
@@ -1230,10 +1227,8 @@ public class ReportDAO {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     String party = rs.getString("party_name");
-                    double outstanding = rs.getDouble("invoice_total") - rs.getDouble("receipt_total");
-                    if (outstanding > 0.01) {
-                        partyOutstanding.put(party, outstanding);
-                    }
+                    double outstanding = rs.getDouble("outstanding");
+                    partyOutstanding.put(party, outstanding);
                 }
             }
         }
@@ -1242,29 +1237,23 @@ public class ReportDAO {
     }
 
     /**
-     * Receivable Outstanding (date-filtered): Sale Invoices - Sale Receipts (customers owe us)
-     * Effective receipt = amount + tds_amount + kasar_amount
+     * Receivable Outstanding (date-filtered): Uses all 4 transaction tables by party_id,
+     * only considering transactions within the given date range.
      */
     public Map<String, Double> getReceivableOutstanding(LocalDate fromDate, LocalDate toDate) throws Exception {
         Map<String, Double> partyOutstanding = new LinkedHashMap<>();
 
         String sql = """
-            SELECT party_name,
-                   SUM(CASE WHEN txn_type = 'INVOICE' THEN amount ELSE 0 END) as invoice_total,
-                   SUM(CASE WHEN txn_type = 'RECEIPT' THEN amount ELSE 0 END) as receipt_total
-            FROM (
-                SELECT party_name, net_amount as amount, 'INVOICE' as txn_type
-                FROM sale_invoices
-                WHERE invoice_date BETWEEN ? AND ?
-                UNION ALL
-                SELECT party_name, (amount + IFNULL(tds_amount, 0) + IFNULL(kasar_amount, 0)) as amount, 'RECEIPT' as txn_type
-                FROM sale_receipts
-                WHERE receipt_date BETWEEN ? AND ?
-            ) combined
-            WHERE party_name IS NOT NULL AND party_name != ''
-            GROUP BY party_name
-            HAVING (invoice_total - receipt_total) > 0.01
-            ORDER BY (invoice_total - receipt_total) DESC
+            SELECT p.party_name,
+                   (COALESCE(si.total, 0) + COALESCE(sr.total, 0)
+                  - COALESCE(pi.total, 0) - COALESCE(pr.total, 0)) as outstanding
+            FROM parties p
+            LEFT JOIN (SELECT party_id, SUM(net_amount) as total FROM sale_invoices WHERE invoice_date BETWEEN ? AND ? GROUP BY party_id) si ON p.id = si.party_id
+            LEFT JOIN (SELECT party_id, SUM(amount) as total FROM sale_receipts WHERE receipt_date BETWEEN ? AND ? GROUP BY party_id) sr ON p.id = sr.party_id
+            LEFT JOIN (SELECT party_id, SUM(net_amount) as total FROM purchase_invoices WHERE invoice_date BETWEEN ? AND ? GROUP BY party_id) pi ON p.id = pi.party_id
+            LEFT JOIN (SELECT party_id, SUM(amount) as total FROM purchase_receipts WHERE receipt_date BETWEEN ? AND ? GROUP BY party_id) pr ON p.id = pr.party_id
+            HAVING outstanding > 0.01
+            ORDER BY outstanding DESC
             """;
 
         try (Connection conn = DBConnection.getConnection();
@@ -1273,14 +1262,16 @@ public class ReportDAO {
             pstmt.setDate(2, Date.valueOf(toDate));
             pstmt.setDate(3, Date.valueOf(fromDate));
             pstmt.setDate(4, Date.valueOf(toDate));
+            pstmt.setDate(5, Date.valueOf(fromDate));
+            pstmt.setDate(6, Date.valueOf(toDate));
+            pstmt.setDate(7, Date.valueOf(fromDate));
+            pstmt.setDate(8, Date.valueOf(toDate));
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     String party = rs.getString("party_name");
-                    double outstanding = rs.getDouble("invoice_total") - rs.getDouble("receipt_total");
-                    if (outstanding > 0.01) {
-                        partyOutstanding.put(party, outstanding);
-                    }
+                    double outstanding = rs.getDouble("outstanding");
+                    partyOutstanding.put(party, outstanding);
                 }
             }
         }
@@ -1289,27 +1280,24 @@ public class ReportDAO {
     }
 
     /**
-     * Payable Outstanding (all-time): Purchase Invoices - Purchase Receipts (we owe suppliers)
-     * Effective receipt = amount + tds_amount + kasar_amount
+     * Payable Outstanding (all-time): Uses all 4 transaction tables by party_id,
+     * matching LedgerDAO balance logic exactly.
+     * Payable = purchase_invoices + purchase_receipts - sale_invoices - sale_receipts > 0
      */
     public Map<String, Double> getPayableOutstanding() throws Exception {
         Map<String, Double> partyOutstanding = new LinkedHashMap<>();
 
         String sql = """
-            SELECT party_name,
-                   SUM(CASE WHEN txn_type = 'INVOICE' THEN amount ELSE 0 END) as invoice_total,
-                   SUM(CASE WHEN txn_type = 'RECEIPT' THEN amount ELSE 0 END) as receipt_total
-            FROM (
-                SELECT party_name, net_amount as amount, 'INVOICE' as txn_type
-                FROM purchase_invoices
-                UNION ALL
-                SELECT party_name, (amount + IFNULL(tds_amount, 0) + IFNULL(kasar_amount, 0)) as amount, 'RECEIPT' as txn_type
-                FROM purchase_receipts
-            ) combined
-            WHERE party_name IS NOT NULL AND party_name != ''
-            GROUP BY party_name
-            HAVING ABS(invoice_total - receipt_total) > 0.01
-            ORDER BY (invoice_total - receipt_total) DESC
+            SELECT p.party_name,
+                   (COALESCE(pi.total, 0) + COALESCE(pr.total, 0)
+                  - COALESCE(si.total, 0) - COALESCE(sr.total, 0)) as outstanding
+            FROM parties p
+            LEFT JOIN (SELECT party_id, SUM(net_amount) as total FROM purchase_invoices GROUP BY party_id) pi ON p.id = pi.party_id
+            LEFT JOIN (SELECT party_id, SUM(amount) as total FROM purchase_receipts GROUP BY party_id) pr ON p.id = pr.party_id
+            LEFT JOIN (SELECT party_id, SUM(net_amount) as total FROM sale_invoices GROUP BY party_id) si ON p.id = si.party_id
+            LEFT JOIN (SELECT party_id, SUM(amount) as total FROM sale_receipts GROUP BY party_id) sr ON p.id = sr.party_id
+            HAVING outstanding > 0.01
+            ORDER BY outstanding DESC
             """;
 
         try (Connection conn = DBConnection.getConnection();
@@ -1318,10 +1306,8 @@ public class ReportDAO {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     String party = rs.getString("party_name");
-                    double outstanding = rs.getDouble("invoice_total") - rs.getDouble("receipt_total");
-                    if (outstanding > 0.01) {
-                        partyOutstanding.put(party, outstanding);
-                    }
+                    double outstanding = rs.getDouble("outstanding");
+                    partyOutstanding.put(party, outstanding);
                 }
             }
         }
@@ -1330,29 +1316,23 @@ public class ReportDAO {
     }
 
     /**
-     * Payable Outstanding (date-filtered): Purchase Invoices - Purchase Receipts (we owe suppliers)
-     * Effective receipt = amount + tds_amount + kasar_amount
+     * Payable Outstanding (date-filtered): Uses all 4 transaction tables by party_id,
+     * only considering transactions within the given date range.
      */
     public Map<String, Double> getPayableOutstanding(LocalDate fromDate, LocalDate toDate) throws Exception {
         Map<String, Double> partyOutstanding = new LinkedHashMap<>();
 
         String sql = """
-            SELECT party_name,
-                   SUM(CASE WHEN txn_type = 'INVOICE' THEN amount ELSE 0 END) as invoice_total,
-                   SUM(CASE WHEN txn_type = 'RECEIPT' THEN amount ELSE 0 END) as receipt_total
-            FROM (
-                SELECT party_name, net_amount as amount, 'INVOICE' as txn_type
-                FROM purchase_invoices
-                WHERE invoice_date BETWEEN ? AND ?
-                UNION ALL
-                SELECT party_name, (amount + IFNULL(tds_amount, 0) + IFNULL(kasar_amount, 0)) as amount, 'RECEIPT' as txn_type
-                FROM purchase_receipts
-                WHERE receipt_date BETWEEN ? AND ?
-            ) combined
-            WHERE party_name IS NOT NULL AND party_name != ''
-            GROUP BY party_name
-            HAVING (invoice_total - receipt_total) > 0.01
-            ORDER BY (invoice_total - receipt_total) DESC
+            SELECT p.party_name,
+                   (COALESCE(pi.total, 0) + COALESCE(pr.total, 0)
+                  - COALESCE(si.total, 0) - COALESCE(sr.total, 0)) as outstanding
+            FROM parties p
+            LEFT JOIN (SELECT party_id, SUM(net_amount) as total FROM purchase_invoices WHERE invoice_date BETWEEN ? AND ? GROUP BY party_id) pi ON p.id = pi.party_id
+            LEFT JOIN (SELECT party_id, SUM(amount) as total FROM purchase_receipts WHERE receipt_date BETWEEN ? AND ? GROUP BY party_id) pr ON p.id = pr.party_id
+            LEFT JOIN (SELECT party_id, SUM(net_amount) as total FROM sale_invoices WHERE invoice_date BETWEEN ? AND ? GROUP BY party_id) si ON p.id = si.party_id
+            LEFT JOIN (SELECT party_id, SUM(amount) as total FROM sale_receipts WHERE receipt_date BETWEEN ? AND ? GROUP BY party_id) sr ON p.id = sr.party_id
+            HAVING outstanding > 0.01
+            ORDER BY outstanding DESC
             """;
 
         try (Connection conn = DBConnection.getConnection();
@@ -1361,14 +1341,16 @@ public class ReportDAO {
             pstmt.setDate(2, Date.valueOf(toDate));
             pstmt.setDate(3, Date.valueOf(fromDate));
             pstmt.setDate(4, Date.valueOf(toDate));
+            pstmt.setDate(5, Date.valueOf(fromDate));
+            pstmt.setDate(6, Date.valueOf(toDate));
+            pstmt.setDate(7, Date.valueOf(fromDate));
+            pstmt.setDate(8, Date.valueOf(toDate));
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     String party = rs.getString("party_name");
-                    double outstanding = rs.getDouble("invoice_total") - rs.getDouble("receipt_total");
-                    if (outstanding > 0.01) {
-                        partyOutstanding.put(party, outstanding);
-                    }
+                    double outstanding = rs.getDouble("outstanding");
+                    partyOutstanding.put(party, outstanding);
                 }
             }
         }
