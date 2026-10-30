@@ -1209,7 +1209,7 @@ public class ReportDAO {
         Map<String, Double> partyOutstanding = new LinkedHashMap<>();
 
         String sql = """
-            SELECT p.party_name,
+            SELECT p.name as party_name,
                    (COALESCE(si.total, 0) + COALESCE(sr.total, 0)
                   - COALESCE(pi.total, 0) - COALESCE(pr.total, 0)) as outstanding
             FROM parties p
@@ -1244,7 +1244,7 @@ public class ReportDAO {
         Map<String, Double> partyOutstanding = new LinkedHashMap<>();
 
         String sql = """
-            SELECT p.party_name,
+            SELECT p.name as party_name,
                    (COALESCE(si.total, 0) + COALESCE(sr.total, 0)
                   - COALESCE(pi.total, 0) - COALESCE(pr.total, 0)) as outstanding
             FROM parties p
@@ -1288,7 +1288,7 @@ public class ReportDAO {
         Map<String, Double> partyOutstanding = new LinkedHashMap<>();
 
         String sql = """
-            SELECT p.party_name,
+            SELECT p.name as party_name,
                    (COALESCE(pi.total, 0) + COALESCE(pr.total, 0)
                   - COALESCE(si.total, 0) - COALESCE(sr.total, 0)) as outstanding
             FROM parties p
@@ -1323,7 +1323,7 @@ public class ReportDAO {
         Map<String, Double> partyOutstanding = new LinkedHashMap<>();
 
         String sql = """
-            SELECT p.party_name,
+            SELECT p.name as party_name,
                    (COALESCE(pi.total, 0) + COALESCE(pr.total, 0)
                   - COALESCE(si.total, 0) - COALESCE(sr.total, 0)) as outstanding
             FROM parties p
