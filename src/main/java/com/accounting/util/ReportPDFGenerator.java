@@ -11,7 +11,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class ReportPDFGenerator {
 
@@ -167,6 +169,69 @@ public class ReportPDFGenerator {
     private static String formatAmount(double amount) {
         if (amount == 0) return "-";
         return String.format("%.2f", amount);
+    }
+
+    public static void generateOutstandingPDF(String reportTitle, Map<String, Double> partyAmounts, String outputPath) {
+        try {
+            Document document = new Document(PageSize.A4, 36, 36, 36, 36);
+            PdfWriter.getInstance(document, new FileOutputStream(outputPath));
+            document.open();
+
+            // Header image
+            Image headerImg = loadImage("REPORT_HEADER");
+            if (headerImg != null) {
+                headerImg.scaleToFit(520, 100);
+                headerImg.setAlignment(Image.ALIGN_CENTER);
+                document.add(headerImg);
+            }
+
+            LineSeparator line = new LineSeparator();
+            line.setLineWidth(1f);
+            line.setLineColor(Color.GRAY);
+            document.add(new Chunk(line));
+
+            // Title
+            Paragraph title = new Paragraph(reportTitle, F_BOLD_14);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingBefore(10);
+            title.setSpacingAfter(12);
+            document.add(title);
+
+            // Table: Sr.No | Party Name | Amount
+            PdfPTable table = new PdfPTable(3);
+            table.setWidthPercentage(100);
+            table.setWidths(new float[]{0.6f, 3.5f, 1.5f});
+            table.setSpacingBefore(4);
+
+            addTableCell(table, "Sr.No",      F_BOLD_10, Color.LIGHT_GRAY, Element.ALIGN_CENTER);
+            addTableCell(table, "Party Name", F_BOLD_10, Color.LIGHT_GRAY, Element.ALIGN_LEFT);
+            addTableCell(table, "Amount",     F_BOLD_10, Color.LIGHT_GRAY, Element.ALIGN_RIGHT);
+
+            int serial = 1;
+            double total = 0;
+            List<Map.Entry<String, Double>> sorted = new ArrayList<>(partyAmounts.entrySet());
+            sorted.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
+
+            for (Map.Entry<String, Double> entry : sorted) {
+                Color bg = (serial % 2 == 0) ? new Color(245, 245, 245) : Color.WHITE;
+                addTableCell(table, String.valueOf(serial++), F_NORM_9, bg, Element.ALIGN_CENTER);
+                addTableCell(table, entry.getKey(),           F_NORM_9, bg, Element.ALIGN_LEFT);
+                addTableCell(table, String.format("\u20B9%.2f", entry.getValue()), F_NORM_9, bg, Element.ALIGN_RIGHT);
+                total += entry.getValue();
+            }
+
+            // Total row
+            addTableCell(table, "",      F_BOLD_10, new Color(220, 220, 220), Element.ALIGN_CENTER);
+            addTableCell(table, "Total", F_BOLD_10, new Color(220, 220, 220), Element.ALIGN_LEFT);
+            addTableCell(table, String.format("\u20B9%.2f", total), F_BOLD_10, new Color(220, 220, 220), Element.ALIGN_RIGHT);
+
+            document.add(table);
+            document.close();
+            log.info("Outstanding PDF generated: {}", outputPath);
+        } catch (Exception e) {
+            log.error("Failed to generate Outstanding PDF", e);
+            throw new RuntimeException("Failed to generate PDF: " + e.getMessage(), e);
+        }
     }
 
     private static Image loadImage(String name) {

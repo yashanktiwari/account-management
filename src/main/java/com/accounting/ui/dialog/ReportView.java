@@ -669,16 +669,16 @@ public class ReportView {
         Alert dialog = new Alert(Alert.AlertType.INFORMATION);
         dialog.setTitle(title);
         dialog.setHeaderText(title);
-        
+
         // Create table for party-wise amounts
         TableView<PartyAmount> table = new TableView<>();
         table.setPrefWidth(500);
         table.setPrefHeight(400);
-        
+
         TableColumn<PartyAmount, String> partyCol = new TableColumn<>("Party Name");
         partyCol.setCellValueFactory(new PropertyValueFactory<>("partyName"));
         partyCol.setPrefWidth(300);
-        
+
         TableColumn<PartyAmount, Double> amountCol = new TableColumn<>("Amount");
         amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
         amountCol.setPrefWidth(180);
@@ -694,27 +694,50 @@ public class ReportView {
                 }
             }
         });
-        
+
         table.getColumns().addAll(partyCol, amountCol);
-        
+
         // Sort by amount descending
         ObservableList<PartyAmount> data = FXCollections.observableArrayList();
         partyAmounts.entrySet().stream()
             .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
             .forEach(entry -> data.add(new PartyAmount(entry.getKey(), entry.getValue())));
-        
+
         table.setItems(data);
-        
+
         // Calculate total
         double total = partyAmounts.values().stream().mapToDouble(Double::doubleValue).sum();
         Label totalLabel = new Label(String.format("Total: ₹%.2f", total));
         totalLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10;");
-        
-        VBox content = new VBox(10, table, totalLabel);
+
+        Button printBtn = new Button("Print PDF");
+        printBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 6 14 6 14; -fx-background-radius: 4;");
+        printBtn.setOnAction(e -> {
+            FileChooser chooser = new FileChooser();
+            chooser.setTitle("Save PDF");
+            chooser.setInitialFileName(title.replace(" ", "_") + ".pdf");
+            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
+            Window owner = dialog.getDialogPane().getScene().getWindow();
+            File file = chooser.showSaveDialog(owner);
+            if (file != null) {
+                try {
+                    com.accounting.util.ReportPDFGenerator.generateOutstandingPDF(title, partyAmounts, file.getAbsolutePath());
+                    AlertUtil.showInfo("Success", "PDF saved to:\n" + file.getAbsolutePath());
+                } catch (Exception ex) {
+                    AlertUtil.showError("Error", "Failed to save PDF: " + ex.getMessage());
+                }
+            }
+        });
+
+        HBox footer = new HBox(10, totalLabel, printBtn);
+        footer.setAlignment(Pos.CENTER_LEFT);
+        footer.setPadding(new Insets(4, 0, 0, 0));
+
+        VBox content = new VBox(10, table, footer);
         content.setPadding(new Insets(10));
-        
+
         dialog.getDialogPane().setContent(content);
-        dialog.getDialogPane().setPrefWidth(550);
+        dialog.getDialogPane().setPrefWidth(580);
         dialog.showAndWait();
     }
 
