@@ -1248,24 +1248,20 @@ public class ReportDAO {
                    (COALESCE(si.total, 0) + COALESCE(sr.total, 0)
                   - COALESCE(pi.total, 0) - COALESCE(pr.total, 0)) as outstanding
             FROM parties p
-            LEFT JOIN (SELECT party_id, SUM(net_amount) as total FROM sale_invoices WHERE invoice_date BETWEEN ? AND ? GROUP BY party_id) si ON p.id = si.party_id
-            LEFT JOIN (SELECT party_id, SUM(amount) as total FROM sale_receipts WHERE receipt_date BETWEEN ? AND ? GROUP BY party_id) sr ON p.id = sr.party_id
-            LEFT JOIN (SELECT party_id, SUM(net_amount) as total FROM purchase_invoices WHERE invoice_date BETWEEN ? AND ? GROUP BY party_id) pi ON p.id = pi.party_id
-            LEFT JOIN (SELECT party_id, SUM(amount) as total FROM purchase_receipts WHERE receipt_date BETWEEN ? AND ? GROUP BY party_id) pr ON p.id = pr.party_id
+            LEFT JOIN (SELECT party_id, SUM(net_amount) as total FROM sale_invoices WHERE invoice_date <= ? GROUP BY party_id) si ON p.id = si.party_id
+            LEFT JOIN (SELECT party_id, SUM(amount) as total FROM sale_receipts WHERE receipt_date <= ? GROUP BY party_id) sr ON p.id = sr.party_id
+            LEFT JOIN (SELECT party_id, SUM(net_amount) as total FROM purchase_invoices WHERE invoice_date <= ? GROUP BY party_id) pi ON p.id = pi.party_id
+            LEFT JOIN (SELECT party_id, SUM(amount) as total FROM purchase_receipts WHERE receipt_date <= ? GROUP BY party_id) pr ON p.id = pr.party_id
             HAVING outstanding > 0.01
             ORDER BY outstanding DESC
             """;
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setDate(1, Date.valueOf(fromDate));
+            pstmt.setDate(1, Date.valueOf(toDate));
             pstmt.setDate(2, Date.valueOf(toDate));
-            pstmt.setDate(3, Date.valueOf(fromDate));
+            pstmt.setDate(3, Date.valueOf(toDate));
             pstmt.setDate(4, Date.valueOf(toDate));
-            pstmt.setDate(5, Date.valueOf(fromDate));
-            pstmt.setDate(6, Date.valueOf(toDate));
-            pstmt.setDate(7, Date.valueOf(fromDate));
-            pstmt.setDate(8, Date.valueOf(toDate));
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
@@ -1327,24 +1323,20 @@ public class ReportDAO {
                    (COALESCE(pi.total, 0) + COALESCE(pr.total, 0)
                   - COALESCE(si.total, 0) - COALESCE(sr.total, 0)) as outstanding
             FROM parties p
-            LEFT JOIN (SELECT party_id, SUM(net_amount) as total FROM purchase_invoices WHERE invoice_date BETWEEN ? AND ? GROUP BY party_id) pi ON p.id = pi.party_id
-            LEFT JOIN (SELECT party_id, SUM(amount) as total FROM purchase_receipts WHERE receipt_date BETWEEN ? AND ? GROUP BY party_id) pr ON p.id = pr.party_id
-            LEFT JOIN (SELECT party_id, SUM(net_amount) as total FROM sale_invoices WHERE invoice_date BETWEEN ? AND ? GROUP BY party_id) si ON p.id = si.party_id
-            LEFT JOIN (SELECT party_id, SUM(amount) as total FROM sale_receipts WHERE receipt_date BETWEEN ? AND ? GROUP BY party_id) sr ON p.id = sr.party_id
+            LEFT JOIN (SELECT party_id, SUM(net_amount) as total FROM purchase_invoices WHERE invoice_date <= ? GROUP BY party_id) pi ON p.id = pi.party_id
+            LEFT JOIN (SELECT party_id, SUM(amount) as total FROM purchase_receipts WHERE receipt_date <= ? GROUP BY party_id) pr ON p.id = pr.party_id
+            LEFT JOIN (SELECT party_id, SUM(net_amount) as total FROM sale_invoices WHERE invoice_date <= ? GROUP BY party_id) si ON p.id = si.party_id
+            LEFT JOIN (SELECT party_id, SUM(amount) as total FROM sale_receipts WHERE receipt_date <= ? GROUP BY party_id) sr ON p.id = sr.party_id
             HAVING outstanding > 0.01
             ORDER BY outstanding DESC
             """;
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setDate(1, Date.valueOf(fromDate));
+            pstmt.setDate(1, Date.valueOf(toDate));
             pstmt.setDate(2, Date.valueOf(toDate));
-            pstmt.setDate(3, Date.valueOf(fromDate));
+            pstmt.setDate(3, Date.valueOf(toDate));
             pstmt.setDate(4, Date.valueOf(toDate));
-            pstmt.setDate(5, Date.valueOf(fromDate));
-            pstmt.setDate(6, Date.valueOf(toDate));
-            pstmt.setDate(7, Date.valueOf(fromDate));
-            pstmt.setDate(8, Date.valueOf(toDate));
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
